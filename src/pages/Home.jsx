@@ -445,12 +445,16 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         json_schema: menuSchema
       });
 
+      console.log('Extract result:', result);
+
       if (result.status === 'success' && result.output?.menu_items) {
         const newItems = result.output.menu_items.map((item, idx) => ({ ...item, id: Date.now() + idx }));
+        console.log('New menu items:', newItems);
         setMenuItems(newItems);
         alert(`Successfully updated menu with ${newItems.length} items!`);
       } else {
-        alert('Failed to extract data: ' + (result.details || 'Unknown error'));
+        console.error('Extraction failed:', result);
+        alert('Failed to extract data: ' + (result.details || JSON.stringify(result)));
       }
     } catch (error) {
       alert('Error uploading file: ' + error.message);

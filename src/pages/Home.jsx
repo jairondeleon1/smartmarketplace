@@ -515,9 +515,14 @@ export default function Home() {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (dayScrollRef.current) {
-        const activeButton = dayScrollRef.current.querySelector(`[data-day="${selectedDay}"]`);
+        const container = dayScrollRef.current;
+        const activeButton = container.querySelector(`[data-day="${selectedDay}"]`);
         if (activeButton) {
-          activeButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          const containerWidth = container.offsetWidth;
+          const buttonLeft = activeButton.offsetLeft;
+          const buttonWidth = activeButton.offsetWidth;
+          const scrollPosition = buttonLeft - (containerWidth / 2) + (buttonWidth / 2);
+          container.scrollTo({ left: scrollPosition, behavior: 'smooth' });
         }
       }
     }, 100);

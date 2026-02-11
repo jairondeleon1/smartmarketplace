@@ -448,10 +448,42 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       console.log('Extract result:', result);
 
       if (result.status === 'success' && result.output?.menu_items) {
-        const newItems = result.output.menu_items.map((item, idx) => ({ ...item, id: Date.now() + idx }));
-        console.log('New menu items:', newItems);
-        setMenuItems(newItems);
-        alert(`Successfully updated menu with ${newItems.length} items!`);
+        const extractedItems = result.output.menu_items;
+        console.log('Extracted items:', extractedItems);
+        
+        setMenuItems(prev => {
+          // If previous menu is empty or default, replace it
+          if (prev.length === 0 || prev === DEFAULT_MENU) {
+            return extractedItems.map((item, idx) => ({ ...item, id: Date.now() + idx }));
+          }
+          
+          // Otherwise, merge by matching name and day
+          const updated = [...prev];
+          let mergedCount = 0;
+          let newCount = 0;
+          
+          extractedItems.forEach(newItem => {
+            const existingIndex = updated.findIndex(item => 
+              item.name?.toLowerCase().trim() === newItem.name?.toLowerCase().trim() &&
+              (item.day?.split('(')[0].trim() === newItem.day?.split('(')[0].trim() || !newItem.day)
+            );
+            
+            if (existingIndex >= 0) {
+              // Merge with existing item
+              updated[existingIndex] = { ...updated[existingIndex], ...newItem };
+              mergedCount++;
+            } else {
+              // Add new item
+              updated.push({ ...newItem, id: Date.now() + Math.random() });
+              newCount++;
+            }
+          });
+          
+          console.log(`Merged ${mergedCount} items, added ${newCount} new items`);
+          return updated;
+        });
+        
+        alert(`Successfully processed ${extractedItems.length} items from file!`);
       } else {
         console.error('Extraction failed:', result);
         alert('Failed to extract data: ' + (result.details || JSON.stringify(result)));

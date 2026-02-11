@@ -476,7 +476,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
             items: {
               type: "object",
               properties: {
-                item_name: { type: "string" },
+                name: { type: "string" },
                 ingredients: { type: "string" }
               }
             }
@@ -490,11 +490,18 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       });
 
       if (result.status === 'success' && result.output?.ingredients_list) {
+        let matchCount = 0;
         setMenuItems(prev => prev.map(item => {
-          const match = result.output.ingredients_list.find(ing => ing.item_name?.toLowerCase() === item.name?.toLowerCase());
-          return match ? { ...item, ingredients: match.ingredients } : item;
+          const match = result.output.ingredients_list.find(ing => 
+            ing.name?.toLowerCase().trim() === item.name?.toLowerCase().trim()
+          );
+          if (match) {
+            matchCount++;
+            return { ...item, ingredients: match.ingredients };
+          }
+          return item;
         }));
-        alert(`Successfully updated ingredients for matching items!`);
+        alert(`Successfully updated ingredients for ${matchCount} items!`);
       } else {
         alert('Failed to extract ingredients: ' + (result.details || 'Unknown error'));
       }

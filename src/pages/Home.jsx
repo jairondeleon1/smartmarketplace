@@ -513,12 +513,15 @@ export default function Home() {
   const changeView = (v) => { setView(v); setIsMobileMenuOpen(false); window.scrollTo(0,0); };
 
   useEffect(() => {
-    if (dayScrollRef.current) {
-      const activeButton = dayScrollRef.current.querySelector(`[data-day="${selectedDay}"]`);
-      if (activeButton) {
-        activeButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    const timer = setTimeout(() => {
+      if (dayScrollRef.current) {
+        const activeButton = dayScrollRef.current.querySelector(`[data-day="${selectedDay}"]`);
+        if (activeButton) {
+          activeButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
       }
-    }
+    }, 100);
+    return () => clearTimeout(timer);
   }, [selectedDay]);
 
   const addToPlate = (item) => {

@@ -680,13 +680,14 @@ export default function Home() {
   };
 
   const filteredItems = menuItems.filter(item => {
-    const matchesDay = selectedDay === 'All Days' || item.day === selectedDay || item.day === 'Daily Special';
+    const itemDay = item.day?.split('(')[0].trim() || item.day;
+    const matchesDay = selectedDay === 'All Days' || itemDay === selectedDay || itemDay === 'Daily Special';
     if (!matchesDay) return false;
-    
+
     if (activeFilters.vegetarian && !item.tags?.includes('Vegetarian') && !item.tags?.includes('Vegan')) return false;
     if (activeFilters.vegan && !item.tags?.includes('Vegan')) return false;
     if (activeFilters.fit && !item.tags?.includes('Fit')) return false;
-    
+
     return true;
   });
 

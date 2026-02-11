@@ -597,7 +597,10 @@ export default function Home() {
   };
 
   const [view, setView] = useState('customer'); 
-  const [menuItems, setMenuItems] = useState(DEFAULT_MENU);
+  const [menuItems, setMenuItems] = useState(() => {
+    const saved = localStorage.getItem('smartmarketplace_menu');
+    return saved ? JSON.parse(saved) : DEFAULT_MENU;
+  });
   const [myPlate, setMyPlate] = useState([]);
   const [isTrayModalOpen, setIsTrayModalOpen] = useState(false);
   const [isWeeklyPlannerOpen, setIsWeeklyPlannerOpen] = useState(false);

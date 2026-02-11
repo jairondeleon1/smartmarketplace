@@ -508,8 +508,18 @@ export default function Home() {
   const [isTyping, setIsTyping] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', day: 'Monday', station: "Chef's Table", ingredients: '', calories: '', protein: '', carbs: '', fat: '', isVeg: false, isVegan: false });
   const [activeFilters, setActiveFilters] = useState({ vegetarian: false, vegan: false, fit: false });
+  const dayScrollRef = useRef(null);
 
   const changeView = (v) => { setView(v); setIsMobileMenuOpen(false); window.scrollTo(0,0); };
+
+  useEffect(() => {
+    if (dayScrollRef.current) {
+      const activeButton = dayScrollRef.current.querySelector(`[data-day="${selectedDay}"]`);
+      if (activeButton) {
+        activeButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+  }, [selectedDay]);
 
   const addToPlate = (item) => {
     setMyPlate(prev => [...prev, item]);
@@ -586,9 +596,9 @@ export default function Home() {
                   </div>
                 </div>
                 
-                <div id="day-selector" className="flex w-full overflow-x-auto py-4 px-2 snap-x gap-2 scroll-smooth font-sans font-bold [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div ref={dayScrollRef} id="day-selector" className="flex w-full overflow-x-auto py-4 px-2 snap-x gap-2 scroll-smooth font-sans font-bold [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                   {DAYS.map(d => (
-                    <button key={d} onClick={() => setSelectedDay(d)} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all snap-start shadow-sm border font-sans font-bold ${selectedDay === d ? 'bg-emerald-800 text-white border-emerald-900 shadow-lg scale-105' : 'bg-white border-gray-100 text-gray-400 font-medium tracking-widest'}`}>{d}</button>
+                    <button key={d} data-day={d} onClick={() => setSelectedDay(d)} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all snap-start shadow-sm border font-sans font-bold ${selectedDay === d ? 'bg-emerald-800 text-white border-emerald-900 shadow-lg scale-105' : 'bg-white border-gray-100 text-gray-400 font-medium tracking-widest'}`}>{d}</button>
                   ))}
                 </div>
 

@@ -466,33 +466,33 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
 
     setIsSyncing("ingredients-csv");
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      // Read CSV file as text
+      const text = await file.text();
 
-      const ingredientsSchema = {
-        type: "object",
-        properties: {
-          ingredients_list: {
-            type: "array",
+      // Parse CSV using AI
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Parse this CSV data and extract menu item names and their ingredients. Return ONLY valid JSON matching the schema. CSV data:\n\n${text}`,
+        response_json_schema: {
+          type: "object",
+          properties: {
             items: {
-              type: "object",
-              properties: {
-                name: { type: "string" },
-                ingredients: { type: "string" }
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  ingredients: { type: "string" }
+                }
               }
             }
           }
         }
-      };
-
-      const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
-        file_url,
-        json_schema: ingredientsSchema
       });
 
-      if (result.status === 'success' && result.output?.ingredients_list) {
+      if (result?.items) {
         let matchCount = 0;
         setMenuItems(prev => prev.map(item => {
-          const match = result.output.ingredients_list.find(ing => 
+          const match = result.items.find(ing => 
             ing.name?.toLowerCase().trim() === item.name?.toLowerCase().trim()
           );
           if (match) {
@@ -503,10 +503,10 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         }));
         alert(`Successfully updated ingredients for ${matchCount} items!`);
       } else {
-        alert('Failed to extract ingredients: ' + (result.details || 'Unknown error'));
+        alert('Failed to parse CSV file');
       }
     } catch (error) {
-      alert('Error uploading CSV: ' + error.message);
+      alert('Error processing CSV: ' + error.message);
     } finally {
       setIsSyncing(null);
       e.target.value = '';

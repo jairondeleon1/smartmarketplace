@@ -507,7 +507,7 @@ export default function Home() {
   const [userQuery, setUserQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', day: 'Monday', station: "Chef's Table", ingredients: '', calories: '', protein: '', carbs: '', fat: '', isVeg: false, isVegan: false });
-  const [activeFilters, setActiveFilters] = useState({ vegetarian: false, vegan: false, dairyFree: false, glutenFree: false, nutFree: false });
+  const [activeFilters, setActiveFilters] = useState({ vegetarian: false, vegan: false, fit: false });
 
   const changeView = (v) => { setView(v); setIsMobileMenuOpen(false); window.scrollTo(0,0); };
 
@@ -548,7 +548,7 @@ export default function Home() {
   };
 
   const clearFilters = () => {
-    setActiveFilters({ vegetarian: false, vegan: false, dairyFree: false, glutenFree: false, nutFree: false });
+    setActiveFilters({ vegetarian: false, vegan: false, fit: false });
   };
 
   const filteredItems = menuItems.filter(item => {
@@ -557,9 +557,7 @@ export default function Home() {
     
     if (activeFilters.vegetarian && !item.tags?.includes('Vegetarian') && !item.tags?.includes('Vegan')) return false;
     if (activeFilters.vegan && !item.tags?.includes('Vegan')) return false;
-    if (activeFilters.glutenFree && item.allergens?.some(a => a.toLowerCase().includes('wheat') || a.toLowerCase().includes('gluten'))) return false;
-    if (activeFilters.dairyFree && item.allergens?.some(a => a.toLowerCase().includes('milk'))) return false;
-    if (activeFilters.nutFree && item.allergens?.some(a => a.toLowerCase().includes('nut') || a.toLowerCase().includes('pecan'))) return false;
+    if (activeFilters.fit && !item.tags?.includes('Fit')) return false;
     
     return true;
   });
@@ -597,9 +595,7 @@ export default function Home() {
                 <div id="dietary-filters" className="flex flex-wrap justify-center gap-2 font-sans font-bold font-medium">
                    <button onClick={() => toggleFilter('vegetarian')} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 font-sans font-bold ${activeFilters.vegetarian ? 'bg-green-50 border-green-500 text-green-900 font-bold' : 'bg-white border-gray-100 text-gray-400 font-bold'}`}><VegProgramIcon url={customVegUrl} className="w-4 h-4 font-sans font-bold" /> Veg</button>
                    <button onClick={() => toggleFilter('vegan')} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 font-sans font-bold ${activeFilters.vegan ? 'bg-green-50 border-green-500 text-green-900 font-bold' : 'bg-white border-gray-100 text-gray-400 font-bold'}`}><VeganProgramIcon url={customVeganUrl} className="w-4 h-4 font-sans font-bold" /> Vegan</button>
-                   <button onClick={() => toggleFilter('glutenFree')} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition font-sans font-bold ${activeFilters.glutenFree ? 'bg-orange-50 border-orange-500 text-orange-900 font-bold' : 'bg-white border-gray-100 text-gray-400 font-bold'}`}><WheatOff className="w-4 h-4 inline mr-1"/> Avoid Gluten</button>
-                   <button onClick={() => toggleFilter('dairyFree')} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition font-sans font-bold ${activeFilters.dairyFree ? 'bg-blue-50 border-blue-500 text-blue-900 font-bold' : 'bg-white border-gray-100 text-gray-400 font-bold'}`}><MilkOff className="w-4 h-4 inline mr-1"/> No Dairy</button>
-                   <button onClick={() => toggleFilter('nutFree')} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition font-sans font-bold ${activeFilters.nutFree ? 'bg-red-50 border-red-500 text-red-900 font-bold' : 'bg-white border-gray-100 text-gray-400 font-bold'}`}><NutOff className="w-4 h-4 inline mr-1"/> No Nuts</button>
+                   <button onClick={() => toggleFilter('fit')} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 font-sans font-bold ${activeFilters.fit ? 'bg-blue-50 border-blue-500 text-blue-900 font-bold' : 'bg-white border-gray-100 text-gray-400 font-bold'}`}><FitIcon className="w-4 h-4 font-sans font-bold" /> Fit</button>
                    {Object.values(activeFilters).some(Boolean) && <button onClick={clearFilters} className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition font-sans font-bold"><XCircle className="w-5 h-5 font-sans font-bold" /></button>}
                 </div>
              </div>

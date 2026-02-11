@@ -39,6 +39,7 @@ import { base44 } from '@/api/base44Client';
 // --- CONSTANTS ---
 const VEGAN_URL = "https://i.postimg.cc/MH7cDSz4/vegan.png"; 
 const VEG_URL = "https://i.postimg.cc/hvsDvPDt/vegetarian.png";
+const FIT_URL = "https://i.postimg.cc/KjQkB6SF/fit.png";
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Daily Special', 'All Days'];
 
@@ -56,12 +57,12 @@ const DEFAULT_MENU = [
   { id: 101, station: "Main - Comfort", name: 'Corn Muffin', description: 'Sweet and savory corn muffin.', ingredients: 'Cornmeal, Flour, Sugar, Milk, Egg, Butter, Baking Powder.', calories: 280, protein: 4, carbs: 38, fat: 12, sodium: 320, fiber: 2, sugar: 14, tags: ['Vegetarian'], allergens: ['Wheat', 'Egg', 'Milk'], day: 'Monday' },
 
   // TUESDAY (Feb 17)
-  { id: 2, station: "Main - Comfort", name: 'Red Beans & Sausage', description: 'Slow-simmered red beans with savory sausage, served over steamed rice.', ingredients: 'Red Kidney Beans, Andouille Sausage, Onions, Celery, Bell Peppers, Rice, Cajun Spices.', calories: 420, protein: 24, carbs: 52, fat: 14, sodium: 620, fiber: 12, sugar: 2, tags: ['High Fiber', 'Dairy Free'], allergens: ['Soy'], day: 'Tuesday' },
+  { id: 2, station: "Main - Comfort", name: 'Red Beans & Sausage', description: 'Slow-simmered red beans with savory sausage, served over steamed rice.', ingredients: 'Red Kidney Beans, Andouille Sausage, Onions, Celery, Bell Peppers, Rice, Cajun Spices.', calories: 420, protein: 24, carbs: 52, fat: 14, sodium: 620, fiber: 12, sugar: 2, tags: ['High Fiber', 'Dairy Free', 'Fit'], allergens: ['Soy'], day: 'Tuesday' },
   { id: 201, station: "Main - Comfort", name: 'Lasagna Al Forno', description: 'Classic baked lasagna with rich meat sauce and cheese.', ingredients: 'Ground Beef, Pork, Lasagna Noodles, Ricotta Cheese, Mozzarella, Parmesan, Marinara Sauce, Garlic, Herbs.', calories: 580, protein: 32, carbs: 45, fat: 28, sodium: 980, fiber: 3, sugar: 8, tags: [], allergens: ['Milk', 'Wheat', 'Egg'], day: 'Tuesday' },
 
   // WEDNESDAY (Feb 18)
   { id: 3, station: "Main - Comfort", name: 'Vegetable Lasagna', description: 'Layers of pasta, ricotta, spinach, and marinara sauce baked to perfection.', ingredients: 'Lasagna Noodles, Spinach, Zucchini, Ricotta Cheese, Mozzarella, Marinara Sauce.', calories: 380, protein: 18, carbs: 42, fat: 16, sodium: 780, fiber: 6, sugar: 8, tags: ['Vegetarian'], allergens: ['Milk', 'Wheat', 'Egg', 'Soy'], day: 'Wednesday' },
-  { id: 301, station: "Main - Comfort", name: 'Collard Greens', description: 'Slow-cooked southern style collard greens.', ingredients: 'Collard Greens, Vegetable Broth, Onions, Garlic, Vinegar, Red Pepper Flakes.', calories: 120, protein: 4, carbs: 12, fat: 6, sodium: 450, fiber: 5, sugar: 2, tags: ['High Fiber', 'Dairy Free', 'Avoid Gluten'], allergens: [], day: 'Wednesday' },
+  { id: 301, station: "Main - Comfort", name: 'Collard Greens', description: 'Slow-cooked southern style collard greens.', ingredients: 'Collard Greens, Vegetable Broth, Onions, Garlic, Vinegar, Red Pepper Flakes.', calories: 120, protein: 4, carbs: 12, fat: 6, sodium: 450, fiber: 5, sugar: 2, tags: ['High Fiber', 'Dairy Free', 'Avoid Gluten', 'Fit'], allergens: [], day: 'Wednesday' },
 
   // THURSDAY (Feb 19)
   { id: 4, station: "Main - Comfort", name: 'Chicken & Broccoli Alfredo', description: 'Tender chicken and broccoli tossed in a rich, creamy alfredo sauce.', ingredients: 'Grilled Chicken, Broccoli Florets, Heavy Cream, Parmesan Cheese, Butter, Garlic, Fettuccine Pasta.', calories: 580, protein: 38, carbs: 42, fat: 28, sodium: 890, fiber: 3, sugar: 4, tags: ['High Protein'], allergens: ['Milk', 'Wheat'], day: 'Thursday' },
@@ -69,7 +70,7 @@ const DEFAULT_MENU = [
   { id: 401, station: "Pizza", name: 'Prosciutto Arugula Pizza', description: 'Thin crust pizza topped with salty prosciutto and fresh arugula.', ingredients: 'Pizza Dough, Prosciutto, Arugula, Mozzarella Cheese, Olive Oil, Balsamic Glaze.', calories: 350, protein: 16, carbs: 38, fat: 14, sodium: 750, fiber: 2, sugar: 2, tags: [], allergens: ['Wheat', 'Milk'], day: 'Thursday' },
 
   // FRIDAY (Feb 20)
-  { id: 6, station: "Main - Comfort", name: 'Shrimp, Sausage & Jambalaya', description: 'A classic Mardi Gras stew with andouille sausage, shrimp, and clams.', ingredients: 'Shrimp, Andouille Sausage, Clams, Rice, Tomato Sauce, Cajun Seasoning, Bell Peppers, Onions.', calories: 480, protein: 32, carbs: 45, fat: 18, sodium: 980, fiber: 3, sugar: 4, tags: ['High Protein', 'Spicy', 'Dairy Free', 'Avoid Gluten'], allergens: ['Shellfish', 'Soy'], day: 'Friday' },
+  { id: 6, station: "Main - Comfort", name: 'Shrimp, Sausage & Jambalaya', description: 'A classic Mardi Gras stew with andouille sausage, shrimp, and clams.', ingredients: 'Shrimp, Andouille Sausage, Clams, Rice, Tomato Sauce, Cajun Seasoning, Bell Peppers, Onions.', calories: 480, protein: 32, carbs: 45, fat: 18, sodium: 980, fiber: 3, sugar: 4, tags: ['High Protein', 'Spicy', 'Dairy Free', 'Avoid Gluten', 'Fit'], allergens: ['Shellfish', 'Soy'], day: 'Friday' },
   { id: 601, station: "Main - Comfort", name: 'Cheese Tortellini', description: 'Cheese filled tortellini served with marinara sauce.', ingredients: 'Cheese Tortellini (Wheat, Egg, Milk), Marinara Sauce, Parmesan Cheese, Basil.', calories: 320, protein: 12, carbs: 48, fat: 8, sodium: 450, fiber: 3, sugar: 6, tags: ['Vegetarian'], allergens: ['Milk', 'Wheat', 'Egg'], day: 'Friday' },
 
   // DAILY SPECIALS
@@ -117,6 +118,13 @@ function VeganProgramIcon({ url, className = "w-6 h-6" }) {
   const src = url || VEGAN_URL;
   if (error) return <CheckCircle className={`${className} text-emerald-800`} />;
   return <img src={src} alt="Vegan" className={`${className} object-contain`} onError={() => setError(true)} />;
+}
+
+function FitIcon({ url, className = "w-6 h-6" }) {
+  const [error, setError] = useState(false);
+  const src = url || FIT_URL;
+  if (error) return <Zap className={`${className} text-blue-600`} />;
+  return <img src={src} alt="Fit" className={`${className} object-contain`} onError={() => setError(true)} />;
 }
 
 // --- MODALS ---
@@ -273,6 +281,7 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
           {item.name}
           {item.tags?.includes('Vegan') ? <VeganProgramIcon url={customVeganUrl} className="w-6 h-6 font-bold" /> : 
            item.tags?.includes('Vegetarian') ? <VegProgramIcon url={customVegUrl} className="w-6 h-6 font-bold" /> : null}
+          {item.tags?.includes('Fit') && <FitIcon className="w-6 h-6 font-bold" />}
         </h4>
         <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-2 font-sans font-medium font-bold">{item.description}</p>
         <div className="flex flex-wrap gap-1.5 mb-4 font-sans font-bold">{item.tags?.map(tag => <Badge key={tag}>{tag}</Badge>)}</div>

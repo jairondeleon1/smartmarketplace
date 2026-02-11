@@ -401,24 +401,106 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
   );
 }
 
-function AdminView({ menuItems, onLogout, customVegUrl, setCustomVegUrl, customVeganUrl, setCustomVeganUrl, newItem, setNewItem, handleAddItem, handleDeleteItem }) {
+function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomVegUrl, customVeganUrl, setCustomVeganUrl, newItem, setNewItem, handleAddItem, handleDeleteItem }) {
   const [isSyncing, setIsSyncing] = useState(null);
-  
-  const handleFileUpload = (e, label) => {
+
+  const handleFileUpload = async (e, type) => {
     const file = e.target.files[0];
-    if (file) {
-      setIsSyncing(label);
-      setTimeout(() => {
-        setIsSyncing(null);
-        alert(`Successfully synced data from: ${file.name}`);
-      }, 2000);
+    if (!file) return;
+
+    setIsSyncing(type);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+
+      const menuSchema = {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            station: { type: "string" },
+            name: { type: "string" },
+            description: { type: "string" },
+            ingredients: { type: "string" },
+            calories: { type: "number" },
+            protein: { type: "number" },
+            carbs: { type: "number" },
+            fat: { type: "number" },
+            sodium: { type: "number" },
+            fiber: { type: "number" },
+            sugar: { type: "number" },
+            tags: { type: "array", items: { type: "string" } },
+            allergens: { type: "array", items: { type: "string" } },
+            day: { type: "string" }
+          }
+        }
+      };
+
+      const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+        file_url,
+        json_schema: menuSchema
+      });
+
+      if (result.status === 'success' && result.output) {
+        const newItems = result.output.map((item, idx) => ({ ...item, id: Date.now() + idx }));
+        setMenuItems(newItems);
+        alert(`Successfully updated menu with ${newItems.length} items!`);
+      } else {
+        alert('Failed to extract data: ' + (result.details || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('Error uploading file: ' + error.message);
+    } finally {
+      setIsSyncing(null);
+      e.target.value = '';
+    }
+  };
+
+  const handleCSVUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsSyncing("ingredients-csv");
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+
+      const ingredientsSchema = {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            item_name: { type: "string" },
+            ingredients: { type: "string" }
+          }
+        }
+      };
+
+      const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+        file_url,
+        json_schema: ingredientsSchema
+      });
+
+      if (result.status === 'success' && result.output) {
+        setMenuItems(prev => prev.map(item => {
+          const match = result.output.find(ing => ing.item_name?.toLowerCase() === item.name?.toLowerCase());
+          return match ? { ...item, ingredients: match.ingredients } : item;
+        }));
+        alert(`Successfully updated ingredients for matching items!`);
+      } else {
+        alert('Failed to extract ingredients: ' + (result.details || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('Error uploading CSV: ' + error.message);
+    } finally {
+      setIsSyncing(null);
+      e.target.value = '';
     }
   };
 
   const syncOptions = [
-    { label: "1. Week Glance PDF", type: "week", icon: FileText }, 
-    { label: "2. Station Reports PDF", type: "station", icon: FileSearch }, 
-    { label: "3. Nutrition PDF", type: "nutrition", icon: Sparkles }
+    { label: "1. Week Glance PDF", type: "week", icon: FileText, accept: ".pdf", handler: handleFileUpload }, 
+    { label: "2. Station Reports PDF", type: "station", icon: FileSearch, accept: ".pdf", handler: handleFileUpload }, 
+    { label: "3. Nutrition PDF", type: "nutrition", icon: Sparkles, accept: ".pdf", handler: handleFileUpload },
+    { label: "4. Ingredients CSV", type: "ingredients-csv", icon: Upload, accept: ".csv", handler: handleCSVUpload }
   ];
 
   return (
@@ -435,16 +517,16 @@ function AdminView({ menuItems, onLogout, customVegUrl, setCustomVegUrl, customV
               <div key={opt.type}>
                   <input 
                     type="file" 
-                    accept=".pdf"
+                    accept={opt.accept}
                     id={`file-upload-${opt.type}`}
                     className="hidden"
-                    onChange={(e) => handleFileUpload(e, opt.label)} 
+                    onChange={(e) => opt.handler(e, opt.type)} 
                   />
                   <label 
                     htmlFor={`file-upload-${opt.type}`}
                     className="w-full p-6 border-2 border-dashed border-emerald-100 rounded-2xl flex flex-col items-center gap-2 text-emerald-800 hover:bg-emerald-50 transition active:scale-[0.98] cursor-pointer"
                   >
-                    {isSyncing === opt.label ? <Loader2 className="animate-spin w-8 h-8" /> : <><opt.icon className="w-8 h-8 opacity-40"/><span className="text-[11px] font-bold uppercase tracking-widest">{opt.label}</span></>}
+                    {isSyncing === opt.type ? <Loader2 className="animate-spin w-8 h-8" /> : <><opt.icon className="w-8 h-8 opacity-40"/><span className="text-[11px] font-bold uppercase tracking-widest">{opt.label}</span></>}
                   </label>
               </div>
             ))}
@@ -644,7 +726,7 @@ export default function Home() {
             </form>
           </div>
         )}
-        {view === 'admin' && isAdminLoggedIn && <AdminView menuItems={menuItems} onLogout={() => setIsAdminLoggedIn(false)} customVegUrl={customVegUrl} setCustomVegUrl={setCustomVegUrl} customVeganUrl={customVeganUrl} setCustomVeganUrl={setCustomVeganUrl} newItem={newItem} setNewItem={setNewItem} handleAddItem={handleAddItem} handleDeleteItem={(id) => setMenuItems(menuItems.filter(i => i.id !== id))} />}
+        {view === 'admin' && isAdminLoggedIn && <AdminView menuItems={menuItems} setMenuItems={setMenuItems} onLogout={() => setIsAdminLoggedIn(false)} customVegUrl={customVegUrl} setCustomVegUrl={setCustomVegUrl} customVeganUrl={customVeganUrl} setCustomVeganUrl={setCustomVeganUrl} newItem={newItem} setNewItem={setNewItem} handleAddItem={handleAddItem} handleDeleteItem={(id) => setMenuItems(menuItems.filter(i => i.id !== id))} />}
       </main>
       
       <TraySummary plate={myPlate} onClick={() => setIsTrayModalOpen(true)} />

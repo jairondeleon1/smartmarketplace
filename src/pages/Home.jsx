@@ -512,22 +512,29 @@ export default function Home() {
 
   const changeView = (v) => { setView(v); setIsMobileMenuOpen(false); window.scrollTo(0,0); };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (dayScrollRef.current) {
-        const container = dayScrollRef.current;
-        const activeButton = container.querySelector(`[data-day="${selectedDay}"]`);
-        if (activeButton) {
-          const containerWidth = container.offsetWidth;
-          const buttonLeft = activeButton.offsetLeft;
-          const buttonWidth = activeButton.offsetWidth;
-          const scrollPosition = buttonLeft - (containerWidth / 2) + (buttonWidth / 2);
-          container.scrollTo({ left: scrollPosition, behavior: 'smooth' });
-        }
+  const scrollToDay = (day) => {
+    if (dayScrollRef.current) {
+      const container = dayScrollRef.current;
+      const activeButton = container.querySelector(`[data-day="${day}"]`);
+      if (activeButton) {
+        const containerWidth = container.offsetWidth;
+        const buttonLeft = activeButton.offsetLeft;
+        const buttonWidth = activeButton.offsetWidth;
+        const scrollPosition = buttonLeft - (containerWidth / 2) + (buttonWidth / 2);
+        container.scrollTo({ left: scrollPosition, behavior: 'smooth' });
       }
-    }, 100);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => scrollToDay(selectedDay), 150);
     return () => clearTimeout(timer);
   }, [selectedDay]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => scrollToDay(selectedDay), 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   const addToPlate = (item) => {
     setMyPlate(prev => [...prev, item]);

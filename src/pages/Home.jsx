@@ -413,24 +413,29 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
       const menuSchema = {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            station: { type: "string" },
-            name: { type: "string" },
-            description: { type: "string" },
-            ingredients: { type: "string" },
-            calories: { type: "number" },
-            protein: { type: "number" },
-            carbs: { type: "number" },
-            fat: { type: "number" },
-            sodium: { type: "number" },
-            fiber: { type: "number" },
-            sugar: { type: "number" },
-            tags: { type: "array", items: { type: "string" } },
-            allergens: { type: "array", items: { type: "string" } },
-            day: { type: "string" }
+        type: "object",
+        properties: {
+          menu_items: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                station: { type: "string" },
+                name: { type: "string" },
+                description: { type: "string" },
+                ingredients: { type: "string" },
+                calories: { type: "number" },
+                protein: { type: "number" },
+                carbs: { type: "number" },
+                fat: { type: "number" },
+                sodium: { type: "number" },
+                fiber: { type: "number" },
+                sugar: { type: "number" },
+                tags: { type: "array", items: { type: "string" } },
+                allergens: { type: "array", items: { type: "string" } },
+                day: { type: "string" }
+              }
+            }
           }
         }
       };
@@ -440,8 +445,8 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         json_schema: menuSchema
       });
 
-      if (result.status === 'success' && result.output) {
-        const newItems = result.output.map((item, idx) => ({ ...item, id: Date.now() + idx }));
+      if (result.status === 'success' && result.output?.menu_items) {
+        const newItems = result.output.menu_items.map((item, idx) => ({ ...item, id: Date.now() + idx }));
         setMenuItems(newItems);
         alert(`Successfully updated menu with ${newItems.length} items!`);
       } else {
@@ -464,12 +469,17 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
       const ingredientsSchema = {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            item_name: { type: "string" },
-            ingredients: { type: "string" }
+        type: "object",
+        properties: {
+          ingredients_list: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                item_name: { type: "string" },
+                ingredients: { type: "string" }
+              }
+            }
           }
         }
       };
@@ -479,9 +489,9 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         json_schema: ingredientsSchema
       });
 
-      if (result.status === 'success' && result.output) {
+      if (result.status === 'success' && result.output?.ingredients_list) {
         setMenuItems(prev => prev.map(item => {
-          const match = result.output.find(ing => ing.item_name?.toLowerCase() === item.name?.toLowerCase());
+          const match = result.output.ingredients_list.find(ing => ing.item_name?.toLowerCase() === item.name?.toLowerCase());
           return match ? { ...item, ingredients: match.ingredients } : item;
         }));
         alert(`Successfully updated ingredients for matching items!`);

@@ -452,12 +452,12 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         console.log('Extracted items:', extractedItems);
         
         setMenuItems(prev => {
-          // If previous menu is empty or default, replace it
-          if (prev.length === 0 || prev === DEFAULT_MENU) {
+          // If previous menu is empty or has only default items, replace it
+          if (prev.length === 0 || prev.length <= DEFAULT_MENU.length) {
             return extractedItems.map((item, idx) => ({ ...item, id: Date.now() + idx }));
           }
           
-          // Otherwise, merge by matching name and day
+          // Otherwise, intelligently merge by matching name and day
           const updated = [...prev];
           let mergedCount = 0;
           let newCount = 0;
@@ -469,8 +469,28 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
             );
             
             if (existingIndex >= 0) {
-              // Merge with existing item
-              updated[existingIndex] = { ...updated[existingIndex], ...newItem };
+              // Smart merge: only update fields that have meaningful values
+              const merged = { ...updated[existingIndex] };
+              
+              Object.keys(newItem).forEach(key => {
+                const newValue = newItem[key];
+                const oldValue = updated[existingIndex][key];
+                
+                // Update if new value exists and is not empty/zero (except for valid zero values)
+                if (newValue !== undefined && newValue !== null && newValue !== '') {
+                  if (typeof newValue === 'number' && newValue === 0 && oldValue && oldValue !== 0) {
+                    // Keep old value if new is 0 and old exists
+                    return;
+                  }
+                  if (Array.isArray(newValue) && newValue.length === 0 && oldValue && oldValue.length > 0) {
+                    // Keep old array if new is empty and old has values
+                    return;
+                  }
+                  merged[key] = newValue;
+                }
+              });
+              
+              updated[existingIndex] = merged;
               mergedCount++;
             } else {
               // Add new item

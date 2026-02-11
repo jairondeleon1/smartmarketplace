@@ -449,61 +449,88 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
 
       if (result.status === 'success' && result.output?.menu_items) {
         const extractedItems = result.output.menu_items;
-        console.log('Extracted items:', extractedItems);
+        console.log('Extracted items from file:', extractedItems);
         
         setMenuItems(prev => {
+          console.log('Current menu items before merge:', prev);
+          
           // If previous menu is empty or has only default items, replace it
           if (prev.length === 0 || prev.length <= DEFAULT_MENU.length) {
-            return extractedItems.map((item, idx) => ({ ...item, id: Date.now() + idx }));
+            const newItems = extractedItems.map((item, idx) => ({ ...item, id: Date.now() + idx }));
+            console.log('Replacing with new items:', newItems);
+            return newItems;
           }
           
-          // Otherwise, intelligently merge by matching name and day
+          // Otherwise, intelligently merge by matching name (more lenient)
           const updated = [...prev];
           let mergedCount = 0;
           let newCount = 0;
           
           extractedItems.forEach(newItem => {
-            const existingIndex = updated.findIndex(item => 
-              item.name?.toLowerCase().trim() === newItem.name?.toLowerCase().trim() &&
-              (item.day?.split('(')[0].trim() === newItem.day?.split('(')[0].trim() || !newItem.day)
-            );
+            // Try to find match by name only (case insensitive, trimmed)
+            const newItemName = newItem.name?.toLowerCase().trim();
+            const existingIndex = updated.findIndex(item => {
+              const itemName = item.name?.toLowerCase().trim();
+              return itemName === newItemName;
+            });
             
             if (existingIndex >= 0) {
-              // Smart merge: only update fields that have meaningful values
+              console.log(`Merging "${newItem.name}" with existing item:`, updated[existingIndex]);
+              
+              // Smart merge: combine all non-empty values
               const merged = { ...updated[existingIndex] };
               
               Object.keys(newItem).forEach(key => {
                 const newValue = newItem[key];
-                const oldValue = updated[existingIndex][key];
+                const oldValue = merged[key];
                 
-                // Update if new value exists and is not empty/zero (except for valid zero values)
-                if (newValue !== undefined && newValue !== null && newValue !== '') {
-                  if (typeof newValue === 'number' && newValue === 0 && oldValue && oldValue !== 0) {
-                    // Keep old value if new is 0 and old exists
-                    return;
+                // Skip id and undefined/null values
+                if (key === 'id' || newValue === undefined || newValue === null) {
+                  return;
+                }
+                
+                // For numbers: use new if > 0, otherwise keep old
+                if (typeof newValue === 'number') {
+                  if (newValue > 0) {
+                    merged[key] = newValue;
                   }
-                  if (Array.isArray(newValue) && newValue.length === 0 && oldValue && oldValue.length > 0) {
-                    // Keep old array if new is empty and old has values
-                    return;
+                }
+                // For strings: use new if not empty, otherwise keep old
+                else if (typeof newValue === 'string') {
+                  if (newValue.trim() !== '') {
+                    merged[key] = newValue;
                   }
+                }
+                // For arrays: merge or replace if has values
+                else if (Array.isArray(newValue)) {
+                  if (newValue.length > 0) {
+                    merged[key] = newValue;
+                  }
+                }
+                // For other types: use new value
+                else {
                   merged[key] = newValue;
                 }
               });
               
+              console.log('Merged result:', merged);
               updated[existingIndex] = merged;
               mergedCount++;
             } else {
               // Add new item
-              updated.push({ ...newItem, id: Date.now() + Math.random() });
+              const newEntry = { ...newItem, id: Date.now() + Math.random() };
+              console.log('Adding new item:', newEntry);
+              updated.push(newEntry);
               newCount++;
             }
           });
           
-          console.log(`Merged ${mergedCount} items, added ${newCount} new items`);
+          console.log(`Final result: Merged ${mergedCount} items, added ${newCount} new items`);
+          console.log('Updated menu items:', updated);
           return updated;
         });
         
-        alert(`Successfully processed ${extractedItems.length} items from file!`);
+        alert(`Successfully processed ${extractedItems.length} items! Check console for details.`);
       } else {
         console.error('Extraction failed:', result);
         alert('Failed to extract data: ' + (result.details || JSON.stringify(result)));

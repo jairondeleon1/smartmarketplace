@@ -642,6 +642,10 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem('smartmarketplace_menu', JSON.stringify(menuItems));
+  }, [menuItems]);
+
   const addToPlate = (item) => {
     setMyPlate(prev => [...prev, item]);
   };

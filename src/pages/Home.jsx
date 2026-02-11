@@ -586,7 +586,7 @@ export default function Home() {
                   </div>
                 </div>
                 
-                <div id="day-selector" className="flex w-full overflow-x-auto py-4 px-2 no-scrollbar snap-x gap-2 scroll-smooth font-sans font-bold">
+                <div id="day-selector" className="flex w-full overflow-x-auto py-4 px-2 snap-x gap-2 scroll-smooth font-sans font-bold [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                   {DAYS.map(d => (
                     <button key={d} onClick={() => setSelectedDay(d)} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all snap-start shadow-sm border font-sans font-bold ${selectedDay === d ? 'bg-emerald-800 text-white border-emerald-900 shadow-lg scale-105' : 'bg-white border-gray-100 text-gray-400 font-medium tracking-widest'}`}>{d}</button>
                   ))}

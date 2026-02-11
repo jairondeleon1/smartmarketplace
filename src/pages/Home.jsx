@@ -61,7 +61,7 @@ const DEFAULT_MENU = [
 
   // WEDNESDAY (Feb 18)
   { id: 3, station: "Main - Comfort", name: 'Vegetable Lasagna', description: 'Layers of pasta, ricotta, spinach, and marinara sauce baked to perfection.', ingredients: 'Lasagna Noodles, Spinach, Zucchini, Ricotta Cheese, Mozzarella, Marinara Sauce.', calories: 380, protein: 18, carbs: 42, fat: 16, sodium: 780, fiber: 6, sugar: 8, tags: ['Vegetarian'], allergens: ['Milk', 'Wheat', 'Egg', 'Soy'], day: 'Wednesday' },
-  { id: 301, station: "Main - Comfort", name: 'Collard Greens', description: 'Slow-cooked southern style collard greens.', ingredients: 'Collard Greens, Vegetable Broth, Onions, Garlic, Vinegar, Red Pepper Flakes.', calories: 120, protein: 4, carbs: 12, fat: 6, sodium: 450, fiber: 5, sugar: 2, tags: ['High Fiber', 'Dairy Free', 'Gluten Free'], allergens: [], day: 'Wednesday' },
+  { id: 301, station: "Main - Comfort", name: 'Collard Greens', description: 'Slow-cooked southern style collard greens.', ingredients: 'Collard Greens, Vegetable Broth, Onions, Garlic, Vinegar, Red Pepper Flakes.', calories: 120, protein: 4, carbs: 12, fat: 6, sodium: 450, fiber: 5, sugar: 2, tags: ['High Fiber', 'Dairy Free', 'Avoid Gluten'], allergens: [], day: 'Wednesday' },
 
   // THURSDAY (Feb 19)
   { id: 4, station: "Main - Comfort", name: 'Chicken & Broccoli Alfredo', description: 'Tender chicken and broccoli tossed in a rich, creamy alfredo sauce.', ingredients: 'Grilled Chicken, Broccoli Florets, Heavy Cream, Parmesan Cheese, Butter, Garlic, Fettuccine Pasta.', calories: 580, protein: 38, carbs: 42, fat: 28, sodium: 890, fiber: 3, sugar: 4, tags: ['High Protein'], allergens: ['Milk', 'Wheat'], day: 'Thursday' },
@@ -69,7 +69,7 @@ const DEFAULT_MENU = [
   { id: 401, station: "Pizza", name: 'Prosciutto Arugula Pizza', description: 'Thin crust pizza topped with salty prosciutto and fresh arugula.', ingredients: 'Pizza Dough, Prosciutto, Arugula, Mozzarella Cheese, Olive Oil, Balsamic Glaze.', calories: 350, protein: 16, carbs: 38, fat: 14, sodium: 750, fiber: 2, sugar: 2, tags: [], allergens: ['Wheat', 'Milk'], day: 'Thursday' },
 
   // FRIDAY (Feb 20)
-  { id: 6, station: "Main - Comfort", name: 'Shrimp, Sausage & Jambalaya', description: 'A classic Mardi Gras stew with andouille sausage, shrimp, and clams.', ingredients: 'Shrimp, Andouille Sausage, Clams, Rice, Tomato Sauce, Cajun Seasoning, Bell Peppers, Onions.', calories: 480, protein: 32, carbs: 45, fat: 18, sodium: 980, fiber: 3, sugar: 4, tags: ['High Protein', 'Spicy', 'Dairy Free', 'Gluten Free'], allergens: ['Shellfish', 'Soy'], day: 'Friday' },
+  { id: 6, station: "Main - Comfort", name: 'Shrimp, Sausage & Jambalaya', description: 'A classic Mardi Gras stew with andouille sausage, shrimp, and clams.', ingredients: 'Shrimp, Andouille Sausage, Clams, Rice, Tomato Sauce, Cajun Seasoning, Bell Peppers, Onions.', calories: 480, protein: 32, carbs: 45, fat: 18, sodium: 980, fiber: 3, sugar: 4, tags: ['High Protein', 'Spicy', 'Dairy Free', 'Avoid Gluten'], allergens: ['Shellfish', 'Soy'], day: 'Friday' },
   { id: 601, station: "Main - Comfort", name: 'Cheese Tortellini', description: 'Cheese filled tortellini served with marinara sauce.', ingredients: 'Cheese Tortellini (Wheat, Egg, Milk), Marinara Sauce, Parmesan Cheese, Basil.', calories: 320, protein: 12, carbs: 48, fat: 8, sodium: 450, fiber: 3, sugar: 6, tags: ['Vegetarian'], allergens: ['Milk', 'Wheat', 'Egg'], day: 'Friday' },
 
   // DAILY SPECIALS

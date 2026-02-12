@@ -548,8 +548,10 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
               }
             }
           });
+          console.log('FDA XLSX Extraction Result:', extractResult);
           if (extractResult.status === 'success') {
-            fdaResult = { items: extractResult.output };
+            fdaResult = { items: Array.isArray(extractResult.output) ? extractResult.output : [extractResult.output] };
+            console.log('FDA Data formatted:', fdaResult);
           }
         } else {
           // Process PDF with LLM

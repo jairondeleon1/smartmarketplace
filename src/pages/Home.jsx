@@ -487,7 +487,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       // Step 1: Process Week Menu - extract items with recipe numbers
       console.log('Step 1: Processing Week Menu...');
       const weekResult = await base44.integrations.Core.InvokeLLM({
-        prompt: `Extract menu items from this weekly menu PDF. For each item, extract: name, recipe_number (the number in parentheses at the end), station, day (MUST be one of: Monday, Tuesday, Wednesday, Thursday, Friday, or Daily Special - extract the specific weekday name for each item, NOT date ranges), description. Return as structured JSON.`,
+        prompt: `Extract menu items from this weekly menu PDF. For each item, extract: name, recipe_number (the number in parentheses at the end), station, day (MUST be one of: Monday, Tuesday, Wednesday, Thursday, Friday, or Daily Special - extract the specific weekday name for each item, NOT date ranges), description (extract the food description text, NOT portion sizes or serving sizes). Return as structured JSON.`,
         file_urls: [uploadedFiles.weekMenu],
         add_context_from_internet: false,
         response_json_schema: {

@@ -434,7 +434,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     setIsSyncing("fda");
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setUploadedFiles(prev => ({ ...prev, fda: file_url }));
+      setUploadedFiles(prev => ({ ...prev, fda: { url: file_url, type: file.name.endsWith('.xlsx') || file.name.endsWith('.xls') ? 'xlsx' : 'pdf' } }));
       alert('✓ FDA Data uploaded - ready to process');
     } catch (error) {
       alert('Error: ' + error.message);
@@ -528,32 +528,58 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       if (uploadedFiles.fda) {
         setProcessingStep('Processing FDA Nutrition...');
         console.log('Step 2: Processing FDA Data...');
-        const fdaResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `Extract FDA nutritional data from this PDF. For each menu item, extract: recipe_number (the number in parentheses), calories, protein (g), carbs (g), fat (g), sodium (mg), fiber (g), sugar (g). Return as structured JSON.`,
-          file_urls: [uploadedFiles.fda],
-          add_context_from_internet: false,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              items: {
-                type: "array",
+        
+        let fdaResult;
+        if (uploadedFiles.fda.type === 'xlsx') {
+          // Extract data from XLSX file
+          const extractResult = await base44.integrations.Core.ExtractDataFromUploadedFile({
+            file_url: uploadedFiles.fda.url,
+            json_schema: {
+              type: "object",
+              properties: {
+                recipe_number: { type: "string" },
+                calories: { type: "number" },
+                protein: { type: "number" },
+                carbs: { type: "number" },
+                fat: { type: "number" },
+                sodium: { type: "number" },
+                fiber: { type: "number" },
+                sugar: { type: "number" }
+              }
+            }
+          });
+          if (extractResult.status === 'success') {
+            fdaResult = { items: extractResult.output };
+          }
+        } else {
+          // Process PDF with LLM
+          fdaResult = await base44.integrations.Core.InvokeLLM({
+            prompt: `Extract FDA nutritional data from this PDF. For each menu item, extract: recipe_number (the number in parentheses), calories, protein (g), carbs (g), fat (g), sodium (mg), fiber (g), sugar (g). Return as structured JSON.`,
+            file_urls: [uploadedFiles.fda.url],
+            add_context_from_internet: false,
+            response_json_schema: {
+              type: "object",
+              properties: {
                 items: {
-                  type: "object",
-                  properties: {
-                    recipe_number: { type: "string" },
-                    calories: { type: "number" },
-                    protein: { type: "number" },
-                    carbs: { type: "number" },
-                    fat: { type: "number" },
-                    sodium: { type: "number" },
-                    fiber: { type: "number" },
-                    sugar: { type: "number" }
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      recipe_number: { type: "string" },
+                      calories: { type: "number" },
+                      protein: { type: "number" },
+                      carbs: { type: "number" },
+                      fat: { type: "number" },
+                      sodium: { type: "number" },
+                      fiber: { type: "number" },
+                      sugar: { type: "number" }
+                    }
                   }
                 }
               }
             }
-          }
-        });
+          });
+        }
 
         if (fdaResult?.items) {
           console.log('FDA Data extracted:', fdaResult.items);

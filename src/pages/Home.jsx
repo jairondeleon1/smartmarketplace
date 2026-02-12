@@ -403,6 +403,8 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
 
 function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomVegUrl, customVeganUrl, setCustomVeganUrl, newItem, setNewItem, handleAddItem, handleDeleteItem }) {
   const [isSyncing, setIsSyncing] = useState(null);
+  const [processingStep, setProcessingStep] = useState('');
+  const [processingProgress, setProcessingProgress] = useState(0);
   const [uploadedFiles, setUploadedFiles] = useState({
     weekMenu: null,
     fda: null,
@@ -481,10 +483,13 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     }
 
     setIsSyncing("publish");
+    setProcessingProgress(0);
     try {
       let finalItems = [];
 
       // Step 1: Process Week Menu - extract items with recipe numbers
+      setProcessingStep('Processing Week Menu...');
+      setProcessingProgress(20);
       console.log('Step 1: Processing Week Menu...');
       const weekResult = await base44.integrations.Core.InvokeLLM({
         prompt: `Extract menu items from this weekly menu PDF. For each item, extract: name, recipe_number (the number in parentheses at the end), station, day (MUST be one of: Monday, Tuesday, Wednesday, Thursday, Friday, or Daily Special - extract the specific weekday name for each item, NOT date ranges), description (extract the food description text, NOT portion sizes or serving sizes). Return as structured JSON.`,
@@ -517,8 +522,11 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         console.error('Week Menu extraction failed:', weekResult);
       }
 
+      setProcessingProgress(40);
+
       // Step 2: Process FDA if uploaded - match by recipe number
       if (uploadedFiles.fda) {
+        setProcessingStep('Processing FDA Nutrition...');
         console.log('Step 2: Processing FDA Data...');
         const fdaResult = await base44.integrations.Core.InvokeLLM({
           prompt: `Extract FDA nutritional data from this PDF. For each menu item, extract: recipe_number (the number in parentheses), calories, protein (g), carbs (g), fat (g), sodium (mg), fiber (g), sugar (g). Return as structured JSON.`,
@@ -670,12 +678,21 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       }
 
       // Publish to menu
+      setProcessingStep('Publishing Menu...');
+      setProcessingProgress(100);
       console.log('Final merged items:', finalItems);
       setMenuItems(finalItems);
       setUploadedFiles({ weekMenu: null, fda: null, allergen: null, ingredients: null });
-      alert(`✅ Published ${finalItems.length} menu items! Check browser console (F12) for details.`);
+      
+      setTimeout(() => {
+        alert(`✅ Published ${finalItems.length} menu items! Check browser console (F12) for details.`);
+        setProcessingStep('');
+        setProcessingProgress(0);
+      }, 500);
     } catch (error) {
       alert('Error processing files: ' + error.message);
+      setProcessingStep('');
+      setProcessingProgress(0);
     } finally {
       setIsSyncing(null);
     }
@@ -756,23 +773,29 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                 <span>Ingredients</span>
               </div>
             </div>
-            <button
-              onClick={handleProcessAndPublish}
-              disabled={!uploadedFiles.weekMenu || isSyncing === "publish"}
-              className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
-            >
-              {isSyncing === "publish" ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  Process & Publish Menu
-                </>
-              )}
-            </button>
+            {isSyncing === "publish" ? (
+              <div className="space-y-2">
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div 
+                    className="bg-emerald-600 h-full transition-all duration-500 rounded-full"
+                    style={{ width: `${processingProgress}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-center gap-2 text-xs text-emerald-700">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <span className="font-bold">{processingStep}</span>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={handleProcessAndPublish}
+                disabled={!uploadedFiles.weekMenu}
+                className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                Process & Publish Menu
+              </button>
+            )}
           </div>
           <button 
             onClick={() => console.log('Current Menu Data:', menuItems)} 

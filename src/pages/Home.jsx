@@ -324,17 +324,34 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
 
 function TraySummary({ plate, onClick }) {
   if (plate.length === 0) return null;
-  const totalCals = plate.reduce((acc, item) => acc + (item.calories || 0), 0);
+  const totals = plate.reduce((acc, item) => ({
+    calories: acc.calories + (item.calories || 0),
+    protein: acc.protein + (item.protein || 0),
+  }), { calories: 0, protein: 0 });
+  
   return (
-    <div onClick={onClick} className="fixed bottom-6 left-6 right-6 bg-slate-900 text-white rounded-2xl shadow-2xl p-4 z-50 flex justify-between items-center border border-white/10 transform transition hover:scale-[1.01] hover:bg-slate-800 cursor-pointer font-sans font-medium">
+    <div onClick={onClick} className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 text-white rounded-full shadow-2xl px-6 py-3 z-50 flex items-center gap-4 border border-teal-500/30 cursor-pointer font-sans backdrop-blur-sm hover:shadow-teal-500/20 hover:shadow-xl transition-all hover:scale-105 animate-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center gap-3">
-        <div className="bg-teal-500 p-2 rounded-xl shadow-lg font-sans"><ShoppingBag className="w-5 h-5 font-sans text-white" /></div>
-        <div><p className="font-bold text-sm leading-tight tracking-tight text-white font-sans font-bold uppercase">My Tray ({plate.length})</p><p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest font-sans font-bold">Tap to View Details</p></div>
+        <div className="bg-teal-500 p-2.5 rounded-full shadow-lg relative">
+          <ShoppingBag className="w-4 h-4 text-white" />
+          <span className="absolute -top-1 -right-1 bg-teal-400 text-slate-900 text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">{plate.length}</span>
+        </div>
+        <div className="text-left">
+          <p className="font-bold text-xs uppercase tracking-wider text-white">My Nutrition Tray</p>
+        </div>
       </div>
-      <div className="text-right pr-2 font-bold font-sans">
-        <span className="block font-bold text-teal-400 text-lg leading-none tracking-tight font-sans font-bold">{totalCals}</span>
-        <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest font-sans font-bold">Total Cals</span>
+      <div className="h-8 w-px bg-teal-500/30"></div>
+      <div className="flex items-center gap-4">
+        <div className="text-center">
+          <span className="block font-bold text-base text-teal-400">{totals.calories}</span>
+          <span className="text-[9px] text-slate-400 uppercase tracking-widest">Cals</span>
+        </div>
+        <div className="text-center">
+          <span className="block font-bold text-base text-teal-400">{totals.protein}g</span>
+          <span className="text-[9px] text-slate-400 uppercase tracking-widest">Protein</span>
+        </div>
       </div>
+      <ArrowRight className="w-4 h-4 text-teal-400 animate-pulse" />
     </div>
   );
 }

@@ -611,7 +611,12 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       </div>
       <div className="grid lg:grid-cols-2 gap-8">
         <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
-          <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2 tracking-widest"><Upload className="w-4 h-4 text-emerald-600"/> Matrix Sync</h3>
+          <div className="flex justify-between items-center">
+            <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2 tracking-widest"><Upload className="w-4 h-4 text-emerald-600"/> Matrix Sync</h3>
+            <div className="text-xs font-bold text-gray-500">
+              <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full">{menuItems.length} Items Loaded</span>
+            </div>
+          </div>
           <div className="space-y-3">
             {syncOptions.map(opt => (
               <div key={opt.type}>
@@ -631,6 +636,12 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
               </div>
             ))}
           </div>
+          <button 
+            onClick={() => console.log('Current Menu Data:', menuItems)} 
+            className="w-full p-3 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-200 transition"
+          >
+            Debug: Log Menu to Console
+          </button>
         </div>
         <div className="space-y-8 font-medium">
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
@@ -816,7 +827,11 @@ export default function Home() {
              </div>
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-2 font-sans font-bold font-medium">
                 {filteredItems.length > 0 ? filteredItems.map(item => <MenuItemCard key={item.id} item={item} addToPlate={addToPlate} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} />) : 
-                <div className="col-span-full py-20 text-center text-gray-400 font-bold uppercase tracking-widest text-sm font-sans">No menu items match your filters</div>}
+                <div className="col-span-full py-20 text-center space-y-3">
+                  <div className="text-gray-400 font-bold uppercase tracking-widest text-sm font-sans">No menu items match your filters</div>
+                  <div className="text-xs text-gray-400">Total Items: {menuItems.length} | Selected Day: {selectedDay}</div>
+                  <button onClick={() => { setSelectedDay('All Days'); clearFilters(); }} className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700">Show All Items</button>
+                </div>}
              </div>
           </div>
         )}

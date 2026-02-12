@@ -215,7 +215,7 @@ function TrayDetailsModal({ isOpen, onClose, plate, setPlate }) {
   const handleDownloadReport = () => {
     setIsExporting(true);
     let htmlContent = `
-      <!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body { font-family: sans-serif; color: #1e293b; background: #f8fafc; padding: 20px; }.container { max-width: 500px; margin: 0 auto; background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }.header { background: #065f46; color: white; padding: 32px 24px; text-align: center; }.content { padding: 24px; }.item { border-bottom: 1px solid #f1f5f9; padding: 16px 0; display: flex; justify-content: space-between; }.stat { flex: 1; text-align: center; }.val { display: block; font-weight: 800; font-size: 18px; color: #065f46; }</style></head><body><div class="container"><div class="header"><h1>SmartMarketplace</h1><p>NUTRITION SUMMARY • ${new Date().toLocaleDateString()}</p></div><div class="content">${plate.map(item => `<div class="item"><span>${item.name}</span><b>${item.calories} CAL</b></div>`).join('')}<div style="display:flex; gap:10px; margin-top:20px;"><div class="stat"><span class="val">${totals.calories}</span><small>Cals</small></div><div class="stat"><span class="val">${totals.protein}g</span><small>Prot</small></div></div></div></div></body></html>
+      <!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body { font-family: sans-serif; color: #1e293b; background: #f8fafc; padding: 20px; }.container { max-width: 500px; margin: 0 auto; background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }.header { background: #065f46; color: white; padding: 32px 24px; text-align: center; }.content { padding: 24px; }.item { border-bottom: 1px solid #f1f5f9; padding: 16px 0; display: flex; justify-content: space-between; }.stat { flex: 1; text-align: center; }.val { display: block; font-weight: 800; font-size: 18px; color: #065f46; }</style></head><body><div class="container"><div class="header"><h1>SmartMenu IQ</h1><p>NUTRITION SUMMARY • ${new Date().toLocaleDateString()}</p></div><div class="content">${plate.map(item => `<div class="item"><span>${item.name}</span><b>${item.calories} CAL</b></div>`).join('')}<div style="display:flex; gap:10px; margin-top:20px;"><div class="stat"><span class="val">${totals.calories}</span><small>Cals</small></div><div class="stat"><span class="val">${totals.protein}g</span><small>Prot</small></div></div></div></div></body></html>
     `;
     const blob = new Blob([htmlContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
@@ -343,7 +343,7 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen }) {
       <div className="w-full max-w-5xl mx-auto flex justify-between items-center px-2 font-sans font-bold">
         <div className="flex items-center gap-2 cursor-pointer font-sans font-bold font-bold" onClick={() => changeView('customer')}>
           <Utensils className="w-6 h-6 text-white font-bold" />
-          <h1 className="text-xl font-bold uppercase tracking-widest text-white font-sans font-bold">SmartMarketplace</h1>
+          <h1 className="text-xl font-bold uppercase tracking-widest text-white font-sans font-bold">SmartMenu IQ</h1>
         </div>
         <div className="hidden md:flex gap-6 items-center text-sm font-bold uppercase tracking-widest font-sans font-bold">
           <button onClick={() => changeView('customer')} className={view === 'customer' ? 'text-white border-b-2 border-white pb-1' : 'text-emerald-100 opacity-70'}>Menu</button>
@@ -1212,7 +1212,7 @@ export default function Home() {
           <div className="max-w-5xl mx-auto p-4 space-y-8 pb-32 font-sans overflow-x-hidden font-bold">
              <div className="text-center space-y-6 pt-10 font-sans font-bold">
                 <div className="space-y-1 font-sans font-bold">
-                  <h2 className="text-4xl font-bold text-slate-900 uppercase tracking-widest font-sans leading-none font-bold">SmartMarketplace</h2>
+                  <h2 className="text-4xl font-bold text-slate-900 uppercase tracking-widest font-sans leading-none font-bold">SmartMenu IQ</h2>
                   <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] tracking-[0.2em] font-sans font-bold"> Heathrow HUB Daily Nutrition Portal</p>
                 </div>
                 <div className="flex flex-col gap-4 items-center max-w-xl mx-auto px-2 font-sans font-bold">

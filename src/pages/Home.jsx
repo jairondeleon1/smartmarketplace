@@ -369,77 +369,103 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatHistory, isTyping]);
 
   const VisualMessage = ({ content }) => {
-    const renderNutritionBadge = (label, value, color) => (
-      <div className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold ${color} mr-2 mb-2`}>
-        <span className="opacity-70">{label}:</span>
-        <span>{value}</span>
-      </div>
-    );
+    // Try to parse menu items from response
+    const lines = content.split('\n').filter(l => l.trim());
+    const menuItemPattern = /^[\d\*\-•]?\s*\*?\*?([A-Z][^(]+?)\*?\*?\s*[-–:]?\s*(\d+)\s*cal/i;
 
-    const sections = content.split('\n\n');
+    const parsedItems = [];
+    let currentItem = null;
 
+    lines.forEach(line => {
+      const match = line.match(menuItemPattern);
+      if (match) {
+        if (currentItem) parsedItems.push(currentItem);
+        currentItem = {
+          name: match[1].trim(),
+          calories: parseInt(match[2]),
+          protein: null,
+          carbs: null,
+          sodium: null,
+          description: ''
+        };
+      } else if (currentItem) {
+        const proteinMatch = line.match(/(\d+)g?\s*prot/i);
+        const carbsMatch = line.match(/(\d+)g?\s*carb/i);
+        const sodiumMatch = line.match(/(\d+)mg?\s*sod/i);
+
+        if (proteinMatch) currentItem.protein = parseInt(proteinMatch[1]);
+        if (carbsMatch) currentItem.carbs = parseInt(carbsMatch[1]);
+        if (sodiumMatch) currentItem.sodium = parseInt(sodiumMatch[1]);
+
+        if (!proteinMatch && !carbsMatch && !sodiumMatch && line.trim()) {
+          currentItem.description += (currentItem.description ? ' ' : '') + line.trim();
+        }
+      }
+    });
+    if (currentItem) parsedItems.push(currentItem);
+
+    if (parsedItems.length > 0) {
+      return (
+        <div className="space-y-3">
+          {parsedItems.map((item, idx) => (
+            <div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-4">
+                <h4 className="font-bold text-gray-800 text-base leading-tight mb-3">{item.name}</h4>
+                {item.description && (
+                  <p className="text-gray-500 text-sm leading-relaxed mb-3">{item.description}</p>
+                )}
+                <div className="grid grid-cols-3 gap-2 text-center py-3 bg-gray-50 rounded-xl border border-gray-100/50">
+                  <div>
+                    <span className="block text-sm font-bold text-gray-700">{item.calories}</span>
+                    <span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Cals</span>
+                  </div>
+                  {item.protein && (
+                    <div>
+                      <span className="block text-sm font-bold text-gray-700">{item.protein}g</span>
+                      <span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Prot</span>
+                    </div>
+                  )}
+                  {item.carbs && (
+                    <div>
+                      <span className="block text-sm font-bold text-gray-700">{item.carbs}g</span>
+                      <span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Carb</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // Regular formatted text
     return (
-      <div className="space-y-4">
-        {sections.map((section, idx) => {
-          // Check if section contains nutrition data pattern
-          const hasCalories = /(\d+)\s*cal/i.test(section);
-          const hasProtein = /(\d+)g?\s*prot/i.test(section);
-          const hasSodium = /(\d+)mg?\s*sod/i.test(section);
-
-          if (hasCalories || hasProtein || hasSodium) {
-            const caloriesMatch = section.match(/(\d+)\s*cal/i);
-            const proteinMatch = section.match(/(\d+)g?\s*prot/i);
-            const sodiumMatch = section.match(/(\d+)mg?\s*sod/i);
-            const carbsMatch = section.match(/(\d+)g?\s*carb/i);
-
-            // Extract item name (usually before the first number)
-            const nameMatch = section.match(/^([^0-9]+)/);
-            const itemName = nameMatch ? nameMatch[1].replace(/[*-]/g, '').trim() : '';
-
+      <div className="space-y-3">
+        {lines.map((line, i) => {
+          if (line.startsWith('**') || line.includes('**')) {
+            return <div key={i} className="font-bold text-slate-800 text-base mb-2"><FormattedText text={line} /></div>;
+          }
+          if (line.startsWith('-') || line.startsWith('•')) {
             return (
-              <div key={idx} className="bg-gradient-to-br from-emerald-50 to-cyan-50 rounded-2xl p-4 border border-emerald-100">
-                {itemName && <div className="font-bold text-slate-800 mb-3 text-base">{itemName}</div>}
-                <div className="flex flex-wrap">
-                  {caloriesMatch && renderNutritionBadge('Cal', caloriesMatch[1], 'bg-emerald-100 text-emerald-800')}
-                  {proteinMatch && renderNutritionBadge('Protein', proteinMatch[1] + 'g', 'bg-blue-100 text-blue-800')}
-                  {carbsMatch && renderNutritionBadge('Carbs', carbsMatch[1] + 'g', 'bg-amber-100 text-amber-800')}
-                  {sodiumMatch && renderNutritionBadge('Sodium', sodiumMatch[1] + 'mg', 'bg-red-100 text-red-800')}
-                </div>
-                <div className="text-xs text-slate-600 mt-2 leading-relaxed">
-                  {section.split('\n').slice(1).join(' ')}
-                </div>
+              <div key={i} className="flex items-start gap-2 mb-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-2 shrink-0" />
+                <span className="text-slate-700 text-sm">{line.replace(/^[-•]\s*/, '')}</span>
               </div>
             );
           }
-
-          // Regular text with formatting
-          const formattedSection = section.split('\n').map((line, i) => {
-            if (line.startsWith('**') || line.includes('**')) {
-              return <div key={i} className="font-bold text-slate-800 mb-2"><FormattedText text={line} /></div>;
-            }
-            if (line.startsWith('-') || line.startsWith('•')) {
-              return (
-                <div key={i} className="flex items-start gap-2 mb-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
-                  <span className="text-slate-700">{line.replace(/^[-•]\s*/, '')}</span>
-                </div>
-              );
-            }
-            return <p key={i} className="text-slate-700 mb-2">{line}</p>;
-          });
-
-          return <div key={idx}>{formattedSection}</div>;
+          return <p key={i} className="text-slate-700 text-sm leading-relaxed">{line}</p>;
         })}
       </div>
     );
   };
 
   return (
-    <div className="fixed inset-0 top-16 flex flex-col bg-gradient-to-b from-stone-50 to-gray-100 z-40 font-sans">
+    <div className="fixed inset-0 top-16 flex flex-col bg-stone-50 z-40 font-sans">
       <div className="flex-1 overflow-y-auto p-5 space-y-6">
         {chatHistory.map((msg, idx) => (
           <div key={idx} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-            <div className={`max-w-[85%] rounded-2xl p-5 text-sm leading-relaxed shadow-lg font-medium ${msg.role === 'user' ? 'bg-emerald-800 text-white rounded-tr-none' : 'bg-white text-gray-800 rounded-tl-none border border-gray-200'}`}>
+            <div className={`max-w-[85%] rounded-2xl p-5 text-sm leading-relaxed shadow-sm font-medium ${msg.role === 'user' ? 'bg-emerald-800 text-white rounded-tr-none' : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'}`}>
               {msg.role === 'user' ? (
                 <p className="text-sm leading-relaxed">{msg.content}</p>
               ) : (
@@ -464,7 +490,7 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
         ))}
         {isTyping && (
           <div className="flex items-center gap-3 ml-4">
-            <div className="bg-white p-4 rounded-2xl shadow-lg border border-gray-200 inline-flex items-center gap-3">
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 inline-flex items-center gap-3">
               <div className="flex gap-1">
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -476,8 +502,8 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
         )}
         <div ref={chatEndRef} className="h-20" />
       </div>
-      <div className="bg-white border-t border-gray-200 p-4 pb-10 flex gap-3 shrink-0 shadow-lg">
-        <input type="text" value={userQuery} onChange={e => setUserQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendChat()} className="flex-1 p-4 rounded-xl bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-sm tracking-tight" placeholder="Ask about nutrition, allergens, menu items..."/>
+      <div className="bg-white border-t border-gray-100 p-4 pb-10 flex gap-3 shrink-0">
+        <input type="text" value={userQuery} onChange={e => setUserQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendChat()} className="flex-1 p-4 rounded-xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-sm tracking-tight" placeholder="Ask about nutrition, allergens, menu items..."/>
         <button onClick={() => handleSendChat()} className="bg-emerald-800 text-white p-4 rounded-xl shadow-lg active:scale-90 transition-all hover:bg-emerald-900"><Send className="w-5 h-5" /></button>
       </div>
     </div>

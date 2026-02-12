@@ -84,16 +84,18 @@ const DEFAULT_MENU = [
 
 function Badge({ children }) {
   const colors = {
-    blue: 'bg-blue-50 text-blue-700 border-blue-100',
-    green: 'bg-green-50 text-green-700 border-green-100',
-    orange: 'bg-orange-50 text-orange-700 border-orange-100',
-    purple: 'bg-purple-50 text-purple-700 border-purple-100',
-    red: 'bg-red-50 text-red-700 border-red-100',
+    blue: 'bg-blue-100 text-blue-800 border-blue-200',
+    green: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    orange: 'bg-orange-100 text-orange-800 border-orange-200',
+    purple: 'bg-purple-100 text-purple-800 border-purple-200',
+    red: 'bg-rose-100 text-rose-800 border-rose-200',
+    teal: 'bg-teal-100 text-teal-800 border-teal-200',
   };
   let color = colors.blue;
   const text = typeof children === 'string' ? children : '';
   if (text.includes('Vegan') || text.includes('Vegetarian')) color = colors.green;
   if (text.includes('Protein')) color = colors.purple;
+  if (text.includes('Fiber')) color = colors.teal;
   if (text.includes('Heart') || text.includes('Sodium') || text.includes('Spicy')) color = colors.red;
   return <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase ${color}`}>{children}</span>;
 }
@@ -1193,6 +1195,13 @@ export default function Home() {
     if (activeFilters.fit && !item.tags?.includes('Fit')) return false;
 
     return true;
+  }).map(item => {
+    // Auto-tag items based on nutritional content
+    const autoTags = [...(item.tags || [])];
+    if (item.protein >= 25 && !autoTags.includes('High Protein')) autoTags.push('High Protein');
+    if (item.fiber >= 8 && !autoTags.includes('High Fiber')) autoTags.push('High Fiber');
+    if ((item.name?.toLowerCase().includes('spicy') || item.description?.toLowerCase().includes('spicy') || item.description?.toLowerCase().includes('cajun') || item.name?.toLowerCase().includes('cajun')) && !autoTags.includes('Spicy')) autoTags.push('Spicy');
+    return { ...item, tags: autoTags };
   }).sort((a, b) => {
     // Sort by meal period: Breakfast -> Lunch -> Dinner -> All Day
     const mealOrder = { 'Breakfast': 0, 'Lunch': 1, 'Dinner': 2, 'All Day': 3 };

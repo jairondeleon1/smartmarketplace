@@ -923,6 +923,7 @@ export default function Home() {
   const [myPlate, setMyPlate] = useState([]);
   const [isTrayModalOpen, setIsTrayModalOpen] = useState(false);
   const [isWeeklyPlannerOpen, setIsWeeklyPlannerOpen] = useState(false);
+  const [isChartsOpen, setIsChartsOpen] = useState(false);
   const [customVegUrl, setCustomVegUrl] = useState("");
   const [customVeganUrl, setCustomVeganUrl] = useState("");
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
@@ -1035,6 +1036,9 @@ export default function Home() {
                   <button id="week-planner" onClick={() => setIsWeeklyPlannerOpen(true)} className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 border border-slate-800 font-sans font-bold uppercase tracking-widest text-xs active:scale-95 transition-all font-bold">
                     <Wand className="w-5 h-5 text-emerald-400 font-sans font-bold" /> Plan My Whole Week Meal
                   </button>
+                  <button onClick={() => setIsChartsOpen(true)} className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white p-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 border border-blue-700 font-sans font-bold uppercase tracking-widest text-xs active:scale-95 transition-all font-bold">
+                    <Sparkles className="w-5 h-5 font-sans font-bold" /> View Nutrition Analytics
+                  </button>
                   <div id="ai-banner" onClick={() => changeView('chat')} className="w-full bg-gradient-to-r from-indigo-700 via-purple-600 to-pink-500 rounded-2xl p-5 text-white shadow-2xl cursor-pointer transform transition-all hover:scale-[1.01] flex items-center justify-between text-left border border-white/10 group overflow-hidden font-bold">
                     <div className="flex items-center gap-4 relative z-10 font-sans font-bold"><div className="bg-white/20 p-2 rounded-xl backdrop-blur-md border border-white/10 font-sans font-bold"><Sparkles className="w-5 h-5 text-white animate-pulse font-sans font-bold" /></div><div><h3 className="font-bold text-sm uppercase tracking-widest text-white font-sans font-bold">Ask AI Assistant</h3><p className="text-white/80 text-[11px] font-medium italic opacity-80 font-sans font-bold">Nutrition Guide & Choices</p></div></div>
                     <div className="bg-white/20 p-2 rounded-full border border-white/10 text-white transition-transform group-hover:translate-x-1 shadow-inner font-sans font-bold"><ArrowRight className="w-5 h-5 font-sans font-bold" /></div>
@@ -1091,6 +1095,8 @@ export default function Home() {
       />
 
       <WeeklyPlannerModal isOpen={isWeeklyPlannerOpen} onClose={() => setIsWeeklyPlannerOpen(false)} menuItems={menuItems} addToPlate={addToPlate} />
-    </div>
-  );
-}
+
+      <NutritionCharts isOpen={isChartsOpen} onClose={() => setIsChartsOpen(false)} menuItems={menuItems} />
+      </div>
+      );
+      }

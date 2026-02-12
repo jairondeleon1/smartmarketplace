@@ -1069,11 +1069,30 @@ export default function Home() {
     return (day === 'Saturday' || day === 'Sunday') ? 'Monday' : day;
   };
 
-  const [view, setView] = useState('customer'); 
-  const [menuItems, setMenuItems] = useState(() => {
-    const saved = localStorage.getItem('smartmarketplace_menu');
-    return saved ? JSON.parse(saved) : DEFAULT_MENU;
+  const [view, setView] = useState('customer');
+  
+  const { data: menuItems = [], isLoading: isLoadingMenu } = useQuery({
+    queryKey: ['menuItems'],
+    queryFn: async () => {
+      const items = await base44.entities.MenuItem.list();
+      if (items.length === 0) {
+        // Initialize with default menu
+        await base44.entities.MenuItem.bulkCreate(DEFAULT_MENU);
+        return DEFAULT_MENU;
+      }
+      return items;
+    },
+    initialData: DEFAULT_MENU,
   });
+  
+  const setMenuItems = async (newItems) => {
+    // Delete all existing items
+    const existing = await base44.entities.MenuItem.list();
+    await Promise.all(existing.map(item => base44.entities.MenuItem.delete(item.id)));
+    // Create new items
+    await base44.entities.MenuItem.bulkCreate(newItems);
+    queryClient.invalidateQueries({ queryKey: ['menuItems'] });
+  };
   const [myPlate, setMyPlate] = useState([]);
   const [isTrayModalOpen, setIsTrayModalOpen] = useState(false);
   const [isWeeklyPlannerOpen, setIsWeeklyPlannerOpen] = useState(false);
@@ -1089,6 +1108,7 @@ export default function Home() {
   const [newItem, setNewItem] = useState({ name: '', day: 'Monday', station: "Chef's Table", ingredients: '', calories: '', protein: '', carbs: '', fat: '', isVeg: false, isVegan: false });
   const [activeFilters, setActiveFilters] = useState({ vegetarian: false, vegan: false, fit: false });
   const dayScrollRef = useRef(null);
+  const queryClient = useQueryClient();
 
   const changeView = (v) => { setView(v); setIsMobileMenuOpen(false); window.scrollTo(0,0); };
 
@@ -1116,24 +1136,26 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('smartmarketplace_menu', JSON.stringify(menuItems));
-  }, [menuItems]);
+
 
   const addToPlate = (item) => {
     setMyPlate(prev => [...prev, item]);
   };
 
-  const handleAddItem = (e) => {
+  const handleAddItem = async (e) => {
     e.preventDefault();
     const tags = [];
     if (newItem.isVeg) tags.push('Vegetarian');
     if (newItem.isVegan) tags.push('Vegan');
-    setMenuItems([...menuItems, { ...newItem, id: Date.now(), calories: Number(newItem.calories), protein: Number(newItem.protein), tags }]);
+    await base44.entities.MenuItem.create({ ...newItem, calories: Number(newItem.calories), protein: Number(newItem.protein), tags });
+    queryClient.invalidateQueries({ queryKey: ['menuItems'] });
     setNewItem({ name: '', day: 'Monday', station: "Chef's Table", ingredients: '', calories: '', protein: '', carbs: '', fat: '', isVeg: false, isVegan: false });
   };
 
-  const handleDeleteItem = (id) => setMenuItems(menuItems.filter(i => i.id !== id));
+  const handleDeleteItem = async (id) => {
+    await base44.entities.MenuItem.delete(id);
+    queryClient.invalidateQueries({ queryKey: ['menuItems'] });
+  };
 
   const handleSendChat = async (overrideText = null) => {
     const textToSend = overrideText || userQuery;

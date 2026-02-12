@@ -35,6 +35,7 @@ import {
   Info
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import NutritionCharts from "../components/NutritionCharts";
 
 // --- CONSTANTS ---

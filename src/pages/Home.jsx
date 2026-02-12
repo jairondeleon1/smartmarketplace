@@ -86,7 +86,7 @@ function Badge({ children }) {
   const colors = {
     blue: 'bg-blue-100 text-blue-800 border-blue-200',
     green: 'bg-green-200 text-green-900 border-green-300',
-    lime: 'bg-lime-200 text-lime-900 border-lime-300',
+    yellow: 'bg-yellow-100 text-yellow-900 border-yellow-200',
     orange: 'bg-orange-100 text-orange-800 border-orange-200',
     purple: 'bg-purple-100 text-purple-800 border-purple-200',
     red: 'bg-rose-100 text-rose-800 border-rose-200',
@@ -95,7 +95,7 @@ function Badge({ children }) {
   let color = colors.blue;
   const text = typeof children === 'string' ? children : '';
   if (text.includes('Vegan')) color = colors.green;
-  if (text.includes('Vegetarian') && !text.includes('Vegan')) color = colors.lime;
+  if (text.includes('Vegetarian') && !text.includes('Vegan')) color = colors.yellow;
   if (text.includes('Protein')) color = colors.purple;
   if (text.includes('Fiber')) color = colors.teal;
   if (text.includes('Heart') || text.includes('Sodium') || text.includes('Spicy')) color = colors.red;

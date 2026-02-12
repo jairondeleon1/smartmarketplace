@@ -404,10 +404,27 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
 function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomVegUrl, customVeganUrl, setCustomVeganUrl, newItem, setNewItem, handleAddItem, handleDeleteItem }) {
   const [isSyncing, setIsSyncing] = useState(null);
   const [uploadedFiles, setUploadedFiles] = useState({
+    weekMenu: null,
     fda: null,
     allergen: null,
     ingredients: null
   });
+
+  const handleWeekMenuUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsSyncing("week-menu");
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setUploadedFiles(prev => ({ ...prev, weekMenu: file_url }));
+      alert('✓ Week Menu uploaded - ready to process');
+    } catch (error) {
+      alert('Error: ' + error.message);
+    } finally {
+      setIsSyncing(null);
+      e.target.value = '';
+    }
+  };
 
   const handleFDAUpload = async (e) => {
     const file = e.target.files[0];
@@ -458,8 +475,8 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   };
 
   const handleProcessAndPublish = async () => {
-    if (!uploadedFiles.fda) {
-      alert('Please upload FDA Menu PDF first');
+    if (!uploadedFiles.weekMenu) {
+      alert('Please upload Week Menu PDF first');
       return;
     }
 
@@ -467,11 +484,11 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     try {
       let finalItems = [];
 
-      // Step 1: Process FDA Menu - extract menu items AND nutritional data
-      console.log('Step 1: Processing FDA Menu for items and nutrition...');
-      const fdaResult = await base44.integrations.Core.InvokeLLM({
-        prompt: `Extract ALL menu items from this FDA nutrition PDF. For each item, extract: name (remove any EUR: prefix or codes in parentheses), station/category, day of week if shown, description if available, calories, protein (g), carbs (g), fat (g), sodium (mg), fiber (g), sugar (g). Return as structured JSON with all items.`,
-        file_urls: [uploadedFiles.fda],
+      // Step 1: Process Week Menu - extract items with recipe numbers
+      console.log('Step 1: Processing Week Menu...');
+      const weekResult = await base44.integrations.Core.InvokeLLM({
+        prompt: `Extract menu items from this weekly menu PDF. For each item, extract: name, recipe_number (the number in parentheses at the end), station, day of week, description. Return as structured JSON.`,
+        file_urls: [uploadedFiles.weekMenu],
         add_context_from_internet: false,
         response_json_schema: {
           type: "object",
@@ -482,16 +499,10 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                 type: "object",
                 properties: {
                   name: { type: "string" },
+                  recipe_number: { type: "string" },
                   station: { type: "string" },
                   day: { type: "string" },
-                  description: { type: "string" },
-                  calories: { type: "number" },
-                  protein: { type: "number" },
-                  carbs: { type: "number" },
-                  fat: { type: "number" },
-                  sodium: { type: "number" },
-                  fiber: { type: "number" },
-                  sugar: { type: "number" }
+                  description: { type: "string" }
                 }
               }
             }
@@ -499,18 +510,69 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         }
       });
 
-      if (fdaResult?.items) {
-        finalItems = fdaResult.items.map((item, idx) => ({ ...item, id: Date.now() + idx }));
-        console.log('FDA Menu extracted:', finalItems.length, 'items');
+      if (weekResult?.items) {
+        finalItems = weekResult.items.map((item, idx) => ({ ...item, id: Date.now() + idx }));
+        console.log('Week Menu extracted:', finalItems);
       } else {
-        console.error('FDA extraction failed:', fdaResult);
+        console.error('Week Menu extraction failed:', weekResult);
       }
 
-      // Step 2: Process Allergen if uploaded
+      // Step 2: Process FDA if uploaded - match by recipe number
+      if (uploadedFiles.fda) {
+        console.log('Step 2: Processing FDA Data...');
+        const fdaResult = await base44.integrations.Core.InvokeLLM({
+          prompt: `Extract FDA nutritional data from this PDF. For each menu item, extract: recipe_number (the number in parentheses), calories, protein (g), carbs (g), fat (g), sodium (mg), fiber (g), sugar (g). Return as structured JSON.`,
+          file_urls: [uploadedFiles.fda],
+          add_context_from_internet: false,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              items: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    recipe_number: { type: "string" },
+                    calories: { type: "number" },
+                    protein: { type: "number" },
+                    carbs: { type: "number" },
+                    fat: { type: "number" },
+                    sodium: { type: "number" },
+                    fiber: { type: "number" },
+                    sugar: { type: "number" }
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        if (fdaResult?.items) {
+          console.log('FDA Data extracted:', fdaResult.items);
+          let matchCount = 0;
+          
+          finalItems = finalItems.map(item => {
+            const match = fdaResult.items.find(fda => fda.recipe_number === item.recipe_number);
+            if (match) {
+              matchCount++;
+              console.log(`✓ Matched FDA by recipe #${item.recipe_number}: ${item.name}`, match);
+              return { ...item, calories: match.calories, protein: match.protein, carbs: match.carbs, fat: match.fat, sodium: match.sodium, fiber: match.fiber, sugar: match.sugar };
+            } else {
+              console.log(`✗ No FDA match for recipe #${item.recipe_number}: ${item.name}`);
+              return item;
+            }
+          });
+          console.log(`FDA: Matched ${matchCount} of ${finalItems.length} items`);
+        } else {
+          console.error('FDA extraction failed:', fdaResult);
+        }
+      }
+
+      // Step 3: Process Allergen if uploaded - match by recipe number
       if (uploadedFiles.allergen) {
         console.log('Step 3: Processing Allergen Data...');
         const allergenResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `Extract allergen information from this PDF. For each menu item, extract: name, allergens (array of allergen names like Milk, Wheat, Egg, Soy, Fish, Shellfish, Tree Nuts, Peanuts, etc.), and dietary tags (array like Vegetarian, Vegan, Fit, Dairy Free, Gluten Free, etc.). Match names exactly as shown in the PDF. Return as structured JSON.`,
+          prompt: `Extract allergen information from this PDF. For each menu item, extract: recipe_number (the number in parentheses), allergens (array of allergen names like Milk, Wheat, Egg, Soy, Fish, Shellfish, Tree Nuts, Peanuts, etc.), and dietary tags (array like Vegetarian, Vegan, Fit, Dairy Free, Gluten Free, etc.). Return as structured JSON.`,
           file_urls: [uploadedFiles.allergen],
           add_context_from_internet: false,
           response_json_schema: {
@@ -521,7 +583,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                 items: {
                   type: "object",
                   properties: {
-                    name: { type: "string" },
+                    recipe_number: { type: "string" },
                     allergens: { type: "array", items: { type: "string" } },
                     tags: { type: "array", items: { type: "string" } }
                   }
@@ -535,28 +597,14 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
           console.log('Allergen Data extracted:', allergenResult.items);
           let matchCount = 0;
           
-          // Helper function to normalize names for matching
-          const normalizeName = (name) => {
-            if (!name) return '';
-            return name
-              .toLowerCase()
-              .replace(/^(eur|ingredient):\s*/i, '') // Remove EUR: or Ingredient: prefix
-              .replace(/\s*\([^)]*\)/g, '') // Remove anything in parentheses
-              .trim();
-          };
-          
           finalItems = finalItems.map(item => {
-            const normalizedItemName = normalizeName(item.name);
-            const match = allergenResult.items.find(al => {
-              const normalizedAllergenName = normalizeName(al.name);
-              return normalizedAllergenName === normalizedItemName;
-            });
+            const match = allergenResult.items.find(al => al.recipe_number === item.recipe_number);
             if (match) {
               matchCount++;
-              console.log(`✓ Matched Allergen data for: ${item.name} ← ${match.name}`, match);
+              console.log(`✓ Matched Allergen by recipe #${item.recipe_number}: ${item.name}`, match);
               return { ...item, allergens: match.allergens, tags: match.tags };
             } else {
-              console.log(`✗ No Allergen match for: ${item.name}`);
+              console.log(`✗ No Allergen match for recipe #${item.recipe_number}: ${item.name}`);
               return item;
             }
           });
@@ -624,7 +672,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       // Publish to menu
       console.log('Final merged items:', finalItems);
       setMenuItems(finalItems);
-      setUploadedFiles({ fda: null, allergen: null, ingredients: null });
+      setUploadedFiles({ weekMenu: null, fda: null, allergen: null, ingredients: null });
       alert(`✅ Published ${finalItems.length} menu items! Check browser console (F12) for details.`);
     } catch (error) {
       alert('Error processing files: ' + error.message);
@@ -634,9 +682,10 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   };
 
   const syncOptions = [
-    { label: "1. FDA Menu PDF (Required)", type: "fda", icon: Sparkles, accept: ".pdf", handler: handleFDAUpload, desc: "Menu items + nutrition" }, 
-    { label: "2. Allergen PDF (Optional)", type: "allergen", icon: AlertTriangle, accept: ".pdf", handler: handleAllergenUpload, desc: "Allergens & tags" },
-    { label: "3. Ingredients CSV (Optional)", type: "ingredients", icon: FileText, accept: ".csv", handler: handleIngredientsUpload, desc: "Ingredient lists" }
+    { label: "1. Week Menu PDF", type: "week-menu", icon: Calendar, accept: ".pdf", handler: handleWeekMenuUpload, desc: "Menu items with recipe #s" }, 
+    { label: "2. FDA Nutrition PDF", type: "fda", icon: Sparkles, accept: ".pdf", handler: handleFDAUpload, desc: "Match by recipe #" }, 
+    { label: "3. Allergen PDF", type: "allergen", icon: AlertTriangle, accept: ".pdf", handler: handleAllergenUpload, desc: "Match by recipe #" },
+    { label: "4. Ingredients CSV", type: "ingredients", icon: FileText, accept: ".csv", handler: handleIngredientsUpload, desc: "Match by recipe #" }
   ];
 
   return (
@@ -691,8 +740,12 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
             </div>
             <div className="space-y-1 text-blue-700 mb-3">
               <div className="flex items-center gap-2">
+                {uploadedFiles.weekMenu ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-300" />}
+                <span>Week Menu (Required)</span>
+              </div>
+              <div className="flex items-center gap-2">
                 {uploadedFiles.fda ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-300" />}
-                <span>FDA Menu (Required)</span>
+                <span>FDA Nutrition</span>
               </div>
               <div className="flex items-center gap-2">
                 {uploadedFiles.allergen ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-300" />}
@@ -705,7 +758,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
             </div>
             <button
               onClick={handleProcessAndPublish}
-              disabled={!uploadedFiles.fda || isSyncing === "publish"}
+              disabled={!uploadedFiles.weekMenu || isSyncing === "publish"}
               className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
             >
               {isSyncing === "publish" ? (

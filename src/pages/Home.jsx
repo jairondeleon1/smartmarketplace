@@ -35,6 +35,7 @@ import {
   Info
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import NutritionCharts from "../components/NutritionCharts";
 
 // --- CONSTANTS ---
 const VEGAN_URL = "https://i.postimg.cc/MH7cDSz4/vegan.png"; 

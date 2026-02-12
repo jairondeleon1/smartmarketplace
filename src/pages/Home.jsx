@@ -346,7 +346,7 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen }) {
     <nav className="bg-emerald-800 text-white p-4 shadow-lg sticky top-0 z-50 h-16 flex items-center w-full shrink-0 font-sans font-bold">
       <div className="w-full max-w-5xl mx-auto flex justify-between items-center px-2 font-sans font-bold">
         <div className="flex items-center gap-2 cursor-pointer font-sans font-bold font-bold" onClick={() => changeView('customer')}>
-          <Utensils className="w-6 h-6 text-white font-bold" />
+          <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698cee888040f55d6a3c5040/066c08658_SmartMenuIQ100x100.png" alt="SmartMenu IQ Logo" className="w-8 h-8 rounded-full" />
           <h1 className="text-xl font-bold uppercase tracking-widest text-white font-sans font-bold">SmartMenu IQ</h1>
         </div>
         <div className="hidden md:flex gap-6 items-center text-sm font-bold uppercase tracking-widest font-sans font-bold">

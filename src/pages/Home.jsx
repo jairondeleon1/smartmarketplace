@@ -343,7 +343,7 @@ function TraySummary({ plate, onClick }) {
 
 function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen }) {
   return (
-    <nav className="bg-teal-800 text-white p-4 shadow-lg sticky top-0 z-50 h-16 flex items-center w-full shrink-0 font-sans font-bold">
+    <nav className="bg-slate-800 text-white p-4 shadow-lg sticky top-0 z-50 h-16 flex items-center w-full shrink-0 font-sans font-bold">
       <div className="w-full max-w-5xl mx-auto flex justify-between items-center px-2 font-sans font-bold">
         <div className="flex items-center gap-2 cursor-pointer font-sans font-bold font-bold" onClick={() => changeView('customer')}>
           <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698cee888040f55d6a3c5040/066c08658_SmartMenuIQ100x100.png" alt="SmartMenu IQ Logo" className="w-8 h-8 rounded-full" />
@@ -359,7 +359,7 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen }) {
         </div>
       </div>
       {isMobileMenuOpen && (
-        <div className="fixed top-16 left-0 right-0 bg-teal-800 border-t border-teal-700 shadow-xl md:hidden z-[110] flex flex-col p-4 gap-4 font-bold uppercase text-sm tracking-widest font-sans text-white">
+        <div className="fixed top-16 left-0 right-0 bg-slate-800 border-t border-slate-700 shadow-xl md:hidden z-[110] flex flex-col p-4 gap-4 font-bold uppercase text-sm tracking-widest font-sans text-white">
           <button onClick={() => { changeView('customer'); setIsMobileMenuOpen(false); }} className="text-left font-bold">Daily Menu</button>
           <button onClick={() => { changeView('chat'); setIsMobileMenuOpen(false); }} className="text-left font-bold">AI Assistant</button>
           <button onClick={() => { changeView('admin'); setIsMobileMenuOpen(false); }} className="text-left font-bold">Admin</button>

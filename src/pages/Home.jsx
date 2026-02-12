@@ -736,7 +736,52 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       }
 
       setProcessingProgress(60);
-      
+
+      // Step 2.5: Generate AI descriptions for items without good descriptions
+      setProcessingStep('Generating Menu Descriptions...');
+      setProcessingProgress(50);
+      console.log('Step 2.5: Generating AI Descriptions...');
+
+      const itemsNeedingDescriptions = finalItems.filter(item => 
+        !item.description || item.description.length < 10 || item.description.toLowerCase().includes(item.name.toLowerCase())
+      );
+
+      if (itemsNeedingDescriptions.length > 0) {
+        const descPrompt = `Generate brief, appetizing 1-sentence descriptions for these menu items. Make each description unique and descriptive (NOT just the item name). Return as JSON array with name and description fields.\n\nItems:\n${itemsNeedingDescriptions.map(i => `- ${i.name}`).join('\n')}`;
+
+        const descResult = await base44.integrations.Core.InvokeLLM({
+          prompt: descPrompt,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              items: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string" },
+                    description: { type: "string" }
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        if (descResult?.items) {
+          console.log('AI Descriptions generated:', descResult.items.length);
+          finalItems = finalItems.map(item => {
+            const match = descResult.items.find(d => d.name.toLowerCase().includes(item.name.toLowerCase().slice(0, 10)));
+            if (match && (!item.description || item.description.length < 10)) {
+              return { ...item, description: match.description };
+            }
+            return item;
+          });
+        }
+      }
+
+      setProcessingProgress(65);
+
       // Step 3: Process Allergen if uploaded - match by recipe number
       if (uploadedFiles.allergen) {
         console.log('Step 3: Processing Allergen Data...');

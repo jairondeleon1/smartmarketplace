@@ -496,7 +496,7 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
-              <span className="text-xs font-bold text-gray-600">AI is thinking...</span>
+              <span className="text-xs font-bold text-gray-600">Smart Menu IQ...</span>
             </div>
           </div>
         )}

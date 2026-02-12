@@ -115,14 +115,14 @@ function FormattedText({ text }) {
 function VegProgramIcon({ url, className = "w-6 h-6" }) {
   const [error, setError] = useState(false);
   const src = url || VEG_URL;
-  if (error) return <Leaf className={`${className} text-emerald-600`} />;
+  if (error) return <Leaf className={`${className} text-teal-600`} />;
   return <img src={src} alt="Vegetarian" className={`${className} object-contain`} onError={() => setError(true)} />;
 }
 
 function VeganProgramIcon({ url, className = "w-6 h-6" }) {
   const [error, setError] = useState(false);
   const src = url || VEGAN_URL;
-  if (error) return <CheckCircle className={`${className} text-emerald-800`} />;
+  if (error) return <CheckCircle className={`${className} text-teal-800`} />;
   return <img src={src} alt="Vegan" className={`${className} object-contain`} onError={() => setError(true)} />;
 }
 
@@ -172,7 +172,7 @@ function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPlate }) {
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4 font-sans font-bold">
       <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95">
         <div className="p-8 bg-slate-900 text-white flex justify-between items-center border-b border-white/5">
-          <h3 className="font-bold text-2xl flex items-center gap-2 uppercase tracking-tight text-white"><Wand className="w-6 h-6 text-emerald-400" /> AI Strategy</h3>
+          <h3 className="font-bold text-2xl flex items-center gap-2 uppercase tracking-tight text-white"><Wand className="w-6 h-6 text-teal-400" /> AI Strategy</h3>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition"><X className="w-5 h-5 text-white" /></button>
         </div>
         <div className="p-8 space-y-6 font-medium font-sans">
@@ -180,19 +180,19 @@ function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPlate }) {
             <>
               <div className="grid grid-cols-1 gap-2 font-sans font-bold">
                 {['High Protein', 'Vegetarian', 'Balanced Strategy'].map(g => (
-                  <button key={g} onClick={() => setGoal(g)} className={`p-4 rounded-xl border-2 text-left transition-all font-sans font-bold ${goal === g ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-500'}`}>
+                  <button key={g} onClick={() => setGoal(g)} className={`p-4 rounded-xl border-2 text-left transition-all font-sans font-bold ${goal === g ? 'border-teal-500 bg-teal-50 text-teal-900' : 'border-gray-100 text-gray-500'}`}>
                     <span className="uppercase text-xs tracking-widest font-sans font-bold">{g}</span>
                   </button>
                 ))}
               </div>
-              <button onClick={generatePlan} disabled={isLoading} className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold uppercase text-sm shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all font-sans font-bold">
+              <button onClick={generatePlan} disabled={isLoading} className="w-full bg-teal-600 text-white py-4 rounded-xl font-bold uppercase text-sm shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all font-sans font-bold">
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Optimize Week'}
               </button>
             </>
           ) : (
             <div className="space-y-3 text-sm font-sans font-bold">
               {plan.map((entry, idx) => (
-                <div key={idx} className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-slate-800 font-sans"><span className="text-emerald-700 w-12 text-[10px] uppercase border-r border-gray-200 pr-2">{entry.day.slice(0,3)}</span><span className="truncate">{entry.item.name}</span></div>
+                <div key={idx} className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-slate-800 font-sans"><span className="text-teal-700 w-12 text-[10px] uppercase border-r border-gray-200 pr-2">{entry.day.slice(0,3)}</span><span className="truncate">{entry.item.name}</span></div>
               ))}
               <button onClick={() => { plan.forEach(e => addToPlate(e.item)); onClose(); }} className="w-full py-4 bg-slate-900 text-white font-bold uppercase text-xs rounded-xl mt-4 active:scale-95 transition-all tracking-widest font-sans font-bold">Add All to Tray</button>
             </div>
@@ -236,14 +236,14 @@ function TrayDetailsModal({ isOpen, onClose, plate, setPlate }) {
       <div className="bg-white rounded-t-[2.5rem] sm:rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
         <div className="p-6 bg-slate-900 text-white flex justify-between items-center shrink-0 font-sans font-bold">
           <div className="flex items-center gap-3">
-            <ShoppingBag className="w-6 h-6 text-emerald-400 font-sans font-bold" />
+            <ShoppingBag className="w-6 h-6 text-teal-400 font-sans font-bold" />
             <h3 className="font-bold text-xl uppercase tracking-tight font-sans text-white">My Nutrition Tray</h3>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition font-sans"><X className="w-6 h-6 text-white font-sans" /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4 font-sans font-bold">
-          {showSuccess && <div className="bg-emerald-50 text-emerald-800 p-4 rounded-xl text-xs font-bold border border-emerald-100 flex items-center gap-2 animate-in fade-in font-sans font-bold">Report Exported Successfully!</div>}
+          {showSuccess && <div className="bg-teal-50 text-teal-800 p-4 rounded-xl text-xs font-bold border border-teal-100 flex items-center gap-2 animate-in fade-in font-sans font-bold">Report Exported Successfully!</div>}
           {plate.length === 0 ? <div className="text-center py-12 text-gray-400 font-bold uppercase text-sm font-sans tracking-widest font-bold">Your tray is empty</div> : 
             plate.map((item, idx) => (
               <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group font-medium font-sans font-bold">
@@ -264,8 +264,8 @@ function TrayDetailsModal({ isOpen, onClose, plate, setPlate }) {
               <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm font-bold font-bold"><span className="block text-sm font-bold text-slate-800 font-sans font-bold">{totals.carbs}g</span><span className="text-[8px] text-gray-400 font-bold uppercase font-sans font-bold tracking-widest">Carbs</span></div>
               <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm font-bold font-bold"><span className="block text-sm font-bold text-slate-800 font-sans font-bold">{totals.sodium}mg</span><span className="text-[8px] text-gray-400 font-bold uppercase font-sans font-bold tracking-widest">Sod</span></div>
             </div>
-            <button onClick={handleDownloadReport} disabled={isExporting} className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold uppercase text-sm shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 font-sans font-bold tracking-widest">
-              {isExporting ? <Loader2 className="animate-spin w-4 h-4 font-sans font-bold" /> : <><Download className="w-4 h-4 font-sans text-emerald-100 font-bold" /> Download Report</>}
+            <button onClick={handleDownloadReport} disabled={isExporting} className="w-full py-4 bg-teal-600 text-white rounded-2xl font-bold uppercase text-sm shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 font-sans font-bold tracking-widest">
+              {isExporting ? <Loader2 className="animate-spin w-4 h-4 font-sans font-bold" /> : <><Download className="w-4 h-4 font-sans text-teal-100 font-bold" /> Download Report</>}
             </button>
           </div>
         )}
@@ -280,7 +280,7 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full animate-in fade-in zoom-in-95 duration-300 font-sans hover:shadow-md font-medium">
       <div className="p-5 flex-1 font-sans font-bold font-medium">
         <div className="flex justify-between items-start mb-2 font-sans font-bold">
-          <span className="text-[10px] font-bold uppercase text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-sans tracking-tight font-bold">{item.station}</span>
+          <span className="text-[10px] font-bold uppercase text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full font-sans tracking-tight font-bold">{item.station}</span>
           <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest font-sans font-bold font-bold"><Calendar className="w-3 h-3 font-bold"/> {item.day}</div>
         </div>
         <h4 className="font-bold text-gray-800 text-lg leading-tight flex items-center gap-2 mb-2 font-sans font-bold font-bold">
@@ -298,7 +298,7 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
         </div>
       </div>
       <div className="px-5 pb-5 flex gap-2 font-sans font-bold">
-        <button onClick={() => setShowDetails(!showDetails)} className="flex-1 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition font-sans font-bold">{showDetails ? 'Hide Info' : 'Nutrition Details'}</button>
+        <button onClick={() => setShowDetails(!showDetails)} className="flex-1 py-2 text-xs font-bold text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition font-sans font-bold">{showDetails ? 'Hide Info' : 'Nutrition Details'}</button>
         <button onClick={() => addToPlate(item)} className="w-10 flex items-center justify-center bg-gray-900 text-white rounded-lg transition active:scale-90 hover:bg-black font-sans font-bold"><Plus className="w-5 h-5 font-sans font-bold" /></button>
       </div>
       {showDetails && (
@@ -328,11 +328,11 @@ function TraySummary({ plate, onClick }) {
   return (
     <div onClick={onClick} className="fixed bottom-6 left-6 right-6 bg-slate-900 text-white rounded-2xl shadow-2xl p-4 z-50 flex justify-between items-center border border-white/10 transform transition hover:scale-[1.01] hover:bg-slate-800 cursor-pointer font-sans font-medium">
       <div className="flex items-center gap-3">
-        <div className="bg-emerald-500 p-2 rounded-xl shadow-lg font-sans"><ShoppingBag className="w-5 h-5 font-sans text-white" /></div>
+        <div className="bg-teal-500 p-2 rounded-xl shadow-lg font-sans"><ShoppingBag className="w-5 h-5 font-sans text-white" /></div>
         <div><p className="font-bold text-sm leading-tight tracking-tight text-white font-sans font-bold uppercase">My Tray ({plate.length})</p><p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest font-sans font-bold">Tap to View Details</p></div>
       </div>
       <div className="text-right pr-2 font-bold font-sans">
-        <span className="block font-bold text-emerald-400 text-lg leading-none tracking-tight font-sans font-bold">{totalCals}</span>
+        <span className="block font-bold text-teal-400 text-lg leading-none tracking-tight font-sans font-bold">{totalCals}</span>
         <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest font-sans font-bold">Total Cals</span>
       </div>
     </div>
@@ -343,23 +343,23 @@ function TraySummary({ plate, onClick }) {
 
 function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen }) {
   return (
-    <nav className="bg-emerald-800 text-white p-4 shadow-lg sticky top-0 z-50 h-16 flex items-center w-full shrink-0 font-sans font-bold">
+    <nav className="bg-teal-800 text-white p-4 shadow-lg sticky top-0 z-50 h-16 flex items-center w-full shrink-0 font-sans font-bold">
       <div className="w-full max-w-5xl mx-auto flex justify-between items-center px-2 font-sans font-bold">
         <div className="flex items-center gap-2 cursor-pointer font-sans font-bold font-bold" onClick={() => changeView('customer')}>
           <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698cee888040f55d6a3c5040/066c08658_SmartMenuIQ100x100.png" alt="SmartMenu IQ Logo" className="w-8 h-8 rounded-full" />
           <h1 className="text-xl font-bold uppercase tracking-widest text-white font-sans font-bold">SmartMenu IQ</h1>
         </div>
         <div className="hidden md:flex gap-6 items-center text-sm font-bold uppercase tracking-widest font-sans font-bold">
-          <button onClick={() => changeView('customer')} className={view === 'customer' ? 'text-white border-b-2 border-white pb-1' : 'text-emerald-100 opacity-70'}>Menu</button>
-          <button onClick={() => changeView('chat')} className={view === 'chat' ? 'text-white border-b-2 border-white pb-1' : 'text-emerald-100 opacity-70'}>AI Assistant</button>
-          <button onClick={() => changeView('admin')} className={view === 'admin' ? 'text-white border-b-2 border-white pb-1' : 'text-emerald-100 opacity-70'}>Admin</button>
+          <button onClick={() => changeView('customer')} className={view === 'customer' ? 'text-white border-b-2 border-white pb-1' : 'text-teal-100 opacity-70'}>Menu</button>
+          <button onClick={() => changeView('chat')} className={view === 'chat' ? 'text-white border-b-2 border-white pb-1' : 'text-teal-100 opacity-70'}>AI Assistant</button>
+          <button onClick={() => changeView('admin')} className={view === 'admin' ? 'text-white border-b-2 border-white pb-1' : 'text-teal-100 opacity-70'}>Admin</button>
         </div>
         <div className="md:hidden flex items-center gap-2">
            <button className="p-2" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>{isMobileMenuOpen ? <X className="text-white" /> : <MenuIcon className="text-white" />}</button>
         </div>
       </div>
       {isMobileMenuOpen && (
-        <div className="fixed top-16 left-0 right-0 bg-emerald-800 border-t border-emerald-700 shadow-xl md:hidden z-[110] flex flex-col p-4 gap-4 font-bold uppercase text-sm tracking-widest font-sans text-white">
+        <div className="fixed top-16 left-0 right-0 bg-teal-800 border-t border-teal-700 shadow-xl md:hidden z-[110] flex flex-col p-4 gap-4 font-bold uppercase text-sm tracking-widest font-sans text-white">
           <button onClick={() => { changeView('customer'); setIsMobileMenuOpen(false); }} className="text-left font-bold">Daily Menu</button>
           <button onClick={() => { changeView('chat'); setIsMobileMenuOpen(false); }} className="text-left font-bold">AI Assistant</button>
           <button onClick={() => { changeView('admin'); setIsMobileMenuOpen(false); }} className="text-left font-bold">Admin</button>
@@ -454,7 +454,7 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
           if (line.startsWith('-') || line.startsWith('•')) {
             return (
               <div key={i} className="flex items-start gap-2 mb-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-2 shrink-0" />
+                <div className="w-1.5 h-1.5 rounded-full bg-teal-600 mt-2 shrink-0" />
                 <span className="text-slate-700 text-sm">{line.replace(/^[-•]\s*/, '')}</span>
               </div>
             );
@@ -470,7 +470,7 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
       <div className="flex-1 overflow-y-auto p-5 space-y-6">
         {chatHistory.map((msg, idx) => (
           <div key={idx} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-            <div className={`max-w-[85%] rounded-2xl p-5 text-sm leading-relaxed shadow-sm font-medium ${msg.role === 'user' ? 'bg-emerald-800 text-white rounded-tr-none' : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'}`}>
+            <div className={`max-w-[85%] rounded-2xl p-5 text-sm leading-relaxed shadow-sm font-medium ${msg.role === 'user' ? 'bg-teal-800 text-white rounded-tr-none' : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'}`}>
               {msg.role === 'user' ? (
                 <p className="text-sm leading-relaxed">{msg.content}</p>
               ) : (
@@ -497,9 +497,9 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
           <div className="flex items-center gap-3 ml-4">
             <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 inline-flex items-center gap-3">
               <div className="flex gap-1">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
               <span className="text-xs font-bold text-gray-600">Smart Menu IQ...</span>
             </div>
@@ -508,8 +508,8 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
         <div ref={chatEndRef} className="h-20" />
       </div>
       <div className="bg-white border-t border-gray-100 p-4 pb-10 flex gap-3 shrink-0">
-        <input type="text" value={userQuery} onChange={e => setUserQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendChat()} className="flex-1 p-4 rounded-xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-sm tracking-tight" placeholder="Ask about nutrition, allergens, menu items..."/>
-        <button onClick={() => handleSendChat()} className="bg-emerald-800 text-white p-4 rounded-xl shadow-lg active:scale-90 transition-all hover:bg-emerald-900"><Send className="w-5 h-5" /></button>
+        <input type="text" value={userQuery} onChange={e => setUserQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendChat()} className="flex-1 p-4 rounded-xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-teal-500 font-bold text-sm tracking-tight" placeholder="Ask about nutrition, allergens, menu items..."/>
+        <button onClick={() => handleSendChat()} className="bg-teal-800 text-white p-4 rounded-xl shadow-lg active:scale-90 transition-all hover:bg-teal-900"><Send className="w-5 h-5" /></button>
       </div>
     </div>
   );
@@ -935,15 +935,15 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8 pb-32 font-sans overflow-x-hidden font-medium">
       <div className="flex justify-between items-center bg-white p-6 rounded-3xl border border-gray-100 shadow-sm font-sans font-bold">
-        <div><h2 className="text-2xl font-bold uppercase tracking-widest text-slate-900">Admin Hub</h2><p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1 text-emerald-800">Infrastructure Control</p></div>
+        <div><h2 className="text-2xl font-bold uppercase tracking-widest text-slate-900">Admin Hub</h2><p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1 text-teal-800">Infrastructure Control</p></div>
         <button onClick={onLogout} className="text-red-500 font-bold hover:bg-red-50 px-6 py-3 rounded-xl transition border border-red-100 uppercase text-[10px] tracking-widest">Logout</button>
       </div>
       <div className="grid lg:grid-cols-2 gap-8">
         <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
           <div className="flex justify-between items-center">
-            <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2 tracking-widest"><Upload className="w-4 h-4 text-emerald-600"/> Matrix Sync</h3>
+            <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2 tracking-widest"><Upload className="w-4 h-4 text-teal-600"/> Matrix Sync</h3>
             <div className="text-xs font-bold text-gray-500">
-              <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full">{menuItems.length} Items Loaded</span>
+              <span className="bg-teal-50 text-teal-700 px-3 py-1 rounded-full">{menuItems.length} Items Loaded</span>
             </div>
           </div>
           <div className="space-y-3">
@@ -958,14 +958,14 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                   />
                   <label 
                     htmlFor={`file-upload-${opt.type}`}
-                    className="w-full p-5 border-2 border-dashed border-emerald-100 rounded-2xl flex items-center gap-4 text-emerald-800 hover:bg-emerald-50 transition active:scale-[0.98] cursor-pointer"
+                    className="w-full p-5 border-2 border-dashed border-teal-100 rounded-2xl flex items-center gap-4 text-teal-800 hover:bg-teal-50 transition active:scale-[0.98] cursor-pointer"
                   >
                     {isSyncing === opt.type ? (
                       <Loader2 className="animate-spin w-6 h-6" />
                     ) : (
                       <>
-                        <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-                          <opt.icon className="w-5 h-5 text-emerald-600"/>
+                        <div className="bg-teal-50 p-3 rounded-xl border border-teal-100">
+                          <opt.icon className="w-5 h-5 text-teal-600"/>
                         </div>
                         <div className="flex-1 text-left">
                           <div className="text-xs font-bold uppercase tracking-widest text-slate-800">{opt.label}</div>
@@ -1004,11 +1004,11 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
               <div className="space-y-2">
                 <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                   <div 
-                    className="bg-emerald-600 h-full transition-all duration-500 rounded-full"
+                    className="bg-teal-600 h-full transition-all duration-500 rounded-full"
                     style={{ width: `${processingProgress}%` }}
                   />
                 </div>
-                <div className="flex items-center justify-center gap-2 text-xs text-emerald-700">
+                <div className="flex items-center justify-center gap-2 text-xs text-teal-700">
                   <Loader2 className="w-3 h-3 animate-spin" />
                   <span className="font-bold">{processingStep}</span>
                 </div>
@@ -1017,7 +1017,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
               <button
                 onClick={handleProcessAndPublish}
                 disabled={!uploadedFiles.weekMenu}
-                className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
+                className="w-full py-3 bg-teal-600 text-white rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
               >
                 <Sparkles className="w-4 h-4" />
                 Process & Publish Menu
@@ -1033,14 +1033,14 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         </div>
         <div className="space-y-8 font-medium">
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
-            <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2 tracking-widest"><Settings className="w-4 h-4 text-emerald-600"/> Assets</h3>
+            <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2 tracking-widest"><Settings className="w-4 h-4 text-teal-600"/> Assets</h3>
             <div className="space-y-4">
               <div><label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Veg URL</label><input type="text" value={customVegUrl} onChange={e => setCustomVegUrl(e.target.value)} className="w-full p-4 border rounded-xl bg-gray-50 text-sm font-bold border-gray-100 outline-none" /></div>
               <div><label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Vegan URL</label><input type="text" value={customVeganUrl} onChange={e => setCustomVeganUrl(e.target.value)} className="w-full p-4 border rounded-xl bg-gray-50 text-sm font-bold border-gray-100 outline-none" /></div>
             </div>
           </div>
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
-            <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2 tracking-widest"><Plus className="w-4 h-4 text-emerald-600"/> Manual Entry</h3>
+            <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2 tracking-widest"><Plus className="w-4 h-4 text-teal-600"/> Manual Entry</h3>
             <form onSubmit={handleAddItem} className="space-y-4">
               <input type="text" placeholder="Dish Name" className="w-full p-4 border rounded-xl bg-gray-50 text-sm font-bold border-gray-100 outline-none" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} required />
               
@@ -1215,7 +1215,7 @@ export default function Home() {
   const trayTotals = myPlate.reduce((acc, item) => acc + (item.calories || 0), 0);
 
   return (
-    <div className="min-h-screen bg-stone-50 text-gray-900 font-sans tracking-tight overflow-x-hidden selection:bg-emerald-100 selection:text-emerald-900 font-bold">
+    <div className="min-h-screen bg-stone-50 text-gray-900 font-sans tracking-tight overflow-x-hidden selection:bg-teal-100 selection:text-teal-900 font-bold">
       <NavBar view={view} changeView={changeView} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />
       
       <main className="w-full font-bold">
@@ -1227,7 +1227,7 @@ export default function Home() {
                 </div>
                 <div className="flex flex-col gap-4 items-center max-w-xl mx-auto px-2 font-sans font-bold">
                   <button id="week-planner" onClick={() => setIsWeeklyPlannerOpen(true)} className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 border border-slate-800 font-sans font-bold uppercase tracking-widest text-xs active:scale-95 transition-all font-bold">
-                    <Wand className="w-5 h-5 text-emerald-400 font-sans font-bold" /> Plan My Whole Week Meal
+                    <Wand className="w-5 h-5 text-teal-400 font-sans font-bold" /> Plan My Whole Week Meal
                   </button>
                   <div id="ai-banner" onClick={() => changeView('chat')} className="w-full bg-gradient-to-r from-indigo-700 via-purple-600 to-pink-500 rounded-2xl p-5 text-white shadow-2xl cursor-pointer transform transition-all hover:scale-[1.01] flex items-center justify-between text-left border border-white/10 group overflow-hidden font-bold">
                     <div className="flex items-center gap-4 relative z-10 font-sans font-bold"><div className="bg-white/20 p-2 rounded-xl backdrop-blur-md border border-white/10 font-sans font-bold"><Sparkles className="w-5 h-5 text-white animate-pulse font-sans font-bold" /></div><div><h3 className="font-bold text-sm uppercase tracking-widest text-white font-sans font-bold">Ask AI Assistant</h3><p className="text-white/80 text-[11px] font-medium italic opacity-80 font-sans font-bold">Nutrition Guide & Choices</p></div></div>
@@ -1237,7 +1237,7 @@ export default function Home() {
                 
                 <div ref={dayScrollRef} id="day-selector" className="flex w-full overflow-x-auto py-4 px-2 snap-x gap-2 scroll-smooth font-sans font-bold [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                   {DAYS.map(d => (
-                    <button key={d} data-day={d} onClick={() => setSelectedDay(d)} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all snap-start shadow-sm border font-sans font-bold ${selectedDay === d ? 'bg-emerald-800 text-white border-emerald-900 shadow-lg scale-105' : 'bg-white border-gray-100 text-gray-400 font-medium tracking-widest'}`}>{d}</button>
+                    <button key={d} data-day={d} onClick={() => setSelectedDay(d)} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all snap-start shadow-sm border font-sans font-bold ${selectedDay === d ? 'bg-teal-800 text-white border-teal-900 shadow-lg scale-105' : 'bg-white border-gray-100 text-gray-400 font-medium tracking-widest'}`}>{d}</button>
                   ))}
                 </div>
 
@@ -1253,7 +1253,7 @@ export default function Home() {
                 <div className="col-span-full py-20 text-center space-y-3">
                   <div className="text-gray-400 font-bold uppercase tracking-widest text-sm font-sans">No menu items match your filters</div>
                   <div className="text-xs text-gray-400">Total Items: {menuItems.length} | Selected Day: {selectedDay}</div>
-                  <button onClick={() => { setSelectedDay('All Days'); clearFilters(); }} className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700">Show All Items</button>
+                  <button onClick={() => { setSelectedDay('All Days'); clearFilters(); }} className="px-4 py-2 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700">Show All Items</button>
                 </div>}
              </div>
           </div>
@@ -1262,12 +1262,12 @@ export default function Home() {
         {view === 'admin' && !isAdminLoggedIn && (
           <div className="flex items-center justify-center min-h-[calc(100vh-100px)] p-6 tracking-tight font-sans font-bold">
             <form onSubmit={(e) => { e.preventDefault(); if (e.target.pw.value === 'admin123') setIsAdminLoggedIn(true); }} className="bg-white p-14 rounded-[3.5rem] shadow-2xl w-full max-w-sm border border-gray-100 text-center space-y-8 animate-in zoom-in-95 font-sans font-medium">
-              <div className="bg-emerald-50 p-6 rounded-3xl inline-block border border-emerald-100 shadow-inner font-sans font-bold"><Lock className="w-10 h-10 text-emerald-800 font-sans font-bold" /></div>
+              <div className="bg-teal-50 p-6 rounded-3xl inline-block border border-teal-100 shadow-inner font-sans font-bold"><Lock className="w-10 h-10 text-teal-800 font-sans font-bold" /></div>
               <div className="space-y-1 font-sans font-bold">
                 <h2 className="text-2xl font-bold uppercase tracking-tight text-slate-900 leading-none tracking-widest font-sans font-bold">Matrix Hub</h2>
                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-3 tracking-[0.2em] font-sans font-bold">Personnel Authorization Required</p>
               </div>
-              <input name="pw" type="password" className="w-full p-5 border-none rounded-2xl bg-gray-100 outline-none focus:ring-4 focus:ring-emerald-100 font-bold text-center tracking-[0.4em] shadow-inner text-lg font-sans font-bold" placeholder="••••" />
+              <input name="pw" type="password" className="w-full p-5 border-none rounded-2xl bg-gray-100 outline-none focus:ring-4 focus:ring-teal-100 font-bold text-center tracking-[0.4em] shadow-inner text-lg font-sans font-bold" placeholder="••••" />
               <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all font-sans font-bold">Verify Access</button>
             </form>
           </div>

@@ -549,14 +549,27 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         if (fdaResult?.items) {
           console.log('FDA Data extracted:', fdaResult.items);
           let matchCount = 0;
+          
+          // Helper function to normalize names for matching
+          const normalizeName = (name) => {
+            if (!name) return '';
+            return name
+              .toLowerCase()
+              .replace(/^(eur|ingredient):\s*/i, '') // Remove EUR: or Ingredient: prefix
+              .replace(/\s*\([^)]*\)/g, '') // Remove anything in parentheses
+              .trim();
+          };
+          
           finalItems = finalItems.map(item => {
-            const match = fdaResult.items.find(fda => 
-              fda.name?.toLowerCase().trim() === item.name?.toLowerCase().trim()
-            );
+            const normalizedItemName = normalizeName(item.name);
+            const match = fdaResult.items.find(fda => {
+              const normalizedFdaName = normalizeName(fda.name);
+              return normalizedFdaName === normalizedItemName;
+            });
             if (match) {
               matchCount++;
-              console.log(`✓ Matched FDA data for: ${item.name}`, match);
-              return { ...item, ...match };
+              console.log(`✓ Matched FDA data for: ${item.name} ← ${match.name}`, match);
+              return { ...item, calories: match.calories, protein: match.protein, carbs: match.carbs, fat: match.fat, sodium: match.sodium, fiber: match.fiber, sugar: match.sugar };
             } else {
               console.log(`✗ No FDA match for: ${item.name}`);
               return item;
@@ -596,13 +609,26 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         if (allergenResult?.items) {
           console.log('Allergen Data extracted:', allergenResult.items);
           let matchCount = 0;
+          
+          // Helper function to normalize names for matching
+          const normalizeName = (name) => {
+            if (!name) return '';
+            return name
+              .toLowerCase()
+              .replace(/^(eur|ingredient):\s*/i, '') // Remove EUR: or Ingredient: prefix
+              .replace(/\s*\([^)]*\)/g, '') // Remove anything in parentheses
+              .trim();
+          };
+          
           finalItems = finalItems.map(item => {
-            const match = allergenResult.items.find(al => 
-              al.name?.toLowerCase().trim() === item.name?.toLowerCase().trim()
-            );
+            const normalizedItemName = normalizeName(item.name);
+            const match = allergenResult.items.find(al => {
+              const normalizedAllergenName = normalizeName(al.name);
+              return normalizedAllergenName === normalizedItemName;
+            });
             if (match) {
               matchCount++;
-              console.log(`✓ Matched Allergen data for: ${item.name}`, match);
+              console.log(`✓ Matched Allergen data for: ${item.name} ← ${match.name}`, match);
               return { ...item, allergens: match.allergens, tags: match.tags };
             } else {
               console.log(`✗ No Allergen match for: ${item.name}`);
@@ -638,10 +664,35 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         });
 
         if (ingredientsResult?.items) {
+          console.log('Ingredients Data extracted:', ingredientsResult.items);
+          let matchCount = 0;
+          
+          // Helper function to normalize names for matching
+          const normalizeName = (name) => {
+            if (!name) return '';
+            return name
+              .toLowerCase()
+              .replace(/^(eur|ingredient):\s*/i, '')
+              .replace(/\s*\([^)]*\)/g, '')
+              .trim();
+          };
+          
           finalItems = finalItems.map(item => {
-            const match = ingredientsResult.items.find(ing => ing.name?.toLowerCase().trim() === item.name?.toLowerCase().trim());
-            return match ? { ...item, ingredients: match.ingredients } : item;
+            const normalizedItemName = normalizeName(item.name);
+            const match = ingredientsResult.items.find(ing => {
+              const normalizedIngName = normalizeName(ing.name);
+              return normalizedIngName === normalizedItemName;
+            });
+            if (match) {
+              matchCount++;
+              console.log(`✓ Matched Ingredients for: ${item.name} ← ${match.name}`);
+              return { ...item, ingredients: match.ingredients };
+            } else {
+              console.log(`✗ No Ingredients match for: ${item.name}`);
+              return item;
+            }
           });
+          console.log(`Ingredients: Matched ${matchCount} of ${finalItems.length} items`);
         }
       }
 

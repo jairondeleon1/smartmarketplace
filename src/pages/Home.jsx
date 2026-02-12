@@ -1050,13 +1050,6 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         </div>
         <div className="space-y-8 font-medium">
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
-            <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2 tracking-widest"><Settings className="w-4 h-4 text-teal-600"/> Assets</h3>
-            <div className="space-y-4">
-              <div><label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Veg URL</label><input type="text" value={customVegUrl} onChange={e => setCustomVegUrl(e.target.value)} className="w-full p-4 border rounded-xl bg-gray-50 text-sm font-bold border-gray-100 outline-none" /></div>
-              <div><label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Vegan URL</label><input type="text" value={customVeganUrl} onChange={e => setCustomVeganUrl(e.target.value)} className="w-full p-4 border rounded-xl bg-gray-50 text-sm font-bold border-gray-100 outline-none" /></div>
-            </div>
-          </div>
-          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
             <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2 tracking-widest"><Plus className="w-4 h-4 text-teal-600"/> Manual Entry</h3>
             <form onSubmit={handleAddItem} className="space-y-4">
               <input type="text" placeholder="Dish Name" className="w-full p-4 border rounded-xl bg-gray-50 text-sm font-bold border-gray-100 outline-none" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} required />

@@ -271,20 +271,11 @@ function TrayDetailsModal({ isOpen, onClose, plate, setPlate }) {
 
 function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
   const [showDetails, setShowDetails] = useState(false);
-
-  // Extract category and station from item.station
-  const stationParts = (item.station || '').split('-').map(s => s.trim());
-  const category = stationParts[0] || 'Menu';
-  const stationName = stationParts[1] || stationParts[0];
-
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full animate-in fade-in zoom-in-95 duration-300 font-sans hover:shadow-md font-medium">
       <div className="p-5 flex-1 font-sans font-bold font-medium">
-        <div className="flex justify-between items-start mb-3 font-sans font-bold">
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-bold uppercase text-slate-700 tracking-tight font-sans">{category}</span>
-            <span className="text-[9px] font-bold uppercase text-emerald-600 tracking-widest font-sans">{stationName}</span>
-          </div>
+        <div className="flex justify-between items-start mb-2 font-sans font-bold">
+          <span className="text-[10px] font-bold uppercase text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-sans tracking-tight font-bold">{item.station}</span>
           <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest font-sans font-bold font-bold"><Calendar className="w-3 h-3 font-bold"/> {item.day}</div>
         </div>
         <h4 className="font-bold text-gray-800 text-lg leading-tight flex items-center gap-2 mb-2 font-sans font-bold font-bold">

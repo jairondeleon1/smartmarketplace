@@ -722,7 +722,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
 
   const syncOptions = [
     { label: "1. Week Menu PDF", type: "week-menu", icon: Calendar, accept: ".pdf", handler: handleWeekMenuUpload, desc: "Menu items with recipe #s" }, 
-    { label: "2. FDA Nutrition PDF", type: "fda", icon: Sparkles, accept: ".pdf", handler: handleFDAUpload, desc: "Match by recipe #" }, 
+    { label: "2. FDA Nutrition File", type: "fda", icon: Sparkles, accept: ".pdf,.xlsx,.xls", handler: handleFDAUpload, desc: "Match by recipe #" }, 
     { label: "3. Allergen PDF", type: "allergen", icon: AlertTriangle, accept: ".pdf", handler: handleAllergenUpload, desc: "Match by recipe #" },
     { label: "4. Ingredients CSV", type: "ingredients", icon: FileText, accept: ".csv", handler: handleIngredientsUpload, desc: "Match by recipe #" }
   ];

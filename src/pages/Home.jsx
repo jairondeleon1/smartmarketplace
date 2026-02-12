@@ -1223,7 +1223,7 @@ export default function Home() {
           <div className="max-w-5xl mx-auto p-4 space-y-8 pb-32 font-sans overflow-x-hidden font-bold">
              <div className="text-center space-y-6 pt-10 font-sans font-bold">
                 <div className="flex justify-center">
-                  <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698cee888040f55d6a3c5040/d5cbd9112_SmartMenuIQ38x22.png" alt="SmartMenu IQ" className="max-w-md w-full px-4" />
+                  <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698cee888040f55d6a3c5040/5f703ba08_SmartMenuIQ38x10.png" alt="SmartMenu IQ" className="max-w-md w-full px-4" />
                 </div>
                 <div className="flex flex-col gap-4 items-center max-w-xl mx-auto px-2 font-sans font-bold">
                   <button id="week-planner" onClick={() => setIsWeeklyPlannerOpen(true)} className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 border border-slate-800 font-sans font-bold uppercase tracking-widest text-xs active:scale-95 transition-all font-bold">

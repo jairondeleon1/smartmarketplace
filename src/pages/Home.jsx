@@ -568,9 +568,10 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         }
 
         if (fdaResult?.items) {
-          console.log('FDA Data extracted:', fdaResult.items);
+          console.log('✅ FDA Data extracted successfully!');
           console.log('FDA items count:', fdaResult.items.length);
-          console.log('Sample FDA items:', fdaResult.items.slice(0, 3));
+          console.log('First 5 FDA items:', fdaResult.items.slice(0, 5));
+          console.log('Sample menu item recipe numbers:', finalItems.slice(0, 5).map(i => i.recipe_number));
           let matchCount = 0;
           
           // Normalize recipe numbers for better matching
@@ -581,7 +582,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
             const match = fdaResult.items.find(fda => normalizeRecipe(fda.recipe_number || '') === normalizedItemRecipe);
             if (match) {
               matchCount++;
-              console.log(`✓ Matched FDA by recipe #${item.recipe_number}: ${item.name}`, match);
+              console.log(`✓ FDA Match: ${item.name} (${item.recipe_number}) -> ${match.calories} cal`);
               return { 
                 ...item, 
                 calories: match.calories || 0, 
@@ -593,16 +594,14 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                 sugar: match.sugar || 0 
               };
             } else {
-              console.warn(`⚠️ No FDA match for recipe #${item.recipe_number}: ${item.name}`);
+              console.warn(`❌ No FDA match for: ${item.name} (recipe #${item.recipe_number})`);
               return item;
             }
           });
-          console.log(`FDA: Matched ${matchCount} of ${finalItems.length} items`);
-          if (matchCount < finalItems.length) {
-            console.warn(`⚠️ ${finalItems.length - matchCount} items missing FDA nutrition data`);
-          }
+          console.log(`🎯 FDA MATCHING COMPLETE: ${matchCount} of ${finalItems.length} items matched`);
+          console.log('Sample matched item:', finalItems.find(i => i.calories > 0));
         } else {
-          console.error('FDA extraction failed or returned no items:', fdaResult);
+          console.error('❌ FDA extraction failed or returned no items:', fdaResult);
         }
       }
 
@@ -727,7 +726,8 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       // Publish to menu
       setProcessingStep('Publishing Menu...');
       setProcessingProgress(100);
-      console.log('Final merged items:', finalItems);
+      console.log('📊 FINAL MENU DATA (first 3 items):', finalItems.slice(0, 3));
+      console.log('📊 Total items with FDA data:', finalItems.filter(i => i.calories > 0).length);
       setMenuItems(finalItems);
       setUploadedFiles({ weekMenu: null, fda: null, allergen: null, ingredients: null });
       

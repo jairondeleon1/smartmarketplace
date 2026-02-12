@@ -485,6 +485,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       let finalItems = [];
 
       // Step 1: Process Week Menu
+      console.log('Step 1: Processing Week Menu...');
       const weekResult = await base44.integrations.Core.InvokeLLM({
         prompt: `Extract menu items from this weekly menu PDF. For each item, extract: name, station, day of week, description. Return as structured JSON.`,
         file_urls: [uploadedFiles.weekMenu],
@@ -510,12 +511,16 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
 
       if (weekResult?.items) {
         finalItems = weekResult.items.map((item, idx) => ({ ...item, id: Date.now() + idx }));
+        console.log('Week Menu extracted:', finalItems);
+      } else {
+        console.error('Week Menu extraction failed:', weekResult);
       }
 
       // Step 2: Process FDA if uploaded
       if (uploadedFiles.fda) {
+        console.log('Step 2: Processing FDA Data...');
         const fdaResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `Extract FDA nutritional data from this PDF. For each menu item, extract: name, calories, protein (g), carbs (g), fat (g), sodium (mg), fiber (g), sugar (g). Return as structured JSON.`,
+          prompt: `Extract FDA nutritional data from this PDF. For each menu item, extract: name, calories, protein (g), carbs (g), fat (g), sodium (mg), fiber (g), sugar (g). Match names exactly as shown in the PDF. Return as structured JSON.`,
           file_urls: [uploadedFiles.fda],
           add_context_from_internet: false,
           response_json_schema: {
@@ -542,17 +547,32 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         });
 
         if (fdaResult?.items) {
+          console.log('FDA Data extracted:', fdaResult.items);
+          let matchCount = 0;
           finalItems = finalItems.map(item => {
-            const match = fdaResult.items.find(fda => fda.name?.toLowerCase().trim() === item.name?.toLowerCase().trim());
-            return match ? { ...item, ...match } : item;
+            const match = fdaResult.items.find(fda => 
+              fda.name?.toLowerCase().trim() === item.name?.toLowerCase().trim()
+            );
+            if (match) {
+              matchCount++;
+              console.log(`✓ Matched FDA data for: ${item.name}`, match);
+              return { ...item, ...match };
+            } else {
+              console.log(`✗ No FDA match for: ${item.name}`);
+              return item;
+            }
           });
+          console.log(`FDA: Matched ${matchCount} of ${finalItems.length} items`);
+        } else {
+          console.error('FDA extraction failed:', fdaResult);
         }
       }
 
       // Step 3: Process Allergen if uploaded
       if (uploadedFiles.allergen) {
+        console.log('Step 3: Processing Allergen Data...');
         const allergenResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `Extract allergen information from this PDF. For each menu item, extract: name, allergens (array of allergen names like Milk, Wheat, Egg, Soy, Fish, Shellfish, Tree Nuts, Peanuts, etc.), and dietary tags (array like Vegetarian, Vegan, Fit, Dairy Free, Gluten Free, etc.). Return as structured JSON.`,
+          prompt: `Extract allergen information from this PDF. For each menu item, extract: name, allergens (array of allergen names like Milk, Wheat, Egg, Soy, Fish, Shellfish, Tree Nuts, Peanuts, etc.), and dietary tags (array like Vegetarian, Vegan, Fit, Dairy Free, Gluten Free, etc.). Match names exactly as shown in the PDF. Return as structured JSON.`,
           file_urls: [uploadedFiles.allergen],
           add_context_from_internet: false,
           response_json_schema: {
@@ -574,10 +594,24 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         });
 
         if (allergenResult?.items) {
+          console.log('Allergen Data extracted:', allergenResult.items);
+          let matchCount = 0;
           finalItems = finalItems.map(item => {
-            const match = allergenResult.items.find(al => al.name?.toLowerCase().trim() === item.name?.toLowerCase().trim());
-            return match ? { ...item, allergens: match.allergens, tags: match.tags } : item;
+            const match = allergenResult.items.find(al => 
+              al.name?.toLowerCase().trim() === item.name?.toLowerCase().trim()
+            );
+            if (match) {
+              matchCount++;
+              console.log(`✓ Matched Allergen data for: ${item.name}`, match);
+              return { ...item, allergens: match.allergens, tags: match.tags };
+            } else {
+              console.log(`✗ No Allergen match for: ${item.name}`);
+              return item;
+            }
           });
+          console.log(`Allergen: Matched ${matchCount} of ${finalItems.length} items`);
+        } else {
+          console.error('Allergen extraction failed:', allergenResult);
         }
       }
 
@@ -612,9 +646,10 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       }
 
       // Publish to menu
+      console.log('Final merged items:', finalItems);
       setMenuItems(finalItems);
       setUploadedFiles({ weekMenu: null, fda: null, allergen: null, ingredients: null });
-      alert(`✅ Published ${finalItems.length} menu items with all data merged!`);
+      alert(`✅ Published ${finalItems.length} menu items! Check browser console (F12) for details.`);
     } catch (error) {
       alert('Error processing files: ' + error.message);
     } finally {

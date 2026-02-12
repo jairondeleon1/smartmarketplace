@@ -677,6 +677,15 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         }
       }
 
+      // Remove Vegan tag from fried items
+      finalItems = finalItems.map(item => {
+        const isFried = (item.name?.toLowerCase().includes('fried') || item.description?.toLowerCase().includes('fried'));
+        if (isFried && item.tags?.includes('Vegan')) {
+          return { ...item, tags: item.tags.filter(tag => tag !== 'Vegan') };
+        }
+        return item;
+      });
+
       // Publish to menu
       setProcessingStep('Publishing Menu...');
       setProcessingProgress(100);

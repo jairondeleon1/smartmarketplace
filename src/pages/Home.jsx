@@ -85,7 +85,7 @@ const DEFAULT_MENU = [
 function Badge({ children }) {
   const colors = {
     blue: 'bg-blue-100 text-blue-800 border-blue-200',
-    green: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    green: 'bg-green-200 text-green-900 border-green-300',
     orange: 'bg-orange-100 text-orange-800 border-orange-200',
     purple: 'bg-purple-100 text-purple-800 border-purple-200',
     red: 'bg-rose-100 text-rose-800 border-rose-200',

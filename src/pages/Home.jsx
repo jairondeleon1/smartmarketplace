@@ -404,157 +404,173 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
 function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomVegUrl, customVeganUrl, setCustomVeganUrl, newItem, setNewItem, handleAddItem, handleDeleteItem }) {
   const [isSyncing, setIsSyncing] = useState(null);
 
-  const handleFileUpload = async (e, type) => {
+  const handleWeekMenuUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    setIsSyncing(type);
+    setIsSyncing("week-menu");
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
-      const menuSchema = {
-        type: "object",
-        properties: {
-          menu_items: {
-            type: "array",
+      const prompt = `Extract menu items from this weekly menu PDF. For each item, extract: name, station, day of week, description. Return as structured JSON.`;
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: prompt,
+        file_urls: [file_url],
+        add_context_from_internet: false,
+        response_json_schema: {
+          type: "object",
+          properties: {
             items: {
-              type: "object",
-              properties: {
-                station: { type: "string" },
-                name: { type: "string" },
-                description: { type: "string" },
-                ingredients: { type: "string" },
-                calories: { type: "number" },
-                protein: { type: "number" },
-                carbs: { type: "number" },
-                fat: { type: "number" },
-                sodium: { type: "number" },
-                fiber: { type: "number" },
-                sugar: { type: "number" },
-                tags: { type: "array", items: { type: "string" } },
-                allergens: { type: "array", items: { type: "string" } },
-                day: { type: "string" }
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  station: { type: "string" },
+                  day: { type: "string" },
+                  description: { type: "string" }
+                }
               }
             }
           }
         }
-      };
-
-      const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
-        file_url,
-        json_schema: menuSchema
       });
 
-      console.log('Extract result:', result);
-
-      if (result.status === 'success' && result.output?.menu_items) {
-        const extractedItems = result.output.menu_items;
-        console.log('Extracted items from file:', extractedItems);
-        
+      if (result?.items) {
         setMenuItems(prev => {
-          console.log('Current menu items before merge:', prev);
-          
-          // If previous menu is empty or has only default items, replace it
           if (prev.length === 0 || prev.length <= DEFAULT_MENU.length) {
-            const newItems = extractedItems.map((item, idx) => ({ ...item, id: Date.now() + idx }));
-            console.log('Replacing with new items:', newItems);
-            return newItems;
+            return result.items.map((item, idx) => ({ ...item, id: Date.now() + idx }));
           }
-          
-          // Otherwise, intelligently merge by matching name (more lenient)
           const updated = [...prev];
-          let mergedCount = 0;
-          let newCount = 0;
-          
-          extractedItems.forEach(newItem => {
-            // Try to find match by name only (case insensitive, trimmed)
-            const newItemName = newItem.name?.toLowerCase().trim();
-            const existingIndex = updated.findIndex(item => {
-              const itemName = item.name?.toLowerCase().trim();
-              return itemName === newItemName;
-            });
-            
+          result.items.forEach(newItem => {
+            const existingIndex = updated.findIndex(i => i.name?.toLowerCase().trim() === newItem.name?.toLowerCase().trim());
             if (existingIndex >= 0) {
-              console.log(`Merging "${newItem.name}" with existing item:`, updated[existingIndex]);
-              
-              // Smart merge: combine all non-empty values
-              const merged = { ...updated[existingIndex] };
-              
-              Object.keys(newItem).forEach(key => {
-                const newValue = newItem[key];
-                const oldValue = merged[key];
-                
-                // Skip id and undefined/null values
-                if (key === 'id' || newValue === undefined || newValue === null) {
-                  return;
-                }
-                
-                // For numbers: use new if > 0, otherwise keep old
-                if (typeof newValue === 'number') {
-                  if (newValue > 0) {
-                    merged[key] = newValue;
-                  }
-                }
-                // For strings: use new if not empty, otherwise keep old
-                else if (typeof newValue === 'string') {
-                  if (newValue.trim() !== '') {
-                    merged[key] = newValue;
-                  }
-                }
-                // For arrays: merge or replace if has values
-                else if (Array.isArray(newValue)) {
-                  if (newValue.length > 0) {
-                    merged[key] = newValue;
-                  }
-                }
-                // For other types: use new value
-                else {
-                  merged[key] = newValue;
-                }
-              });
-              
-              console.log('Merged result:', merged);
-              updated[existingIndex] = merged;
-              mergedCount++;
+              updated[existingIndex] = { ...updated[existingIndex], ...newItem };
             } else {
-              // Add new item
-              const newEntry = { ...newItem, id: Date.now() + Math.random() };
-              console.log('Adding new item:', newEntry);
-              updated.push(newEntry);
-              newCount++;
+              updated.push({ ...newItem, id: Date.now() + Math.random() });
             }
           });
-          
-          console.log(`Final result: Merged ${mergedCount} items, added ${newCount} new items`);
-          console.log('Updated menu items:', updated);
           return updated;
         });
-        
-        alert(`Successfully processed ${extractedItems.length} items! Check console for details.`);
-      } else {
-        console.error('Extraction failed:', result);
-        alert('Failed to extract data: ' + (result.details || JSON.stringify(result)));
+        alert(`✓ Week Menu: ${result.items.length} items loaded`);
       }
     } catch (error) {
-      alert('Error uploading file: ' + error.message);
+      alert('Error: ' + error.message);
     } finally {
       setIsSyncing(null);
       e.target.value = '';
     }
   };
 
-  const handleCSVUpload = async (e) => {
+  const handleFDAUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    setIsSyncing("ingredients-csv");
+    setIsSyncing("fda");
     try {
-      // Read CSV file as text
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+
+      const prompt = `Extract FDA nutritional data from this PDF. For each menu item, extract: name, calories, protein (g), carbs (g), fat (g), sodium (mg), fiber (g), sugar (g). Return as structured JSON.`;
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: prompt,
+        file_urls: [file_url],
+        add_context_from_internet: false,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            items: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  calories: { type: "number" },
+                  protein: { type: "number" },
+                  carbs: { type: "number" },
+                  fat: { type: "number" },
+                  sodium: { type: "number" },
+                  fiber: { type: "number" },
+                  sugar: { type: "number" }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (result?.items) {
+        setMenuItems(prev => prev.map(item => {
+          const match = result.items.find(fda => fda.name?.toLowerCase().trim() === item.name?.toLowerCase().trim());
+          return match ? { ...item, ...match } : item;
+        }));
+        alert(`✓ FDA Data: ${result.items.length} items updated`);
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    } finally {
+      setIsSyncing(null);
+      e.target.value = '';
+    }
+  };
+
+  const handleAllergenUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsSyncing("allergen");
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+
+      const prompt = `Extract allergen information from this PDF. For each menu item, extract: name, allergens (array of allergen names like Milk, Wheat, Egg, Soy, Fish, Shellfish, Tree Nuts, Peanuts, etc.), and dietary tags (array like Vegetarian, Vegan, Fit, Dairy Free, Gluten Free, etc.). Return as structured JSON.`;
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: prompt,
+        file_urls: [file_url],
+        add_context_from_internet: false,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            items: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  allergens: { type: "array", items: { type: "string" } },
+                  tags: { type: "array", items: { type: "string" } }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (result?.items) {
+        setMenuItems(prev => prev.map(item => {
+          const match = result.items.find(al => al.name?.toLowerCase().trim() === item.name?.toLowerCase().trim());
+          return match ? { ...item, allergens: match.allergens, tags: match.tags } : item;
+        }));
+        alert(`✓ Allergen Data: ${result.items.length} items updated`);
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    } finally {
+      setIsSyncing(null);
+      e.target.value = '';
+    }
+  };
+
+  const handleIngredientsUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsSyncing("ingredients");
+    try {
       const text = await file.text();
 
-      // Parse CSV using AI
+      const prompt = `Parse this CSV data and extract menu item names and their full ingredient lists. Return as structured JSON.`;
+
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Parse this CSV data and extract menu item names and their ingredients. Return ONLY valid JSON matching the schema. CSV data:\n\n${text}`,
+        prompt: `${prompt}\n\nCSV Data:\n${text}`,
+        add_context_from_internet: false,
         response_json_schema: {
           type: "object",
           properties: {
@@ -573,23 +589,14 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       });
 
       if (result?.items) {
-        let matchCount = 0;
         setMenuItems(prev => prev.map(item => {
-          const match = result.items.find(ing => 
-            ing.name?.toLowerCase().trim() === item.name?.toLowerCase().trim()
-          );
-          if (match) {
-            matchCount++;
-            return { ...item, ingredients: match.ingredients };
-          }
-          return item;
+          const match = result.items.find(ing => ing.name?.toLowerCase().trim() === item.name?.toLowerCase().trim());
+          return match ? { ...item, ingredients: match.ingredients } : item;
         }));
-        alert(`Successfully updated ingredients for ${matchCount} items!`);
-      } else {
-        alert('Failed to parse CSV file');
+        alert(`✓ Ingredients: ${result.items.length} items updated`);
       }
     } catch (error) {
-      alert('Error processing CSV: ' + error.message);
+      alert('Error: ' + error.message);
     } finally {
       setIsSyncing(null);
       e.target.value = '';
@@ -597,10 +604,10 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   };
 
   const syncOptions = [
-    { label: "1. Week Glance PDF", type: "week", icon: FileText, accept: ".pdf", handler: handleFileUpload }, 
-    { label: "2. Station Reports PDF", type: "station", icon: FileSearch, accept: ".pdf", handler: handleFileUpload }, 
-    { label: "3. Nutrition PDF", type: "nutrition", icon: Sparkles, accept: ".pdf", handler: handleFileUpload },
-    { label: "4. Ingredients CSV", type: "ingredients-csv", icon: Upload, accept: ".csv", handler: handleCSVUpload }
+    { label: "1. Week Menu PDF", type: "week-menu", icon: Calendar, accept: ".pdf", handler: handleWeekMenuUpload, desc: "Menu items & days" }, 
+    { label: "2. FDA Nutrition PDF", type: "fda", icon: Sparkles, accept: ".pdf", handler: handleFDAUpload, desc: "Calories, protein, etc." }, 
+    { label: "3. Allergen PDF", type: "allergen", icon: AlertTriangle, accept: ".pdf", handler: handleAllergenUpload, desc: "Allergens & tags" },
+    { label: "4. Ingredients CSV", type: "ingredients", icon: FileText, accept: ".csv", handler: handleIngredientsUpload, desc: "Ingredient lists" }
   ];
 
   return (
@@ -625,16 +632,38 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                     accept={opt.accept}
                     id={`file-upload-${opt.type}`}
                     className="hidden"
-                    onChange={(e) => opt.handler(e, opt.type)} 
+                    onChange={opt.handler} 
                   />
                   <label 
                     htmlFor={`file-upload-${opt.type}`}
-                    className="w-full p-6 border-2 border-dashed border-emerald-100 rounded-2xl flex flex-col items-center gap-2 text-emerald-800 hover:bg-emerald-50 transition active:scale-[0.98] cursor-pointer"
+                    className="w-full p-5 border-2 border-dashed border-emerald-100 rounded-2xl flex items-center gap-4 text-emerald-800 hover:bg-emerald-50 transition active:scale-[0.98] cursor-pointer"
                   >
-                    {isSyncing === opt.type ? <Loader2 className="animate-spin w-8 h-8" /> : <><opt.icon className="w-8 h-8 opacity-40"/><span className="text-[11px] font-bold uppercase tracking-widest">{opt.label}</span></>}
+                    {isSyncing === opt.type ? (
+                      <Loader2 className="animate-spin w-6 h-6" />
+                    ) : (
+                      <>
+                        <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                          <opt.icon className="w-5 h-5 text-emerald-600"/>
+                        </div>
+                        <div className="flex-1 text-left">
+                          <div className="text-xs font-bold uppercase tracking-widest text-slate-800">{opt.label}</div>
+                          <div className="text-[10px] text-gray-500 mt-0.5">{opt.desc}</div>
+                        </div>
+                      </>
+                    )}
                   </label>
               </div>
             ))}
+          </div>
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-800">
+            <div className="font-bold mb-1 flex items-center gap-2">
+              <Info className="w-4 h-4" />
+              Upload Order
+            </div>
+            <div className="text-blue-600 space-y-1">
+              <div>1️⃣ Start with Week Menu to create items</div>
+              <div>2️⃣ Upload FDA, Allergen, and Ingredients to enrich data</div>
+            </div>
           </div>
           <button 
             onClick={() => console.log('Current Menu Data:', menuItems)} 

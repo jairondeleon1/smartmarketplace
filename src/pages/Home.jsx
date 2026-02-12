@@ -518,11 +518,11 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       if (weekResult?.items) {
         finalItems = weekResult.items.map((item, idx) => ({ ...item, id: Date.now() + idx }));
         console.log('Week Menu extracted:', finalItems);
-      } else {
+        } else {
         console.error('Week Menu extraction failed:', weekResult);
-      }
+        }
 
-      setProcessingProgress(40);
+        setProcessingProgress(35);
 
       // Step 2: Process FDA if uploaded - match by recipe number
       if (uploadedFiles.fda) {
@@ -634,6 +634,8 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         }
       }
 
+      setProcessingProgress(60);
+      
       // Step 3: Process Allergen if uploaded - match by recipe number
       if (uploadedFiles.allergen) {
         console.log('Step 3: Processing Allergen Data...');

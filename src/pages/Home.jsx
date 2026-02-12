@@ -537,7 +537,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
           // Use LLM for both PDF and XLSX - more reliable
           console.log('Extracting FDA data using AI...');
           fdaResult = await base44.integrations.Core.InvokeLLM({
-            prompt: `Extract FDA nutritional data from this file. For each menu item, extract: recipe_number (the item number/code), calories, protein (g), carbs (g), fat (g), sodium (mg), fiber (g), sugar (g). Return ALL items as structured JSON array.`,
+            prompt: `Extract FDA nutritional data from this file. For each menu item, extract: name (item name), recipe_number (the item number/code), calories, protein (g), carbs (g), fat (g), sodium (mg), fiber (g), sugar (g). Return ALL items as structured JSON array.`,
             file_urls: [uploadedFiles.fda.url],
             add_context_from_internet: false,
             response_json_schema: {
@@ -548,6 +548,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                   items: {
                     type: "object",
                     properties: {
+                      name: { type: "string" },
                       recipe_number: { type: "string" },
                       calories: { type: "number" },
                       protein: { type: "number" },
@@ -573,16 +574,36 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
           console.log('First 5 FDA items:', fdaResult.items.slice(0, 5));
           console.log('Sample menu item recipe numbers:', finalItems.slice(0, 5).map(i => i.recipe_number));
           let matchCount = 0;
+          let nameMatchCount = 0;
           
-          // Normalize recipe numbers for better matching
+          // Normalize recipe numbers and names for better matching
           const normalizeRecipe = (num) => String(num).trim().replace(/^0+/, '').toLowerCase();
+          const normalizeName = (name) => String(name || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');
           
           finalItems = finalItems.map(item => {
             const normalizedItemRecipe = normalizeRecipe(item.recipe_number || '');
-            const match = fdaResult.items.find(fda => normalizeRecipe(fda.recipe_number || '') === normalizedItemRecipe);
+            const normalizedItemName = normalizeName(item.name);
+            
+            // First try to match by recipe number
+            let match = fdaResult.items.find(fda => normalizeRecipe(fda.recipe_number || '') === normalizedItemRecipe);
+            
+            // If no match by recipe number, try matching by name
+            if (!match && item.name) {
+              match = fdaResult.items.find(fda => {
+                const fdaName = normalizeName(fda.name || fda.item_name || '');
+                return fdaName && normalizedItemName && fdaName.includes(normalizedItemName.slice(0, 10)) || normalizedItemName.includes(fdaName.slice(0, 10));
+              });
+              if (match) {
+                nameMatchCount++;
+                console.log(`✓ FDA Name Match: ${item.name} -> ${match.calories} cal`);
+              }
+            }
+            
             if (match) {
               matchCount++;
-              console.log(`✓ FDA Match: ${item.name} (${item.recipe_number}) -> ${match.calories} cal`);
+              if (nameMatchCount === 0) {
+                console.log(`✓ FDA Recipe Match: ${item.name} (${item.recipe_number}) -> ${match.calories} cal`);
+              }
               return { 
                 ...item, 
                 calories: match.calories || 0, 
@@ -598,7 +619,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
               return item;
             }
           });
-          console.log(`🎯 FDA MATCHING COMPLETE: ${matchCount} of ${finalItems.length} items matched`);
+          console.log(`🎯 FDA MATCHING COMPLETE: ${matchCount} of ${finalItems.length} items matched (${nameMatchCount} by name)`);
           console.log('Sample matched item:', finalItems.find(i => i.calories > 0));
         } else {
           console.error('❌ FDA extraction failed or returned no items:', fdaResult);

@@ -614,10 +614,10 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         }
       }
 
-      // Step 3: Process Ingredients if uploaded
+      // Step 4: Process Ingredients if uploaded - match by recipe number
       if (uploadedFiles.ingredients) {
         const ingredientsResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `Parse this CSV data and extract menu item names and their full ingredient lists. Return as structured JSON.\n\nCSV Data:\n${uploadedFiles.ingredients}`,
+          prompt: `Parse this CSV data and extract recipe_number and full ingredient lists. Return as structured JSON.\n\nCSV Data:\n${uploadedFiles.ingredients}`,
           add_context_from_internet: false,
           response_json_schema: {
             type: "object",
@@ -627,7 +627,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                 items: {
                   type: "object",
                   properties: {
-                    name: { type: "string" },
+                    recipe_number: { type: "string" },
                     ingredients: { type: "string" }
                   }
                 }
@@ -640,28 +640,14 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
           console.log('Ingredients Data extracted:', ingredientsResult.items);
           let matchCount = 0;
           
-          // Helper function to normalize names for matching
-          const normalizeName = (name) => {
-            if (!name) return '';
-            return name
-              .toLowerCase()
-              .replace(/^(eur|ingredient):\s*/i, '')
-              .replace(/\s*\([^)]*\)/g, '')
-              .trim();
-          };
-          
           finalItems = finalItems.map(item => {
-            const normalizedItemName = normalizeName(item.name);
-            const match = ingredientsResult.items.find(ing => {
-              const normalizedIngName = normalizeName(ing.name);
-              return normalizedIngName === normalizedItemName;
-            });
+            const match = ingredientsResult.items.find(ing => ing.recipe_number === item.recipe_number);
             if (match) {
               matchCount++;
-              console.log(`✓ Matched Ingredients for: ${item.name} ← ${match.name}`);
+              console.log(`✓ Matched Ingredients by recipe #${item.recipe_number}: ${item.name}`);
               return { ...item, ingredients: match.ingredients };
             } else {
-              console.log(`✗ No Ingredients match for: ${item.name}`);
+              console.log(`✗ No Ingredients match for recipe #${item.recipe_number}: ${item.name}`);
               return item;
             }
           });

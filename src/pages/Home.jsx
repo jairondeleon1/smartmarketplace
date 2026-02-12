@@ -403,6 +403,12 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
 
 function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomVegUrl, customVeganUrl, setCustomVeganUrl, newItem, setNewItem, handleAddItem, handleDeleteItem }) {
   const [isSyncing, setIsSyncing] = useState(null);
+  const [uploadedFiles, setUploadedFiles] = useState({
+    weekMenu: null,
+    fda: null,
+    allergen: null,
+    ingredients: null
+  });
 
   const handleWeekMenuUpload = async (e) => {
     const file = e.target.files[0];
@@ -410,12 +416,78 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     setIsSyncing("week-menu");
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setUploadedFiles(prev => ({ ...prev, weekMenu: file_url }));
+      alert('✓ Week Menu uploaded - ready to process');
+    } catch (error) {
+      alert('Error: ' + error.message);
+    } finally {
+      setIsSyncing(null);
+      e.target.value = '';
+    }
+  };
 
-      const prompt = `Extract menu items from this weekly menu PDF. For each item, extract: name, station, day of week, description. Return as structured JSON.`;
+  const handleFDAUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsSyncing("fda");
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setUploadedFiles(prev => ({ ...prev, fda: file_url }));
+      alert('✓ FDA Data uploaded - ready to process');
+    } catch (error) {
+      alert('Error: ' + error.message);
+    } finally {
+      setIsSyncing(null);
+      e.target.value = '';
+    }
+  };
 
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: prompt,
-        file_urls: [file_url],
+  const handleAllergenUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsSyncing("allergen");
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setUploadedFiles(prev => ({ ...prev, allergen: file_url }));
+      alert('✓ Allergen Data uploaded - ready to process');
+    } catch (error) {
+      alert('Error: ' + error.message);
+    } finally {
+      setIsSyncing(null);
+      e.target.value = '';
+    }
+  };
+
+  const handleIngredientsUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsSyncing("ingredients");
+    try {
+      const text = await file.text();
+      setUploadedFiles(prev => ({ ...prev, ingredients: text }));
+      alert('✓ Ingredients uploaded - ready to process');
+    } catch (error) {
+      alert('Error: ' + error.message);
+    } finally {
+      setIsSyncing(null);
+      e.target.value = '';
+    }
+  };
+
+  const handleProcessAndPublish = async () => {
+    if (!uploadedFiles.weekMenu) {
+      alert('Please upload Week Menu PDF first');
+      return;
+    }
+
+    setIsSyncing("publish");
+    try {
+      let finalItems = [];
+
+      // Step 1: Process Week Menu
+      const weekResult = await base44.integrations.Core.InvokeLLM({
+        prompt: `Extract menu items from this weekly menu PDF. For each item, extract: name, station, day of week, description. Return as structured JSON.`,
+        file_urls: [uploadedFiles.weekMenu],
         add_context_from_internet: false,
         response_json_schema: {
           type: "object",
@@ -436,170 +508,117 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         }
       });
 
-      if (result?.items) {
-        setMenuItems(prev => {
-          if (prev.length === 0 || prev.length <= DEFAULT_MENU.length) {
-            return result.items.map((item, idx) => ({ ...item, id: Date.now() + idx }));
-          }
-          const updated = [...prev];
-          result.items.forEach(newItem => {
-            const existingIndex = updated.findIndex(i => i.name?.toLowerCase().trim() === newItem.name?.toLowerCase().trim());
-            if (existingIndex >= 0) {
-              updated[existingIndex] = { ...updated[existingIndex], ...newItem };
-            } else {
-              updated.push({ ...newItem, id: Date.now() + Math.random() });
+      if (weekResult?.items) {
+        finalItems = weekResult.items.map((item, idx) => ({ ...item, id: Date.now() + idx }));
+      }
+
+      // Step 2: Process FDA if uploaded
+      if (uploadedFiles.fda) {
+        const fdaResult = await base44.integrations.Core.InvokeLLM({
+          prompt: `Extract FDA nutritional data from this PDF. For each menu item, extract: name, calories, protein (g), carbs (g), fat (g), sodium (mg), fiber (g), sugar (g). Return as structured JSON.`,
+          file_urls: [uploadedFiles.fda],
+          add_context_from_internet: false,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              items: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string" },
+                    calories: { type: "number" },
+                    protein: { type: "number" },
+                    carbs: { type: "number" },
+                    fat: { type: "number" },
+                    sodium: { type: "number" },
+                    fiber: { type: "number" },
+                    sugar: { type: "number" }
+                  }
+                }
+              }
             }
-          });
-          return updated;
+          }
         });
-        alert(`✓ Week Menu: ${result.items.length} items loaded`);
+
+        if (fdaResult?.items) {
+          finalItems = finalItems.map(item => {
+            const match = fdaResult.items.find(fda => fda.name?.toLowerCase().trim() === item.name?.toLowerCase().trim());
+            return match ? { ...item, ...match } : item;
+          });
+        }
       }
-    } catch (error) {
-      alert('Error: ' + error.message);
-    } finally {
-      setIsSyncing(null);
-      e.target.value = '';
-    }
-  };
 
-  const handleFDAUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setIsSyncing("fda");
-    try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-
-      const prompt = `Extract FDA nutritional data from this PDF. For each menu item, extract: name, calories, protein (g), carbs (g), fat (g), sodium (mg), fiber (g), sugar (g). Return as structured JSON.`;
-
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: prompt,
-        file_urls: [file_url],
-        add_context_from_internet: false,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            items: {
-              type: "array",
+      // Step 3: Process Allergen if uploaded
+      if (uploadedFiles.allergen) {
+        const allergenResult = await base44.integrations.Core.InvokeLLM({
+          prompt: `Extract allergen information from this PDF. For each menu item, extract: name, allergens (array of allergen names like Milk, Wheat, Egg, Soy, Fish, Shellfish, Tree Nuts, Peanuts, etc.), and dietary tags (array like Vegetarian, Vegan, Fit, Dairy Free, Gluten Free, etc.). Return as structured JSON.`,
+          file_urls: [uploadedFiles.allergen],
+          add_context_from_internet: false,
+          response_json_schema: {
+            type: "object",
+            properties: {
               items: {
-                type: "object",
-                properties: {
-                  name: { type: "string" },
-                  calories: { type: "number" },
-                  protein: { type: "number" },
-                  carbs: { type: "number" },
-                  fat: { type: "number" },
-                  sodium: { type: "number" },
-                  fiber: { type: "number" },
-                  sugar: { type: "number" }
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string" },
+                    allergens: { type: "array", items: { type: "string" } },
+                    tags: { type: "array", items: { type: "string" } }
+                  }
                 }
               }
             }
           }
+        });
+
+        if (allergenResult?.items) {
+          finalItems = finalItems.map(item => {
+            const match = allergenResult.items.find(al => al.name?.toLowerCase().trim() === item.name?.toLowerCase().trim());
+            return match ? { ...item, allergens: match.allergens, tags: match.tags } : item;
+          });
         }
-      });
-
-      if (result?.items) {
-        setMenuItems(prev => prev.map(item => {
-          const match = result.items.find(fda => fda.name?.toLowerCase().trim() === item.name?.toLowerCase().trim());
-          return match ? { ...item, ...match } : item;
-        }));
-        alert(`✓ FDA Data: ${result.items.length} items updated`);
       }
-    } catch (error) {
-      alert('Error: ' + error.message);
-    } finally {
-      setIsSyncing(null);
-      e.target.value = '';
-    }
-  };
 
-  const handleAllergenUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setIsSyncing("allergen");
-    try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-
-      const prompt = `Extract allergen information from this PDF. For each menu item, extract: name, allergens (array of allergen names like Milk, Wheat, Egg, Soy, Fish, Shellfish, Tree Nuts, Peanuts, etc.), and dietary tags (array like Vegetarian, Vegan, Fit, Dairy Free, Gluten Free, etc.). Return as structured JSON.`;
-
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: prompt,
-        file_urls: [file_url],
-        add_context_from_internet: false,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            items: {
-              type: "array",
+      // Step 4: Process Ingredients if uploaded
+      if (uploadedFiles.ingredients) {
+        const ingredientsResult = await base44.integrations.Core.InvokeLLM({
+          prompt: `Parse this CSV data and extract menu item names and their full ingredient lists. Return as structured JSON.\n\nCSV Data:\n${uploadedFiles.ingredients}`,
+          add_context_from_internet: false,
+          response_json_schema: {
+            type: "object",
+            properties: {
               items: {
-                type: "object",
-                properties: {
-                  name: { type: "string" },
-                  allergens: { type: "array", items: { type: "string" } },
-                  tags: { type: "array", items: { type: "string" } }
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string" },
+                    ingredients: { type: "string" }
+                  }
                 }
               }
             }
           }
-        }
-      });
+        });
 
-      if (result?.items) {
-        setMenuItems(prev => prev.map(item => {
-          const match = result.items.find(al => al.name?.toLowerCase().trim() === item.name?.toLowerCase().trim());
-          return match ? { ...item, allergens: match.allergens, tags: match.tags } : item;
-        }));
-        alert(`✓ Allergen Data: ${result.items.length} items updated`);
+        if (ingredientsResult?.items) {
+          finalItems = finalItems.map(item => {
+            const match = ingredientsResult.items.find(ing => ing.name?.toLowerCase().trim() === item.name?.toLowerCase().trim());
+            return match ? { ...item, ingredients: match.ingredients } : item;
+          });
+        }
       }
+
+      // Publish to menu
+      setMenuItems(finalItems);
+      setUploadedFiles({ weekMenu: null, fda: null, allergen: null, ingredients: null });
+      alert(`✅ Published ${finalItems.length} menu items with all data merged!`);
     } catch (error) {
-      alert('Error: ' + error.message);
+      alert('Error processing files: ' + error.message);
     } finally {
       setIsSyncing(null);
-      e.target.value = '';
-    }
-  };
-
-  const handleIngredientsUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setIsSyncing("ingredients");
-    try {
-      const text = await file.text();
-
-      const prompt = `Parse this CSV data and extract menu item names and their full ingredient lists. Return as structured JSON.`;
-
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `${prompt}\n\nCSV Data:\n${text}`,
-        add_context_from_internet: false,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            items: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  name: { type: "string" },
-                  ingredients: { type: "string" }
-                }
-              }
-            }
-          }
-        }
-      });
-
-      if (result?.items) {
-        setMenuItems(prev => prev.map(item => {
-          const match = result.items.find(ing => ing.name?.toLowerCase().trim() === item.name?.toLowerCase().trim());
-          return match ? { ...item, ingredients: match.ingredients } : item;
-        }));
-        alert(`✓ Ingredients: ${result.items.length} items updated`);
-      }
-    } catch (error) {
-      alert('Error: ' + error.message);
-    } finally {
-      setIsSyncing(null);
-      e.target.value = '';
     }
   };
 
@@ -656,14 +675,45 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
             ))}
           </div>
           <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-800">
-            <div className="font-bold mb-1 flex items-center gap-2">
+            <div className="font-bold mb-2 flex items-center gap-2">
               <Info className="w-4 h-4" />
-              Upload Order
+              Files Uploaded
             </div>
-            <div className="text-blue-600 space-y-1">
-              <div>1️⃣ Start with Week Menu to create items</div>
-              <div>2️⃣ Upload FDA, Allergen, and Ingredients to enrich data</div>
+            <div className="space-y-1 text-blue-700 mb-3">
+              <div className="flex items-center gap-2">
+                {uploadedFiles.weekMenu ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-300" />}
+                <span>Week Menu</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {uploadedFiles.fda ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-300" />}
+                <span>FDA Nutrition</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {uploadedFiles.allergen ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-300" />}
+                <span>Allergen Data</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {uploadedFiles.ingredients ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-300" />}
+                <span>Ingredients</span>
+              </div>
             </div>
+            <button
+              onClick={handleProcessAndPublish}
+              disabled={!uploadedFiles.weekMenu || isSyncing === "publish"}
+              className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
+            >
+              {isSyncing === "publish" ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  Process & Publish Menu
+                </>
+              )}
+            </button>
           </div>
           <button 
             onClick={() => console.log('Current Menu Data:', menuItems)} 

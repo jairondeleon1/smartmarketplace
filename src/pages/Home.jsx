@@ -559,18 +559,25 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
           console.log('FDA Data extracted:', fdaResult.items);
           let matchCount = 0;
           
+          // Normalize recipe numbers for better matching
+          const normalizeRecipe = (num) => String(num).trim().replace(/^0+/, '').toLowerCase();
+          
           finalItems = finalItems.map(item => {
-            const match = fdaResult.items.find(fda => fda.recipe_number === item.recipe_number);
+            const normalizedItemRecipe = normalizeRecipe(item.recipe_number || '');
+            const match = fdaResult.items.find(fda => normalizeRecipe(fda.recipe_number || '') === normalizedItemRecipe);
             if (match) {
               matchCount++;
               console.log(`✓ Matched FDA by recipe #${item.recipe_number}: ${item.name}`, match);
               return { ...item, calories: match.calories, protein: match.protein, carbs: match.carbs, fat: match.fat, sodium: match.sodium, fiber: match.fiber, sugar: match.sugar };
             } else {
-              console.log(`✗ No FDA match for recipe #${item.recipe_number}: ${item.name}`);
+              console.warn(`⚠️ No FDA match for recipe #${item.recipe_number}: ${item.name}`);
               return item;
             }
           });
           console.log(`FDA: Matched ${matchCount} of ${finalItems.length} items`);
+          if (matchCount < finalItems.length) {
+            console.warn(`⚠️ ${finalItems.length - matchCount} items missing FDA nutrition data`);
+          }
         } else {
           console.error('FDA extraction failed:', fdaResult);
         }
@@ -605,14 +612,17 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
           console.log('Allergen Data extracted:', allergenResult.items);
           let matchCount = 0;
           
+          const normalizeRecipe = (num) => String(num).trim().replace(/^0+/, '').toLowerCase();
+          
           finalItems = finalItems.map(item => {
-            const match = allergenResult.items.find(al => al.recipe_number === item.recipe_number);
+            const normalizedItemRecipe = normalizeRecipe(item.recipe_number || '');
+            const match = allergenResult.items.find(al => normalizeRecipe(al.recipe_number || '') === normalizedItemRecipe);
             if (match) {
               matchCount++;
               console.log(`✓ Matched Allergen by recipe #${item.recipe_number}: ${item.name}`, match);
               return { ...item, allergens: match.allergens, tags: match.tags };
             } else {
-              console.log(`✗ No Allergen match for recipe #${item.recipe_number}: ${item.name}`);
+              console.warn(`⚠️ No Allergen match for recipe #${item.recipe_number}: ${item.name}`);
               return item;
             }
           });
@@ -651,8 +661,11 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
           console.log('Ingredients Data extracted:', ingredientsResult.items);
           let matchCount = 0;
           
+          const normalizeRecipe = (num) => String(num).trim().replace(/^0+/, '').toLowerCase();
+          
           finalItems = finalItems.map(item => {
-            const match = ingredientsResult.items.find(ing => ing.recipe_number === item.recipe_number);
+            const normalizedItemRecipe = normalizeRecipe(item.recipe_number || '');
+            const match = ingredientsResult.items.find(ing => normalizeRecipe(ing.recipe_number || '') === normalizedItemRecipe);
             if (match) {
               matchCount++;
               console.log(`✓ Matched Ingredients by recipe #${item.recipe_number}: ${item.name}`);
@@ -669,7 +682,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
               
               return { ...item, ingredients: match.ingredients, tags: mergedTags };
             } else {
-              console.log(`✗ No Ingredients match for recipe #${item.recipe_number}: ${item.name}`);
+              console.warn(`⚠️ No Ingredients match for recipe #${item.recipe_number}: ${item.name}`);
               return item;
             }
           });

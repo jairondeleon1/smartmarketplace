@@ -614,10 +614,10 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         }
       }
 
-      // Step 4: Process Ingredients if uploaded - match by recipe number
+      // Step 4: Process Ingredients if uploaded - match by recipe number and extract dietary tags
       if (uploadedFiles.ingredients) {
         const ingredientsResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `Parse this CSV data and extract recipe_number and full ingredient lists. Return as structured JSON.\n\nCSV Data:\n${uploadedFiles.ingredients}`,
+          prompt: `Parse this CSV data and extract recipe_number, full ingredient lists, and dietary tags (Vegan, Vegetarian, Fit). Look for these indicators in the CSV columns. Return as structured JSON.\n\nCSV Data:\n${uploadedFiles.ingredients}`,
           add_context_from_internet: false,
           response_json_schema: {
             type: "object",
@@ -628,7 +628,10 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                   type: "object",
                   properties: {
                     recipe_number: { type: "string" },
-                    ingredients: { type: "string" }
+                    ingredients: { type: "string" },
+                    is_vegan: { type: "boolean" },
+                    is_vegetarian: { type: "boolean" },
+                    is_fit: { type: "boolean" }
                   }
                 }
               }
@@ -645,7 +648,18 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
             if (match) {
               matchCount++;
               console.log(`✓ Matched Ingredients by recipe #${item.recipe_number}: ${item.name}`);
-              return { ...item, ingredients: match.ingredients };
+              
+              // Build tags array from ingredients CSV data
+              const csvTags = [];
+              if (match.is_vegan) csvTags.push('Vegan');
+              if (match.is_vegetarian) csvTags.push('Vegetarian');
+              if (match.is_fit) csvTags.push('Fit');
+              
+              // Merge with existing tags from allergen file
+              const existingTags = item.tags || [];
+              const mergedTags = [...new Set([...existingTags, ...csvTags])];
+              
+              return { ...item, ingredients: match.ingredients, tags: mergedTags };
             } else {
               console.log(`✗ No Ingredients match for recipe #${item.recipe_number}: ${item.name}`);
               return item;

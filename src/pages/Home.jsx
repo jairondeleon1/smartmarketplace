@@ -350,9 +350,9 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen }) {
           <h1 className="text-xl font-bold uppercase tracking-widest text-white font-sans font-bold">SmartMenu IQ</h1>
         </div>
         <div className="hidden md:flex gap-6 items-center text-sm font-bold uppercase tracking-widest font-sans font-bold">
-          <button onClick={() => changeView('customer')} className={view === 'customer' ? 'text-white border-b-2 border-white pb-1' : 'text-teal-100 opacity-70'}>Menu</button>
-          <button onClick={() => changeView('chat')} className={view === 'chat' ? 'text-white border-b-2 border-white pb-1' : 'text-teal-100 opacity-70'}>AI Assistant</button>
-          <button onClick={() => changeView('admin')} className={view === 'admin' ? 'text-white border-b-2 border-white pb-1' : 'text-teal-100 opacity-70'}>Admin</button>
+          <button onClick={() => changeView('customer')} className={view === 'customer' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>Menu</button>
+          <button onClick={() => changeView('chat')} className={view === 'chat' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>AI Assistant</button>
+          <button onClick={() => changeView('admin')} className={view === 'admin' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>Admin</button>
         </div>
         <div className="md:hidden flex items-center gap-2">
            <button className="p-2" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>{isMobileMenuOpen ? <X className="text-white" /> : <MenuIcon className="text-white" />}</button>

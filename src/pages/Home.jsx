@@ -1193,6 +1193,12 @@ export default function Home() {
     if (activeFilters.fit && !item.tags?.includes('Fit')) return false;
 
     return true;
+  }).sort((a, b) => {
+    // Sort by meal period: Breakfast -> Lunch -> Dinner -> All Day
+    const mealOrder = { 'Breakfast': 0, 'Lunch': 1, 'Dinner': 2, 'All Day': 3 };
+    const aOrder = mealOrder[a.meal_period || 'Lunch'] ?? 1;
+    const bOrder = mealOrder[b.meal_period || 'Lunch'] ?? 1;
+    return aOrder - bOrder;
   });
 
   const trayTotals = myPlate.reduce((acc, item) => acc + (item.calories || 0), 0);

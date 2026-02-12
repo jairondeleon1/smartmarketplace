@@ -1222,9 +1222,8 @@ export default function Home() {
         {view === 'customer' && (
           <div className="max-w-5xl mx-auto p-4 space-y-8 pb-32 font-sans overflow-x-hidden font-bold">
              <div className="text-center space-y-6 pt-10 font-sans font-bold">
-                <div className="space-y-1 font-sans font-bold">
-                  <h2 className="text-4xl font-bold text-slate-900 uppercase tracking-widest font-sans leading-none font-bold">SmartMenu IQ</h2>
-                  <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] tracking-[0.2em] font-sans font-bold"> Heathrow HUB Daily Nutrition Portal</p>
+                <div className="flex justify-center">
+                  <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698cee888040f55d6a3c5040/403ea3134_SmartMenuIQ100x50.png" alt="SmartMenu IQ" className="h-16" />
                 </div>
                 <div className="flex flex-col gap-4 items-center max-w-xl mx-auto px-2 font-sans font-bold">
                   <button id="week-planner" onClick={() => setIsWeeklyPlannerOpen(true)} className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 border border-slate-800 font-sans font-bold uppercase tracking-widest text-xs active:scale-95 transition-all font-bold">

@@ -37,6 +37,7 @@ import {
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import NutritionCharts from "../components/NutritionCharts";
+import RecipeDiscovery from "./RecipeDiscovery";
 
 // --- CONSTANTS ---
 const VEGAN_URL = "https://i.postimg.cc/MH7cDSz4/vegan.png"; 
@@ -368,6 +369,7 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen }) {
         </div>
         <div className="hidden md:flex gap-6 items-center text-sm font-bold uppercase tracking-widest font-sans font-bold">
           <button onClick={() => changeView('customer')} className={view === 'customer' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>Menu</button>
+          <button onClick={() => changeView('recipes')} className={view === 'recipes' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>Recipes</button>
           <button onClick={() => changeView('chat')} className={view === 'chat' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>AI Assistant</button>
           <button onClick={() => changeView('admin')} className={view === 'admin' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>Admin</button>
         </div>
@@ -378,6 +380,7 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen }) {
       {isMobileMenuOpen && (
         <div className="fixed top-16 left-0 right-0 bg-slate-800 border-t border-slate-700 shadow-xl md:hidden z-[110] flex flex-col p-4 gap-4 font-bold uppercase text-sm tracking-widest font-sans text-white">
           <button onClick={() => { changeView('customer'); setIsMobileMenuOpen(false); }} className="text-left font-bold">Daily Menu</button>
+          <button onClick={() => { changeView('recipes'); setIsMobileMenuOpen(false); }} className="text-left font-bold">Recipes</button>
           <button onClick={() => { changeView('chat'); setIsMobileMenuOpen(false); }} className="text-left font-bold">AI Assistant</button>
           <button onClick={() => { changeView('admin'); setIsMobileMenuOpen(false); }} className="text-left font-bold">Admin</button>
         </div>
@@ -1276,6 +1279,7 @@ export default function Home() {
           </div>
         )}
         {view === 'chat' && <ChatView chatHistory={chatHistory} isTyping={isTyping} userQuery={userQuery} setUserQuery={setUserQuery} handleSendChat={handleSendChat} />}
+        {view === 'recipes' && <RecipeDiscovery />}
         {view === 'admin' && !isAdminLoggedIn && (
           <div className="flex items-center justify-center min-h-[calc(100vh-100px)] p-6 tracking-tight font-sans font-bold">
             <form onSubmit={(e) => { e.preventDefault(); if (e.target.pw.value === 'admin123') setIsAdminLoggedIn(true); }} className="bg-white p-14 rounded-[3.5rem] shadow-2xl w-full max-w-sm border border-gray-100 text-center space-y-8 animate-in zoom-in-95 font-sans font-medium">

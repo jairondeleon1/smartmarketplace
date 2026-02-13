@@ -912,8 +912,10 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
 
     setIsSyncing("publish");
     setProcessingProgress(0);
+
+    let finalItems = [];
+
     try {
-      let finalItems = [];
 
       // Step 1: Process Week Menu - extract items with recipe numbers
       setProcessingStep('Processing Week Menu...');
@@ -962,47 +964,49 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
 
         let fdaResult;
         try {
-          // Use LLM for extraction - focus on available data
           console.log('Extracting FDA data using AI...');
-          fdaResult = await base44.integrations.Core.InvokeLLM({
-            prompt: `Extract nutritional data from this FDA file. For each item, get: name, recipe_number, calories, protein, carbs, fat, saturated_fat, sodium, fiber, sugar, cholesterol. Also try to extract: vitamin_a, vitamin_c, vitamin_d, calcium, iron, potassium (if available in the file). If a nutrient is not listed, omit it or set to 0. Return as JSON.`,
-            file_urls: [uploadedFiles.fda.url],
-            add_context_from_internet: false,
-            response_json_schema: {
-              type: "object",
-              properties: {
-                items: {
-                  type: "array",
+          fdaResult = await Promise.race([
+            base44.integrations.Core.InvokeLLM({
+              prompt: `Extract nutritional data. For each item: name, recipe_number, calories, protein, carbs, fat, saturated_fat, sodium, fiber, sugar. If available also extract: cholesterol, vitamin_a, vitamin_c, vitamin_d, calcium, iron, potassium. Return JSON array.`,
+              file_urls: [uploadedFiles.fda.url],
+              response_json_schema: {
+                type: "object",
+                properties: {
                   items: {
-                    type: "object",
-                    properties: {
-                      name: { type: "string" },
-                      recipe_number: { type: "string" },
-                      calories: { type: "number" },
-                      protein: { type: "number" },
-                      carbs: { type: "number" },
-                      fat: { type: "number" },
-                      saturated_fat: { type: "number" },
-                      sodium: { type: "number" },
-                      fiber: { type: "number" },
-                      sugar: { type: "number" },
-                      cholesterol: { type: "number" },
-                      vitamin_a: { type: "number" },
-                      vitamin_c: { type: "number" },
-                      vitamin_d: { type: "number" },
-                      calcium: { type: "number" },
-                      iron: { type: "number" },
-                      potassium: { type: "number" }
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        name: { type: "string" },
+                        recipe_number: { type: "string" },
+                        calories: { type: "number" },
+                        protein: { type: "number" },
+                        carbs: { type: "number" },
+                        fat: { type: "number" },
+                        saturated_fat: { type: "number" },
+                        sodium: { type: "number" },
+                        fiber: { type: "number" },
+                        sugar: { type: "number" },
+                        cholesterol: { type: "number" },
+                        vitamin_a: { type: "number" },
+                        vitamin_c: { type: "number" },
+                        vitamin_d: { type: "number" },
+                        calcium: { type: "number" },
+                        iron: { type: "number" },
+                        potassium: { type: "number" }
+                      }
                     }
                   }
                 }
               }
-            }
-          });
-          console.log('FDA AI extraction result:', fdaResult);
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('FDA processing timeout - file too large or complex')), 60000))
+          ]);
+          console.log('FDA extraction complete:', fdaResult);
         } catch (error) {
           console.error('FDA extraction error:', error);
-          alert('Warning: FDA extraction failed - ' + error.message);
+          alert('⚠️ FDA extraction failed: ' + error.message + '\n\nContinuing without FDA data...');
+          fdaResult = null;
         }
 
         if (fdaResult?.items) {
@@ -1255,13 +1259,14 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         setProcessingProgress(0);
       }, 500);
     } catch (error) {
-      alert('Error processing files: ' + error.message);
+      console.error('Full error:', error);
+      const errorMsg = error.message || error.toString();
+      alert(`Error processing files: ${errorMsg}\n\nCheck console (F12) for details.`);
       setProcessingStep('');
       setProcessingProgress(0);
-    } finally {
       setIsSyncing(null);
     }
-  };
+    };
 
   const syncOptions = [
     { label: "1. Week Menu PDF", type: "week-menu", icon: Calendar, accept: ".pdf", handler: handleWeekMenuUpload, desc: "Menu items with recipe #s" }, 

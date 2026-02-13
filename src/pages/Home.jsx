@@ -40,6 +40,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import NutritionCharts from "../components/NutritionCharts";
 import ProfileSettingsModal from "../components/ProfileSettingsModal";
 import NutritionDetailView from "../components/NutritionDetailView";
+import BulkEditModal from "../components/admin/BulkEditModal";
+import MenuItemsTable from "../components/admin/MenuItemsTable";
 import jsPDF from 'jspdf';
 
 // --- CONSTANTS ---
@@ -830,6 +832,7 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
 }
 
 function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomVegUrl, customVeganUrl, setCustomVeganUrl, newItem, setNewItem, handleAddItem, handleDeleteItem }) {
+  const [activeTab, setActiveTab] = useState('upload');
   const [isSyncing, setIsSyncing] = useState(null);
   const [processingStep, setProcessingStep] = useState('');
   const [processingProgress, setProcessingProgress] = useState(0);
@@ -839,19 +842,87 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     allergen: null,
     ingredients: null
   });
+  const [showBulkEdit, setShowBulkEdit] = useState(false);
+  const [bulkEditItems, setBulkEditItems] = useState([]);
 
-  const uploadFile = async (file, type) => {
-    if (!file) return null;
-    
-    if (file.size > 10 * 1024 * 1024) {
-      throw new Error('File too large (max 10MB)');
-    }
-    
-    const formData = new FormData();
-    formData.append('file', file);
+  const uploadFile = async (file) => {
+    if (!file) throw new Error('No file provided');
+    if (file.size > 10 * 1024 * 1024) throw new Error('File too large (max 10MB)');
     
     const result = await base44.integrations.Core.UploadFile({ file });
+    if (!result?.file_url) throw new Error('Upload failed - no URL returned');
+    
     return result.file_url;
+  };
+
+  const handleBulkEdit = (selectedItems) => {
+    setBulkEditItems(selectedItems);
+    setShowBulkEdit(true);
+  };
+
+  const applyBulkEdit = async (editData) => {
+    const updatedItems = menuItems.map(item => {
+      if (!bulkEditItems.find(i => i.id === item.id)) return item;
+      
+      let updated = { ...item };
+      
+      if (editData.tags.length > 0) {
+        const existingTags = updated.tags || [];
+        updated.tags = [...new Set([...existingTags, ...editData.tags])];
+      }
+      
+      if (editData.addCalories !== 0) {
+        updated.calories = (updated.calories || 0) + editData.addCalories;
+      }
+      
+      if (editData.multiplyCalories !== 1) {
+        updated.calories = Math.round((updated.calories || 0) * editData.multiplyCalories);
+      }
+      
+      if (editData.descriptionPrefix) {
+        updated.description = editData.descriptionPrefix + ' ' + (updated.description || '');
+      }
+      
+      if (editData.descriptionSuffix) {
+        updated.description = (updated.description || '') + ' ' + editData.descriptionSuffix;
+      }
+      
+      return updated;
+    });
+    
+    await setMenuItems(updatedItems);
+    setShowBulkEdit(false);
+    setBulkEditItems([]);
+  };
+
+  const exportToCSV = () => {
+    const headers = ['Name', 'Day', 'Station', 'Description', 'Calories', 'Protein', 'Carbs', 'Fat', 'Sodium', 'Tags', 'Allergens'];
+    const rows = menuItems.map(item => [
+      item.name || '',
+      item.day || '',
+      item.station || '',
+      item.description || '',
+      item.calories || 0,
+      item.protein || 0,
+      item.carbs || 0,
+      item.fat || 0,
+      item.sodium || 0,
+      (item.tags || []).join('; '),
+      (item.allergens || []).join('; ')
+    ]);
+    
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `menu_export_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleWeekMenuUpload = async (e) => {
@@ -1252,12 +1323,35 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   ];
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-8 pb-32 font-sans overflow-x-hidden font-medium">
-      <div className="flex justify-between items-center bg-white p-6 rounded-3xl border border-gray-100 shadow-sm font-sans font-bold">
-        <div><h2 className="text-2xl font-bold uppercase tracking-widest text-slate-900">Admin Hub</h2><p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1 text-teal-800">Infrastructure Control</p></div>
-        <button onClick={onLogout} className="text-red-500 font-bold hover:bg-red-50 px-6 py-3 rounded-xl transition border border-red-100 uppercase text-[10px] tracking-widest">Logout</button>
-      </div>
-      <div className="grid lg:grid-cols-2 gap-8">
+    <>
+      <div className="max-w-6xl mx-auto p-6 space-y-8 pb-32 font-sans overflow-x-hidden font-medium">
+        <div className="flex justify-between items-center bg-white p-6 rounded-3xl border border-gray-100 shadow-sm font-sans font-bold">
+          <div><h2 className="text-2xl font-bold uppercase tracking-widest text-slate-900">Admin Hub</h2><p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1 text-teal-800">Manage Menu & Data</p></div>
+          <button onClick={onLogout} className="text-red-500 font-bold hover:bg-red-50 px-6 py-3 rounded-xl transition border border-red-100 uppercase text-[10px] tracking-widest">Logout</button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2 bg-white p-2 rounded-xl border border-gray-100">
+          <button
+            onClick={() => setActiveTab('upload')}
+            className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${
+              activeTab === 'upload' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            Upload Files
+          </button>
+          <button
+            onClick={() => setActiveTab('manage')}
+            className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${
+              activeTab === 'manage' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            Manage Items ({menuItems.length})
+          </button>
+        </div>
+
+        {activeTab === 'upload' && (
+          <div className="grid lg:grid-cols-2 gap-8">
         <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2 tracking-widest"><Upload className="w-4 h-4 text-teal-600"/> Matrix Sync</h3>

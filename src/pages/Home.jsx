@@ -916,19 +916,16 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
 
     setIsSyncing("publish");
     setProcessingProgress(0);
-
     let finalItems = [];
 
     try {
-
-      // Step 1: Process Week Menu - extract items with recipe numbers
-      setProcessingStep('Processing Week Menu...');
+      // Step 1: Week Menu
+      setProcessingStep('Step 1: Week Menu...');
       setProcessingProgress(20);
-      console.log('Step 1: Processing Week Menu...');
+
       const weekResult = await base44.integrations.Core.InvokeLLM({
-        prompt: `Extract menu items from this weekly menu PDF. For each item, extract: name, recipe_number (the number in parentheses at the end), station, day (MUST be one of: Monday, Tuesday, Wednesday, Thursday, Friday, or Daily Special - extract the specific weekday name for each item, NOT date ranges), description (extract the food description text, NOT portion sizes or serving sizes). Return as structured JSON.`,
+        prompt: `Extract menu items: name, recipe_number, station, day (Monday/Tuesday/Wednesday/Thursday/Friday/Daily Special), description. JSON array.`,
         file_urls: [uploadedFiles.weekMenu],
-        add_context_from_internet: false,
         response_json_schema: {
           type: "object",
           properties: {
@@ -949,108 +946,65 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         }
       });
 
-      if (weekResult?.items) {
-        finalItems = weekResult.items.map((item, idx) => ({ ...item, id: Date.now() + idx }));
-        console.log('Week Menu extracted:', finalItems);
-        } else {
-        console.error('Week Menu extraction failed:', weekResult);
-        }
+      if (!weekResult?.items) {
+        throw new Error('Week Menu extraction failed');
+      }
 
-        setProcessingProgress(35);
+      finalItems = weekResult.items.map((item, idx) => ({ ...item, id: Date.now() + idx }));
+      setProcessingProgress(35);
 
-      // Step 2: Process FDA if uploaded - match by recipe number
+      // Step 2: FDA (optional)
       if (uploadedFiles.fda) {
-        setProcessingStep('Processing FDA Nutrition...');
+        setProcessingStep('Step 2: FDA Data...');
         setProcessingProgress(40);
-        console.log('Step 2: Processing FDA Data...');
-        console.log('FDA file type:', uploadedFiles.fda.type);
-        console.log('FDA file URL:', uploadedFiles.fda.url);
 
-        let fdaResult;
         try {
-          console.log('Extracting FDA data using AI...');
-          fdaResult = await Promise.race([
-            base44.integrations.Core.InvokeLLM({
-              prompt: `Extract nutritional data. For each item: name, recipe_number, calories, protein, carbs, fat, saturated_fat, sodium, fiber, sugar. If available also extract: cholesterol, vitamin_a, vitamin_c, vitamin_d, calcium, iron, potassium. Return JSON array.`,
-              file_urls: [uploadedFiles.fda.url],
-              response_json_schema: {
-                type: "object",
-                properties: {
+          const fdaResult = await base44.integrations.Core.InvokeLLM({
+            prompt: `Extract: name, recipe_number, calories, protein, carbs, fat, saturated_fat, sodium, fiber, sugar, cholesterol, vitamin_a, vitamin_c, vitamin_d, calcium, iron, potassium. JSON.`,
+            file_urls: [uploadedFiles.fda.url],
+            response_json_schema: {
+              type: "object",
+              properties: {
+                items: {
+                  type: "array",
                   items: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        name: { type: "string" },
-                        recipe_number: { type: "string" },
-                        calories: { type: "number" },
-                        protein: { type: "number" },
-                        carbs: { type: "number" },
-                        fat: { type: "number" },
-                        saturated_fat: { type: "number" },
-                        sodium: { type: "number" },
-                        fiber: { type: "number" },
-                        sugar: { type: "number" },
-                        cholesterol: { type: "number" },
-                        vitamin_a: { type: "number" },
-                        vitamin_c: { type: "number" },
-                        vitamin_d: { type: "number" },
-                        calcium: { type: "number" },
-                        iron: { type: "number" },
-                        potassium: { type: "number" }
-                      }
+                    type: "object",
+                    properties: {
+                      name: { type: "string" },
+                      recipe_number: { type: "string" },
+                      calories: { type: "number" },
+                      protein: { type: "number" },
+                      carbs: { type: "number" },
+                      fat: { type: "number" },
+                      saturated_fat: { type: "number" },
+                      sodium: { type: "number" },
+                      fiber: { type: "number" },
+                      sugar: { type: "number" },
+                      cholesterol: { type: "number" },
+                      vitamin_a: { type: "number" },
+                      vitamin_c: { type: "number" },
+                      vitamin_d: { type: "number" },
+                      calcium: { type: "number" },
+                      iron: { type: "number" },
+                      potassium: { type: "number" }
                     }
                   }
                 }
               }
-            }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('FDA processing timeout - file too large or complex')), 60000))
-          ]);
-          console.log('FDA extraction complete:', fdaResult);
-        } catch (error) {
-          console.error('FDA extraction error:', error);
-          alert('⚠️ FDA extraction failed: ' + error.message + '\n\nContinuing without FDA data...');
-          fdaResult = null;
-        }
+            }
+          });
+
+        let fdaResult;
 
         if (fdaResult?.items) {
-          console.log('✅ FDA Data extracted successfully!');
-          console.log('FDA items count:', fdaResult.items.length);
-          console.log('First 5 FDA items:', fdaResult.items.slice(0, 5));
-          console.log('Sample menu item recipe numbers:', finalItems.slice(0, 5).map(i => i.recipe_number));
-          let matchCount = 0;
-          let nameMatchCount = 0;
-          
-          // Normalize recipe numbers and names for better matching
           const normalizeRecipe = (num) => String(num).trim().replace(/^0+/, '').toLowerCase();
-          const normalizeName = (name) => String(name || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');
-          
-          finalItems = finalItems.map(item => {
-            const normalizedItemRecipe = normalizeRecipe(item.recipe_number || '');
-            const normalizedItemName = normalizeName(item.name);
-            
-            // First try to match by recipe number
-            let match = fdaResult.items.find(fda => normalizeRecipe(fda.recipe_number || '') === normalizedItemRecipe);
-            
-            // If no match by recipe number, try matching by name
-            if (!match && item.name) {
-              match = fdaResult.items.find(fda => {
-                const fdaName = normalizeName(fda.name || fda.item_name || '');
-                return fdaName && normalizedItemName && fdaName.includes(normalizedItemName.slice(0, 10)) || normalizedItemName.includes(fdaName.slice(0, 10));
-              });
-              if (match) {
-                nameMatchCount++;
-                console.log(`✓ FDA Name Match: ${item.name} -> ${match.calories} cal`);
-              }
-            }
-            
-            if (match) {
-              matchCount++;
-              if (nameMatchCount === 0) {
-                console.log(`✓ FDA Recipe Match: ${item.name} (${item.recipe_number}) -> ${match.calories} cal`);
-              }
 
-              // Calculate unsaturated fat if not provided
+          finalItems = finalItems.map(item => {
+            const match = fdaResult.items.find(fda => 
+              normalizeRecipe(fda.recipe_number || '') === normalizeRecipe(item.recipe_number || '')
+            );
+
+            if (match) {
               const saturatedFat = match.saturated_fat || 0;
               const totalFat = match.fat || 0;
               const unsaturatedFat = totalFat > saturatedFat ? totalFat - saturatedFat : 0;
@@ -1074,17 +1028,14 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                 iron: match.iron || 0,
                 potassium: match.potassium || 0
               };
-            } else {
-              console.warn(`❌ No FDA match for: ${item.name} (recipe #${item.recipe_number})`);
-              return item;
             }
+            return item;
           });
-          console.log(`🎯 FDA MATCHING COMPLETE: ${matchCount} of ${finalItems.length} items matched (${nameMatchCount} by name)`);
-          console.log('Sample matched item:', finalItems.find(i => i.calories > 0));
-        } else {
-          console.error('❌ FDA extraction failed or returned no items:', fdaResult);
         }
-      }
+        } catch (error) {
+        alert('FDA failed: ' + error.message);
+        }
+        }
 
       setProcessingProgress(60);
 

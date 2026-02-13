@@ -139,26 +139,68 @@ function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPlate }) {
   const [goal, setGoal] = useState('High Protein');
   const [plan, setPlan] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [changingMeal, setChangingMeal] = useState(null);
 
   const generatePlan = async () => {
     setIsLoading(true);
-    const prompt = `Plan 5-day meal menu for goal: "${goal}". Menu Data: ${JSON.stringify(menuItems.map(i => ({id: i.id, name: i.name, day: i.day})))}. Return ONLY JSON {"Monday": ID, "Tuesday": ID, ...}`;
+    const prompt = `Plan 5-day meal menu for goal: "${goal}". For each weekday (Monday-Friday), select BOTH a breakfast item AND a lunch item from the menu. Menu Data: ${JSON.stringify(menuItems.map(i => ({id: i.id, name: i.name, day: i.day, meal_period: i.meal_period})))}. Return ONLY JSON with structure: {"Monday": {"breakfast": ID, "lunch": ID}, "Tuesday": {"breakfast": ID, "lunch": ID}, ...}`;
     try {
       const response = await base44.integrations.Core.InvokeLLM({
         prompt: prompt,
         response_json_schema: {
           type: "object",
           properties: {
-            Monday: { type: "number" },
-            Tuesday: { type: "number" },
-            Wednesday: { type: "number" },
-            Thursday: { type: "number" },
-            Friday: { type: "number" }
+            Monday: { 
+              type: "object",
+              properties: {
+                breakfast: { type: "number" },
+                lunch: { type: "number" }
+              }
+            },
+            Tuesday: { 
+              type: "object",
+              properties: {
+                breakfast: { type: "number" },
+                lunch: { type: "number" }
+              }
+            },
+            Wednesday: { 
+              type: "object",
+              properties: {
+                breakfast: { type: "number" },
+                lunch: { type: "number" }
+              }
+            },
+            Thursday: { 
+              type: "object",
+              properties: {
+                breakfast: { type: "number" },
+                lunch: { type: "number" }
+              }
+            },
+            Friday: { 
+              type: "object",
+              properties: {
+                breakfast: { type: "number" },
+                lunch: { type: "number" }
+              }
+            }
           }
         }
       });
       if (response) {
-        setPlan(Object.entries(response).map(([day, id]) => ({ day, item: menuItems.find(i => i.id === id) })).filter(e => e.item));
+        const planData = [];
+        Object.entries(response).forEach(([day, meals]) => {
+          if (meals.breakfast) {
+            const breakfastItem = menuItems.find(i => i.id === meals.breakfast);
+            if (breakfastItem) planData.push({ day, mealType: 'Breakfast', item: breakfastItem });
+          }
+          if (meals.lunch) {
+            const lunchItem = menuItems.find(i => i.id === meals.lunch);
+            if (lunchItem) planData.push({ day, mealType: 'Lunch', item: lunchItem });
+          }
+        });
+        setPlan(planData);
       }
     } catch (e) { 
       setPlan(null); 
@@ -167,15 +209,40 @@ function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPlate }) {
     }
   };
 
+  const clearPlan = () => {
+    setPlan(null);
+    setChangingMeal(null);
+  };
+
+  const changeMeal = (dayIndex) => {
+    setChangingMeal(dayIndex);
+  };
+
+  const selectNewMeal = (dayIndex, newItem) => {
+    const updatedPlan = [...plan];
+    updatedPlan[dayIndex] = { ...updatedPlan[dayIndex], item: newItem };
+    setPlan(updatedPlan);
+    setChangingMeal(null);
+  };
+
+  const removeMeal = (dayIndex) => {
+    setPlan(prev => prev.filter((_, idx) => idx !== dayIndex));
+  };
+
   if (!isOpen) return null;
+  
+  const availableMeals = changingMeal !== null 
+    ? menuItems.filter(item => item.day === plan[changingMeal].day || item.day === 'Daily Special')
+    : [];
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4 font-sans font-bold">
-      <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95">
-        <div className="p-8 bg-slate-900 text-white flex justify-between items-center border-b border-white/5">
+      <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden animate-in zoom-in-95 flex flex-col">
+        <div className="p-8 bg-slate-900 text-white flex justify-between items-center border-b border-white/5 shrink-0">
           <h3 className="font-bold text-2xl flex items-center gap-2 uppercase tracking-tight text-white"><Wand className="w-6 h-6 text-teal-400" /> AI Strategy</h3>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition"><X className="w-5 h-5 text-white" /></button>
         </div>
-        <div className="p-8 space-y-6 font-medium font-sans">
+        <div className="p-8 space-y-6 font-medium font-sans overflow-y-auto flex-1">
           {!plan ? (
             <>
               <div className="grid grid-cols-1 gap-2 font-sans font-bold">
@@ -189,12 +256,59 @@ function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPlate }) {
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Optimize Week'}
               </button>
             </>
+          ) : changingMeal !== null ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-bold text-sm uppercase text-slate-800">Select {plan[changingMeal].mealType} for {plan[changingMeal].day}</h4>
+                <button onClick={() => setChangingMeal(null)} className="text-xs text-gray-500 hover:text-gray-700">Cancel</button>
+              </div>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {availableMeals.map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => selectNewMeal(changingMeal, item)}
+                    className="w-full p-3 bg-gray-50 hover:bg-teal-50 rounded-xl border border-gray-100 hover:border-teal-200 text-left transition-all"
+                  >
+                    <div className="font-bold text-sm text-slate-800">{item.name}</div>
+                    <div className="text-xs text-gray-500 mt-1">{item.calories} cal • {item.protein}g protein</div>
+                  </button>
+                ))}
+              </div>
+            </div>
           ) : (
             <div className="space-y-3 text-sm font-sans font-bold">
               {plan.map((entry, idx) => (
-                <div key={idx} className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-slate-800 font-sans"><span className="text-teal-700 w-12 text-[10px] uppercase border-r border-gray-200 pr-2">{entry.day.slice(0,3)}</span><span className="truncate">{entry.item.name}</span></div>
+                <div key={idx} className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-slate-800 font-sans">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-teal-700 text-[10px] uppercase font-bold">{entry.day.slice(0,3)}</span>
+                      <span className="text-gray-400 text-[10px] uppercase">•</span>
+                      <span className="text-gray-600 text-[10px] uppercase font-bold">{entry.mealType}</span>
+                    </div>
+                    <span className="text-sm truncate block">{entry.item.name}</span>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <button 
+                      onClick={() => changeMeal(idx)}
+                      className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition"
+                      title="Change meal"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => removeMeal(idx)}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition"
+                      title="Remove meal"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               ))}
-              <button onClick={() => { plan.forEach(e => addToPlate(e.item)); onClose(); }} className="w-full py-4 bg-slate-900 text-white font-bold uppercase text-xs rounded-xl mt-4 active:scale-95 transition-all tracking-widest font-sans font-bold">Add All to Tray</button>
+              <div className="flex gap-2 pt-2">
+                <button onClick={clearPlan} className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold uppercase text-xs rounded-xl hover:bg-gray-200 transition-all tracking-widest font-sans font-bold">Clear Plan</button>
+                <button onClick={() => { plan.forEach(e => addToPlate(e.item)); onClose(); }} className="flex-1 py-3 bg-slate-900 text-white font-bold uppercase text-xs rounded-xl active:scale-95 transition-all tracking-widest font-sans font-bold">Add All to Tray</button>
+              </div>
             </div>
           )}
         </div>

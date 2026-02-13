@@ -959,13 +959,13 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         console.log('Step 2: Processing FDA Data...');
         console.log('FDA file type:', uploadedFiles.fda.type);
         console.log('FDA file URL:', uploadedFiles.fda.url);
-        
+
         let fdaResult;
         try {
-          // Use LLM for both PDF and XLSX - more reliable
+          // Use LLM for extraction - focus on available data
           console.log('Extracting FDA data using AI...');
           fdaResult = await base44.integrations.Core.InvokeLLM({
-            prompt: `Extract FDA nutritional data from this file. For each menu item, extract: name, recipe_number, calories, protein (g), carbs (g), fat (g), saturated_fat (g), unsaturated_fat (g), sodium (mg), fiber (g), sugar (g), cholesterol (mg), vitamin_a (mcg), vitamin_c (mg), vitamin_d (mcg), calcium (mg), iron (mg), potassium (mg). Return ALL items as structured JSON array.`,
+            prompt: `Extract nutritional data from this FDA file. For each item, get: name, recipe_number, calories, protein, carbs, fat, saturated_fat, sodium, fiber, sugar, cholesterol. Also try to extract: vitamin_a, vitamin_c, vitamin_d, calcium, iron, potassium (if available in the file). If a nutrient is not listed, omit it or set to 0. Return as JSON.`,
             file_urls: [uploadedFiles.fda.url],
             add_context_from_internet: false,
             response_json_schema: {
@@ -983,7 +983,6 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                       carbs: { type: "number" },
                       fat: { type: "number" },
                       saturated_fat: { type: "number" },
-                      unsaturated_fat: { type: "number" },
                       sodium: { type: "number" },
                       fiber: { type: "number" },
                       sugar: { type: "number" },
@@ -1003,6 +1002,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
           console.log('FDA AI extraction result:', fdaResult);
         } catch (error) {
           console.error('FDA extraction error:', error);
+          alert('Warning: FDA extraction failed - ' + error.message);
         }
 
         if (fdaResult?.items) {
@@ -1041,14 +1041,20 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
               if (nameMatchCount === 0) {
                 console.log(`✓ FDA Recipe Match: ${item.name} (${item.recipe_number}) -> ${match.calories} cal`);
               }
+
+              // Calculate unsaturated fat if not provided
+              const saturatedFat = match.saturated_fat || 0;
+              const totalFat = match.fat || 0;
+              const unsaturatedFat = totalFat > saturatedFat ? totalFat - saturatedFat : 0;
+
               return { 
                 ...item, 
                 calories: match.calories || 0, 
                 protein: match.protein || 0, 
                 carbs: match.carbs || 0, 
-                fat: match.fat || 0, 
-                saturated_fat: match.saturated_fat || 0,
-                unsaturated_fat: match.unsaturated_fat || 0,
+                fat: totalFat, 
+                saturated_fat: saturatedFat,
+                unsaturated_fat: unsaturatedFat,
                 sodium: match.sodium || 0, 
                 fiber: match.fiber || 0, 
                 sugar: match.sugar || 0,

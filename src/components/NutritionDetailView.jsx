@@ -143,26 +143,36 @@ export default function NutritionDetailView({ item }) {
       {activeTab === 'macros' && (
         <div className="space-y-4">
           <div>
-            <h4 className="text-xs font-bold uppercase text-gray-700 mb-3">Fat Breakdown</h4>
-            <ResponsiveContainer width="100%" height={100}>
-              <BarChart data={fatBreakdown} layout="horizontal">
-                <XAxis type="category" dataKey="name" tick={{ fontSize: 10 }} />
-                <YAxis type="number" tick={{ fontSize: 10 }} />
-                <Tooltip contentStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
-                <Bar dataKey="value" fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="mt-2 space-y-2">
-              {fatBreakdown.map(fat => (
-                <div key={fat.name} className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-gray-700">{fat.name} Fat</span>
-                  <div className="text-right">
-                    <span className="font-bold text-gray-900">{fat.value}g</span>
-                    {fat.dv > 0 && <span className="text-teal-600 ml-2">({fat.dv}% DV)</span>}
-                  </div>
+            <h4 className="text-xs font-bold uppercase text-gray-700 mb-3">Total Fat: {item.fat || 0}g</h4>
+            
+            {(item.saturated_fat > 0 || item.unsaturated_fat > 0) ? (
+              <>
+                <ResponsiveContainer width="100%" height={100}>
+                  <BarChart data={fatBreakdown} layout="horizontal">
+                    <XAxis type="category" dataKey="name" tick={{ fontSize: 10 }} />
+                    <YAxis type="number" tick={{ fontSize: 10 }} />
+                    <Tooltip contentStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
+                    <Bar dataKey="value" fill="#3b82f6" />
+                  </BarChart>
+                </ResponsiveContainer>
+                <div className="mt-2 space-y-2">
+                  {fatBreakdown.map(fat => (
+                    <div key={fat.name} className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-gray-700">{fat.name} Fat</span>
+                      <div className="text-right">
+                        <span className="font-bold text-gray-900">{fat.value}g</span>
+                        {fat.dv > 0 && <span className="text-teal-600 ml-2">({fat.dv}% DV)</span>}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
+                <p className="font-bold">Detailed fat breakdown not available for this item.</p>
+                <p className="mt-1 text-amber-700">Total fat: {item.fat || 0}g</p>
+              </div>
+            )}
           </div>
 
           <div className="border-t pt-3">

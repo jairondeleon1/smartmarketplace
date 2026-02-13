@@ -363,7 +363,7 @@ function TrayDetailsModal({ isOpen, onClose, plate, setPlate }) {
       }
 
       // Meal period header
-      pdf.setFillColor(20, 184, 166);
+      pdf.setFillColor(6, 95, 70);
       pdf.rect(20, yPos - 5, pageWidth - 40, 10, 'F');
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(11);
@@ -458,10 +458,10 @@ function TrayDetailsModal({ isOpen, onClose, plate, setPlate }) {
           {plate.length === 0 ? <div className="text-center py-12 text-gray-400 font-bold uppercase text-sm font-sans tracking-widest font-bold">Your tray is empty</div> : 
             <>
               {['Breakfast', 'Lunch', 'Dinner', 'All Day'].map(period => {
-                const periodItems = plate.filter((item, idx) => (item.meal_period || 'Lunch') === period).map((item, originalIdx) => ({
-                  item,
-                  originalIdx: plate.findIndex((p, i) => p === item && i >= originalIdx)
-                }));
+                const periodItems = plate.map((item, idx) => ({ item, originalIdx: idx })).filter(({ item }) => {
+                  const mealPeriod = item.meal_period || 'Lunch';
+                  return mealPeriod === period;
+                });
                 if (periodItems.length === 0) return null;
                 return (
                   <div key={period}>

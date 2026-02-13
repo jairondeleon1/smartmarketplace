@@ -855,6 +855,15 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     return result.file_url;
   };
 
+  const readFileAsText = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = (e) => reject(new Error('Failed to read file'));
+      reader.readAsText(file);
+    });
+  };
+
   const handleBulkEdit = (selectedItems) => {
     setBulkEditItems(selectedItems);
     setShowBulkEdit(true);
@@ -931,15 +940,13 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     
     setIsSyncing("week-menu");
     try {
-      const fileUrl = await uploadFile(file, 'week-menu');
+      const fileUrl = await uploadFile(file);
       setUploadedFiles(prev => ({ ...prev, weekMenu: fileUrl }));
-      alert('✓ Week Menu uploaded');
     } catch (error) {
       console.error('Week Menu upload error:', error);
-      alert('Upload failed: ' + (error?.message || 'Network error. Please try again.'));
+      alert('Week Menu upload failed: ' + (error?.message || 'Network error'));
     } finally {
       setIsSyncing(null);
-      if (e.target) e.target.value = '';
     }
   };
 
@@ -949,16 +956,13 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     
     setIsSyncing("fda");
     try {
-      const fileUrl = await uploadFile(file, 'fda');
-      const fileType = file.name.match(/\.(xlsx?|pdf)$/i)?.[1] || 'pdf';
-      setUploadedFiles(prev => ({ ...prev, fda: { url: fileUrl, type: fileType } }));
-      alert('✓ FDA Data uploaded');
+      const fileUrl = await uploadFile(file);
+      setUploadedFiles(prev => ({ ...prev, fda: { url: fileUrl, type: file.name.match(/\.(xlsx?|pdf)$/i)?.[1] || 'pdf' } }));
     } catch (error) {
       console.error('FDA upload error:', error);
-      alert('Upload failed: ' + (error?.message || 'Network error. Please try again.'));
+      alert('FDA upload failed: ' + (error?.message || 'Network error'));
     } finally {
       setIsSyncing(null);
-      if (e.target) e.target.value = '';
     }
   };
 
@@ -968,15 +972,13 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     
     setIsSyncing("allergen");
     try {
-      const fileUrl = await uploadFile(file, 'allergen');
+      const fileUrl = await uploadFile(file);
       setUploadedFiles(prev => ({ ...prev, allergen: fileUrl }));
-      alert('✓ Allergen Data uploaded');
     } catch (error) {
       console.error('Allergen upload error:', error);
-      alert('Upload failed: ' + (error?.message || 'Network error. Please try again.'));
+      alert('Allergen upload failed: ' + (error?.message || 'Network error'));
     } finally {
       setIsSyncing(null);
-      if (e.target) e.target.value = '';
     }
   };
 
@@ -986,18 +988,14 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     
     setIsSyncing("ingredients");
     try {
-      const text = await file.text();
-      if (!text || text.length === 0) {
-        throw new Error('File is empty');
-      }
+      const text = await readFileAsText(file);
+      if (!text || text.length === 0) throw new Error('File is empty');
       setUploadedFiles(prev => ({ ...prev, ingredients: text }));
-      alert('✓ Ingredients CSV loaded');
     } catch (error) {
       console.error('Ingredients upload error:', error);
-      alert('Upload failed: ' + (error?.message || 'Cannot read file'));
+      alert('Ingredients upload failed: ' + (error?.message || 'Cannot read file'));
     } finally {
       setIsSyncing(null);
-      if (e.target) e.target.value = '';
     }
   };
 

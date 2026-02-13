@@ -994,8 +994,6 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
             }
           });
 
-        let fdaResult;
-
         if (fdaResult?.items) {
           const normalizeRecipe = (num) => String(num).trim().replace(/^0+/, '').toLowerCase();
 

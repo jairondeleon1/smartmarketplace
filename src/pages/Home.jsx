@@ -840,71 +840,93 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     ingredients: null
   });
 
+  const uploadFile = async (file, type) => {
+    if (!file) return null;
+    
+    if (file.size > 10 * 1024 * 1024) {
+      throw new Error('File too large (max 10MB)');
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const result = await base44.integrations.Core.UploadFile({ file });
+    return result.file_url;
+  };
+
   const handleWeekMenuUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
+    
     setIsSyncing("week-menu");
-
     try {
-      const result = await base44.integrations.Core.UploadFile({ file });
-      setUploadedFiles(prev => ({ ...prev, weekMenu: result.file_url }));
+      const fileUrl = await uploadFile(file, 'week-menu');
+      setUploadedFiles(prev => ({ ...prev, weekMenu: fileUrl }));
       alert('✓ Week Menu uploaded');
     } catch (error) {
-      alert('Upload failed: ' + (error.message || 'Unknown error'));
+      console.error('Week Menu upload error:', error);
+      alert('Upload failed: ' + (error?.message || 'Network error. Please try again.'));
     } finally {
       setIsSyncing(null);
-      e.target.value = '';
+      if (e.target) e.target.value = '';
     }
   };
 
   const handleFDAUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
+    
     setIsSyncing("fda");
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setUploadedFiles(prev => ({ ...prev, fda: { url: file_url, type: file.name.endsWith('.xlsx') || file.name.endsWith('.xls') ? 'xlsx' : 'pdf' } }));
+      const fileUrl = await uploadFile(file, 'fda');
+      const fileType = file.name.match(/\.(xlsx?|pdf)$/i)?.[1] || 'pdf';
+      setUploadedFiles(prev => ({ ...prev, fda: { url: fileUrl, type: fileType } }));
       alert('✓ FDA Data uploaded');
     } catch (error) {
-      alert('Upload failed: ' + (error.message || 'Unknown error'));
+      console.error('FDA upload error:', error);
+      alert('Upload failed: ' + (error?.message || 'Network error. Please try again.'));
     } finally {
       setIsSyncing(null);
-      e.target.value = '';
+      if (e.target) e.target.value = '';
     }
   };
 
   const handleAllergenUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
+    
     setIsSyncing("allergen");
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setUploadedFiles(prev => ({ ...prev, allergen: file_url }));
+      const fileUrl = await uploadFile(file, 'allergen');
+      setUploadedFiles(prev => ({ ...prev, allergen: fileUrl }));
       alert('✓ Allergen Data uploaded');
     } catch (error) {
-      alert('Upload failed: ' + (error.message || 'Unknown error'));
+      console.error('Allergen upload error:', error);
+      alert('Upload failed: ' + (error?.message || 'Network error. Please try again.'));
     } finally {
       setIsSyncing(null);
-      e.target.value = '';
+      if (e.target) e.target.value = '';
     }
   };
 
   const handleIngredientsUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    
     setIsSyncing("ingredients");
     try {
       const text = await file.text();
+      if (!text || text.length === 0) {
+        throw new Error('File is empty');
+      }
       setUploadedFiles(prev => ({ ...prev, ingredients: text }));
-      alert('✓ Ingredients uploaded - ready to process');
+      alert('✓ Ingredients CSV loaded');
     } catch (error) {
-      alert('Error: ' + error.message);
+      console.error('Ingredients upload error:', error);
+      alert('Upload failed: ' + (error?.message || 'Cannot read file'));
     } finally {
       setIsSyncing(null);
-      e.target.value = '';
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -1212,9 +1234,10 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         setProcessingProgress(0);
       }, 500);
     } catch (error) {
-      console.error('Full error:', error);
-      const errorMsg = error.message || error.toString();
-      alert(`Error processing files: ${errorMsg}\n\nCheck console (F12) for details.`);
+      console.error('Processing error:', error);
+      const errorMsg = error?.message || error?.toString() || 'Unknown error';
+      alert(`Error: ${errorMsg}\n\nPlease check:\n1. Files are correct format\n2. Internet connection is stable\n3. Files are not corrupted`);
+    } finally {
       setProcessingStep('');
       setProcessingProgress(0);
       setIsSyncing(null);

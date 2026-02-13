@@ -954,15 +954,25 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     const file = e.target.files[0];
     if (!file) return;
     
+    console.log('FDA Upload - File:', file.name, 'Size:', file.size, 'Type:', file.type);
     setIsSyncing("fda");
+    
     try {
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error('File too large (max 10MB). Your file is ' + Math.round(file.size / 1024 / 1024) + 'MB');
+      }
+      
+      console.log('Uploading FDA file...');
       const fileUrl = await uploadFile(file);
+      console.log('FDA file uploaded successfully:', fileUrl);
+      
       setUploadedFiles(prev => ({ ...prev, fda: { url: fileUrl, type: file.name.match(/\.(xlsx?|pdf)$/i)?.[1] || 'pdf' } }));
     } catch (error) {
       console.error('FDA upload error:', error);
-      alert('FDA upload failed: ' + (error?.message || 'Network error'));
+      alert('FDA upload failed: ' + (error?.message || error?.toString() || 'Network error'));
     } finally {
       setIsSyncing(null);
+      e.target.value = '';
     }
   };
 

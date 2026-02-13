@@ -311,7 +311,7 @@ function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPlate, user }) {
           {!plan ? (
             <>
               <div className="grid grid-cols-1 gap-2 font-sans font-bold">
-                {['High Protein', 'Balanced Strategy', 'Vegan Meal Prep', 'Vegetarian Week', 'Avoid Gluten Week', 'Low Carb Plan', 'Heart Healthy'].map(g => (
+                {['High Protein', 'Balanced Strategy', 'Vegan Meal Prep', 'Vegetarian', 'Avoid Gluten', 'Low Carb Plan', 'Heart Healthy'].map(g => (
                   <button key={g} onClick={() => setGoal(g)} className={`p-4 rounded-xl border-2 text-left transition-all font-sans font-bold ${goal === g ? 'border-teal-500 bg-teal-50 text-teal-900' : 'border-gray-100 text-gray-500'}`}>
                     <span className="uppercase text-xs tracking-widest font-sans font-bold">{g}</span>
                   </button>

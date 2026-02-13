@@ -39,6 +39,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import NutritionCharts from "../components/NutritionCharts";
 import ProfileSettingsModal from "../components/ProfileSettingsModal";
+import NutritionDetailView from "../components/NutritionDetailView";
 import jsPDF from 'jspdf';
 
 // --- CONSTANTS ---
@@ -588,20 +589,26 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
         <button onClick={() => addToPlate(item)} className="w-10 flex items-center justify-center bg-gray-900 text-white rounded-lg transition active:scale-90 hover:bg-black font-sans font-bold"><Plus className="w-5 h-5 font-sans font-bold" /></button>
       </div>
       {showDetails && (
-        <div className="px-5 pb-5 space-y-2 animate-in slide-in-from-top-2 text-xs font-sans font-bold">
+        <div className="px-5 pb-5 animate-in slide-in-from-top-2 font-sans">
           {item.ingredients && (
-            <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 mb-2 font-sans">
-              <div className="flex items-center gap-1.5 mb-1 font-sans">
-                <Info className="w-3 h-3 text-slate-400 font-sans" />
-                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest font-sans">Ingredients</span>
+            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 mb-3">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Info className="w-3 h-3 text-slate-400" />
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Ingredients</span>
               </div>
-              <p className="text-[10px] text-slate-600 leading-snug font-sans font-medium">{item.ingredients}</p>
+              <p className="text-[10px] text-slate-600 leading-snug font-medium">{item.ingredients}</p>
             </div>
           )}
-          <div className="flex justify-between border-b pb-1 text-gray-600 font-sans font-bold">Sodium<span className="font-bold text-gray-900 font-sans font-bold">{item.sodium}mg</span></div>
-          <div className="flex justify-between border-b pb-1 text-gray-600 font-sans font-bold">Fiber<span className="font-bold text-gray-900 font-sans font-bold">{item.fiber}g</span></div>
-          <div className="flex justify-between border-b pb-1 text-gray-600 font-sans font-bold">Sugars<span className="font-bold text-gray-900 font-sans font-bold">{item.sugar}g</span></div>
-          {item.allergens && <div className="text-red-600 font-bold mt-1 uppercase text-[10px] font-sans tracking-widest font-bold">Contains: {item.allergens.join(', ')}</div>}
+          
+          <NutritionDetailView item={item} />
+          
+          {item.allergens && item.allergens.length > 0 && (
+            <div className="mt-3 bg-red-50 border border-red-100 rounded-lg p-3">
+              <div className="text-red-600 font-bold uppercase text-[10px] tracking-widest">
+                Contains: {item.allergens.join(', ')}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -1,0 +1,262 @@
+import React, { useState } from 'react';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import { Info } from 'lucide-react';
+
+const DAILY_VALUES = {
+  calories: 2000,
+  protein: 50,
+  carbs: 275,
+  fat: 78,
+  saturated_fat: 20,
+  sodium: 2300,
+  fiber: 28,
+  sugar: 50,
+  cholesterol: 300,
+  vitamin_a: 900,
+  vitamin_c: 90,
+  vitamin_d: 20,
+  calcium: 1300,
+  iron: 18,
+  potassium: 4700
+};
+
+const COLORS = {
+  protein: '#8b5cf6',
+  carbs: '#f59e0b',
+  fat: '#ef4444',
+  saturated: '#dc2626',
+  unsaturated: '#10b981'
+};
+
+export default function NutritionDetailView({ item }) {
+  const [activeTab, setActiveTab] = useState('overview');
+
+  const calculateDV = (nutrient, value) => {
+    const dv = DAILY_VALUES[nutrient];
+    return dv ? Math.round((value / dv) * 100) : 0;
+  };
+
+  const macroData = [
+    { name: 'Protein', value: item.protein || 0, color: COLORS.protein },
+    { name: 'Carbs', value: item.carbs || 0, color: COLORS.carbs },
+    { name: 'Fat', value: item.fat || 0, color: COLORS.fat }
+  ];
+
+  const fatBreakdown = [
+    { name: 'Saturated', value: item.saturated_fat || 0, dv: calculateDV('saturated_fat', item.saturated_fat || 0) },
+    { name: 'Unsaturated', value: item.unsaturated_fat || 0, dv: 0 }
+  ];
+
+  const vitamins = [
+    { name: 'Vitamin A', value: item.vitamin_a || 0, unit: 'mcg', dv: calculateDV('vitamin_a', item.vitamin_a || 0) },
+    { name: 'Vitamin C', value: item.vitamin_c || 0, unit: 'mg', dv: calculateDV('vitamin_c', item.vitamin_c || 0) },
+    { name: 'Vitamin D', value: item.vitamin_d || 0, unit: 'mcg', dv: calculateDV('vitamin_d', item.vitamin_d || 0) }
+  ];
+
+  const minerals = [
+    { name: 'Calcium', value: item.calcium || 0, unit: 'mg', dv: calculateDV('calcium', item.calcium || 0) },
+    { name: 'Iron', value: item.iron || 0, unit: 'mg', dv: calculateDV('iron', item.iron || 0) },
+    { name: 'Potassium', value: item.potassium || 0, unit: 'mg', dv: calculateDV('potassium', item.potassium || 0) }
+  ];
+
+  return (
+    <div className="space-y-4">
+      {/* Tab Navigation */}
+      <div className="flex gap-2 border-b border-gray-200">
+        {['overview', 'macros', 'micros'].map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all ${
+              activeTab === tab
+                ? 'text-teal-700 border-b-2 border-teal-600'
+                : 'text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {/* Overview Tab */}
+      {activeTab === 'overview' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <ResponsiveContainer width="100%" height={120}>
+                <PieChart>
+                  <Pie
+                    data={macroData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={30}
+                    outerRadius={50}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {macroData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex-1 space-y-2">
+              {macroData.map(macro => (
+                <div key={macro.name} className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: macro.color }} />
+                    <span className="font-bold text-gray-700">{macro.name}</span>
+                  </div>
+                  <span className="font-bold text-gray-900">{macro.value}g</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <div className="text-xs text-gray-500 uppercase font-bold">Sodium</div>
+              <div className="text-lg font-bold text-gray-900">{item.sodium || 0}mg</div>
+              <div className="text-xs text-teal-600 font-bold">{calculateDV('sodium', item.sodium || 0)}% DV</div>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <div className="text-xs text-gray-500 uppercase font-bold">Fiber</div>
+              <div className="text-lg font-bold text-gray-900">{item.fiber || 0}g</div>
+              <div className="text-xs text-teal-600 font-bold">{calculateDV('fiber', item.fiber || 0)}% DV</div>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <div className="text-xs text-gray-500 uppercase font-bold">Sugar</div>
+              <div className="text-lg font-bold text-gray-900">{item.sugar || 0}g</div>
+              <div className="text-xs text-teal-600 font-bold">{calculateDV('sugar', item.sugar || 0)}% DV</div>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <div className="text-xs text-gray-500 uppercase font-bold">Cholesterol</div>
+              <div className="text-lg font-bold text-gray-900">{item.cholesterol || 0}mg</div>
+              <div className="text-xs text-teal-600 font-bold">{calculateDV('cholesterol', item.cholesterol || 0)}% DV</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Macros Tab */}
+      {activeTab === 'macros' && (
+        <div className="space-y-4">
+          <div>
+            <h4 className="text-xs font-bold uppercase text-gray-700 mb-3">Fat Breakdown</h4>
+            <ResponsiveContainer width="100%" height={100}>
+              <BarChart data={fatBreakdown} layout="horizontal">
+                <XAxis type="category" dataKey="name" tick={{ fontSize: 10 }} />
+                <YAxis type="number" tick={{ fontSize: 10 }} />
+                <Tooltip contentStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
+                <Bar dataKey="value" fill="#3b82f6" />
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="mt-2 space-y-2">
+              {fatBreakdown.map(fat => (
+                <div key={fat.name} className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-gray-700">{fat.name} Fat</span>
+                  <div className="text-right">
+                    <span className="font-bold text-gray-900">{fat.value}g</span>
+                    {fat.dv > 0 && <span className="text-teal-600 ml-2">({fat.dv}% DV)</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t pt-3">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-bold text-gray-700">Total Carbohydrates</span>
+                <div className="text-right">
+                  <span className="font-bold text-gray-900">{item.carbs || 0}g</span>
+                  <span className="text-teal-600 ml-2">({calculateDV('carbs', item.carbs || 0)}% DV)</span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center text-xs pl-4">
+                <span className="text-gray-600">Dietary Fiber</span>
+                <span className="font-bold text-gray-900">{item.fiber || 0}g</span>
+              </div>
+              <div className="flex justify-between items-center text-xs pl-4">
+                <span className="text-gray-600">Total Sugars</span>
+                <span className="font-bold text-gray-900">{item.sugar || 0}g</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t pt-3">
+            <div className="flex justify-between items-center text-xs">
+              <span className="font-bold text-gray-700">Protein</span>
+              <div className="text-right">
+                <span className="font-bold text-gray-900">{item.protein || 0}g</span>
+                <span className="text-teal-600 ml-2">({calculateDV('protein', item.protein || 0)}% DV)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Micros Tab */}
+      {activeTab === 'micros' && (
+        <div className="space-y-4">
+          <div>
+            <h4 className="text-xs font-bold uppercase text-gray-700 mb-3 flex items-center gap-2">
+              <Info className="w-3 h-3" /> Vitamins
+            </h4>
+            <div className="space-y-2">
+              {vitamins.map(vitamin => (
+                <div key={vitamin.name} className="space-y-1">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-gray-700">{vitamin.name}</span>
+                    <span className="text-gray-900">
+                      {vitamin.value}{vitamin.unit} 
+                      <span className="text-teal-600 ml-2 font-bold">({vitamin.dv}% DV)</span>
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div 
+                      className="bg-gradient-to-r from-teal-500 to-green-500 h-2 rounded-full transition-all"
+                      style={{ width: `${Math.min(vitamin.dv, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t pt-3">
+            <h4 className="text-xs font-bold uppercase text-gray-700 mb-3 flex items-center gap-2">
+              <Info className="w-3 h-3" /> Minerals
+            </h4>
+            <div className="space-y-2">
+              {minerals.map(mineral => (
+                <div key={mineral.name} className="space-y-1">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-gray-700">{mineral.name}</span>
+                    <span className="text-gray-900">
+                      {mineral.value}{mineral.unit}
+                      <span className="text-teal-600 ml-2 font-bold">({mineral.dv}% DV)</span>
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div 
+                      className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all"
+                      style={{ width: `${Math.min(mineral.dv, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mt-3">
+            <p className="text-xs text-blue-800">
+              <span className="font-bold">Note:</span> Percent Daily Values (DV) are based on a 2,000 calorie diet. Your daily values may be higher or lower depending on your calorie needs.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

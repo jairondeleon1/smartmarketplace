@@ -844,25 +844,23 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     const file = e.target.files[0];
     if (!file) return;
 
-    // Check file size (limit to 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      alert('File too large! Please use a PDF under 10MB.');
+    if (file.size > 5 * 1024 * 1024) {
+      alert('⚠️ File too large (limit: 5MB)\n\nPlease compress or reduce the PDF size.');
       e.target.value = '';
       return;
     }
 
     setIsSyncing("week-menu");
+    console.log('📤 Uploading:', file.name, `(${(file.size / 1024).toFixed(0)}KB)`);
+
     try {
-      console.log('Uploading Week Menu PDF...', file.name, file.size);
-      const { file_url } = await Promise.race([
-        base44.integrations.Core.UploadFile({ file }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Upload timeout - file may be too large')), 30000))
-      ]);
-      setUploadedFiles(prev => ({ ...prev, weekMenu: file_url }));
-      alert('✓ Week Menu uploaded - ready to process');
+      const result = await base44.integrations.Core.UploadFile({ file });
+      console.log('✅ Upload complete:', result.file_url);
+      setUploadedFiles(prev => ({ ...prev, weekMenu: result.file_url }));
+      alert('✓ Week Menu uploaded successfully!');
     } catch (error) {
-      console.error('Upload error:', error);
-      alert('Upload failed: ' + error.message + '\n\nTry a smaller PDF or check your connection.');
+      console.error('❌ Upload failed:', error);
+      alert(`Upload failed: ${error.message || 'Network error'}\n\nTry:\n• Smaller PDF (under 5MB)\n• Check internet connection\n• Refresh page and retry`);
     } finally {
       setIsSyncing(null);
       e.target.value = '';
@@ -872,13 +870,20 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   const handleFDAUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('⚠️ File too large (limit: 5MB)');
+      e.target.value = '';
+      return;
+    }
+
     setIsSyncing("fda");
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setUploadedFiles(prev => ({ ...prev, fda: { url: file_url, type: file.name.endsWith('.xlsx') || file.name.endsWith('.xls') ? 'xlsx' : 'pdf' } }));
-      alert('✓ FDA Data uploaded - ready to process');
+      alert('✓ FDA Data uploaded successfully!');
     } catch (error) {
-      alert('Error: ' + error.message);
+      alert('Upload failed: ' + error.message);
     } finally {
       setIsSyncing(null);
       e.target.value = '';
@@ -888,13 +893,20 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   const handleAllergenUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('⚠️ File too large (limit: 5MB)');
+      e.target.value = '';
+      return;
+    }
+
     setIsSyncing("allergen");
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setUploadedFiles(prev => ({ ...prev, allergen: file_url }));
-      alert('✓ Allergen Data uploaded - ready to process');
+      alert('✓ Allergen Data uploaded successfully!');
     } catch (error) {
-      alert('Error: ' + error.message);
+      alert('Upload failed: ' + error.message);
     } finally {
       setIsSyncing(null);
       e.target.value = '';

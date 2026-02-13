@@ -37,6 +37,7 @@ import {
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import NutritionCharts from "../components/NutritionCharts";
+import jsPDF from 'jspdf';
 
 // --- CONSTANTS ---
 const VEGAN_URL = "https://i.postimg.cc/MH7cDSz4/vegan.png"; 
@@ -287,13 +288,12 @@ function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPlate }) {
                     </div>
                     <span className="text-sm truncate block">{entry.item.name}</span>
                   </div>
-                  <div className="flex gap-1 shrink-0">
+                  <div className="flex gap-2 shrink-0">
                     <button 
                       onClick={() => changeMeal(idx)}
-                      className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition"
-                      title="Change meal"
+                      className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition border border-blue-100"
                     >
-                      <RefreshCw className="w-4 h-4" />
+                      Change Meal
                     </button>
                     <button 
                       onClick={() => removeMeal(idx)}
@@ -332,12 +332,74 @@ function TrayDetailsModal({ isOpen, onClose, plate, setPlate }) {
 
   const handleDownloadReport = () => {
     setIsExporting(true);
-    let htmlContent = `
-      <!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body { font-family: sans-serif; color: #1e293b; background: #f8fafc; padding: 20px; }.container { max-width: 500px; margin: 0 auto; background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }.header { background: #065f46; color: white; padding: 32px 24px; text-align: center; }.content { padding: 24px; }.item { border-bottom: 1px solid #f1f5f9; padding: 16px 0; display: flex; justify-content: space-between; }.stat { flex: 1; text-align: center; }.val { display: block; font-weight: 800; font-size: 18px; color: #065f46; }</style></head><body><div class="container"><div class="header"><h1>SmartMenu IQ</h1><p>NUTRITION SUMMARY • ${new Date().toLocaleDateString()}</p></div><div class="content">${plate.map(item => `<div class="item"><span>${item.name}</span><b>${item.calories} CAL</b></div>`).join('')}<div style="display:flex; gap:10px; margin-top:20px;"><div class="stat"><span class="val">${totals.calories}</span><small>Cals</small></div><div class="stat"><span class="val">${totals.protein}g</span><small>Prot</small></div></div></div></div></body></html>
-    `;
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = "Marketplace_Report.html"; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+
+    const pdf = new jsPDF();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+
+    // Header
+    pdf.setFillColor(6, 95, 70);
+    pdf.rect(0, 0, pageWidth, 40, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(24);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('SmartMenu IQ', pageWidth / 2, 20, { align: 'center' });
+    pdf.setFontSize(10);
+    pdf.text(`NUTRITION SUMMARY • ${new Date().toLocaleDateString()}`, pageWidth / 2, 30, { align: 'center' });
+
+    // Content
+    pdf.setTextColor(30, 41, 59);
+    let yPos = 55;
+
+    // Items
+    pdf.setFontSize(12);
+    plate.forEach(item => {
+      if (yPos > 270) {
+        pdf.addPage();
+        yPos = 20;
+      }
+      pdf.setFont(undefined, 'normal');
+      pdf.text(item.name, 20, yPos);
+      pdf.setFont(undefined, 'bold');
+      pdf.text(`${item.calories} CAL`, pageWidth - 20, yPos, { align: 'right' });
+      pdf.setDrawColor(241, 245, 249);
+      pdf.line(20, yPos + 3, pageWidth - 20, yPos + 3);
+      yPos += 12;
+    });
+
+    // Totals
+    yPos += 10;
+    pdf.setFillColor(249, 250, 251);
+    pdf.rect(20, yPos, pageWidth - 40, 30, 'F');
+    pdf.setFontSize(14);
+    pdf.setFont(undefined, 'bold');
+    pdf.setTextColor(6, 95, 70);
+    pdf.text(`${totals.calories}`, 40, yPos + 15);
+    pdf.setFontSize(8);
+    pdf.setTextColor(148, 163, 184);
+    pdf.text('CALS', 40, yPos + 22);
+
+    pdf.setFontSize(14);
+    pdf.setTextColor(6, 95, 70);
+    pdf.text(`${totals.protein}g`, 80, yPos + 15);
+    pdf.setFontSize(8);
+    pdf.setTextColor(148, 163, 184);
+    pdf.text('PROTEIN', 80, yPos + 22);
+
+    pdf.setFontSize(14);
+    pdf.setTextColor(6, 95, 70);
+    pdf.text(`${totals.carbs}g`, 130, yPos + 15);
+    pdf.setFontSize(8);
+    pdf.setTextColor(148, 163, 184);
+    pdf.text('CARBS', 130, yPos + 22);
+
+    pdf.setFontSize(14);
+    pdf.setTextColor(6, 95, 70);
+    pdf.text(`${totals.sodium}mg`, 170, yPos + 15);
+    pdf.setFontSize(8);
+    pdf.setTextColor(148, 163, 184);
+    pdf.text('SODIUM', 170, yPos + 22);
+
+    pdf.save('Marketplace_Report.pdf');
     setTimeout(() => { setIsExporting(false); setShowSuccess(true); setTimeout(() => setShowSuccess(false), 3000); }, 800);
   };
 

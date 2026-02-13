@@ -843,13 +843,26 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   const handleWeekMenuUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Check file size (limit to 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File too large! Please use a PDF under 10MB.');
+      e.target.value = '';
+      return;
+    }
+
     setIsSyncing("week-menu");
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      console.log('Uploading Week Menu PDF...', file.name, file.size);
+      const { file_url } = await Promise.race([
+        base44.integrations.Core.UploadFile({ file }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Upload timeout - file may be too large')), 30000))
+      ]);
       setUploadedFiles(prev => ({ ...prev, weekMenu: file_url }));
       alert('✓ Week Menu uploaded - ready to process');
     } catch (error) {
-      alert('Error: ' + error.message);
+      console.error('Upload error:', error);
+      alert('Upload failed: ' + error.message + '\n\nTry a smaller PDF or check your connection.');
     } finally {
       setIsSyncing(null);
       e.target.value = '';

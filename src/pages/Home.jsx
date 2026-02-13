@@ -350,24 +350,59 @@ function TrayDetailsModal({ isOpen, onClose, plate, setPlate }) {
     pdf.setTextColor(30, 41, 59);
     let yPos = 55;
 
-    // Items
-    pdf.setFontSize(12);
-    plate.forEach(item => {
-      if (yPos > 270) {
+    // Group items by meal period
+    const mealPeriods = ['Breakfast', 'Lunch', 'Dinner', 'All Day'];
+    mealPeriods.forEach(period => {
+      const periodItems = plate.filter(item => (item.meal_period || 'Lunch') === period);
+      if (periodItems.length === 0) return;
+
+      // Check if we need a new page
+      if (yPos > 240) {
         pdf.addPage();
         yPos = 20;
       }
-      pdf.setFont(undefined, 'normal');
-      pdf.text(item.name, 20, yPos);
+
+      // Meal period header
+      pdf.setFillColor(20, 184, 166);
+      pdf.rect(20, yPos - 5, pageWidth - 40, 10, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(11);
       pdf.setFont(undefined, 'bold');
-      pdf.text(`${item.calories} CAL`, pageWidth - 20, yPos, { align: 'right' });
-      pdf.setDrawColor(241, 245, 249);
-      pdf.line(20, yPos + 3, pageWidth - 20, yPos + 3);
+      pdf.text(period.toUpperCase(), 25, yPos + 2);
       yPos += 12;
+
+      // Items in this period
+      pdf.setTextColor(30, 41, 59);
+      pdf.setFontSize(11);
+      periodItems.forEach(item => {
+        if (yPos > 270) {
+          pdf.addPage();
+          yPos = 20;
+        }
+        pdf.setFont(undefined, 'bold');
+        pdf.text(item.name, 25, yPos);
+        pdf.setFont(undefined, 'normal');
+        pdf.setFontSize(9);
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(`Station: ${item.station || 'N/A'}`, 25, yPos + 5);
+        pdf.setFontSize(11);
+        pdf.setTextColor(30, 41, 59);
+        pdf.setFont(undefined, 'bold');
+        pdf.text(`${item.calories} CAL`, pageWidth - 20, yPos, { align: 'right' });
+        pdf.setDrawColor(241, 245, 249);
+        pdf.line(25, yPos + 7, pageWidth - 20, yPos + 7);
+        yPos += 15;
+      });
+
+      yPos += 5;
     });
 
     // Totals
     yPos += 10;
+    if (yPos > 250) {
+      pdf.addPage();
+      yPos = 20;
+    }
     pdf.setFillColor(249, 250, 251);
     pdf.rect(20, yPos, pageWidth - 40, 30, 'F');
     pdf.setFontSize(14);
@@ -421,15 +456,35 @@ function TrayDetailsModal({ isOpen, onClose, plate, setPlate }) {
         <div className="flex-1 overflow-y-auto p-6 space-y-4 font-sans font-bold">
           {showSuccess && <div className="bg-teal-50 text-teal-800 p-4 rounded-xl text-xs font-bold border border-teal-100 flex items-center gap-2 animate-in fade-in font-sans font-bold">Report Exported Successfully!</div>}
           {plate.length === 0 ? <div className="text-center py-12 text-gray-400 font-bold uppercase text-sm font-sans tracking-widest font-bold">Your tray is empty</div> : 
-            plate.map((item, idx) => (
-              <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group font-medium font-sans font-bold">
-                <div className="flex-1 pr-4 font-sans font-bold">
-                  <p className="font-bold text-gray-800 text-sm truncate uppercase font-sans font-bold">{item.name}</p>
-                  <div className="flex gap-3 mt-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest font-sans font-bold"><span>{item.calories} Cal</span><span>{item.protein}g Prot</span></div>
-                </div>
-                <button onClick={() => removeItem(idx)} className="p-2 text-gray-300 hover:text-red-500 transition-colors font-sans font-bold"><Trash2 className="w-5 h-5 font-sans" /></button>
-              </div>
-            ))
+            <>
+              {['Breakfast', 'Lunch', 'Dinner', 'All Day'].map(period => {
+                const periodItems = plate.filter((item, idx) => (item.meal_period || 'Lunch') === period).map((item, originalIdx) => ({
+                  item,
+                  originalIdx: plate.findIndex((p, i) => p === item && i >= originalIdx)
+                }));
+                if (periodItems.length === 0) return null;
+                return (
+                  <div key={period}>
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-teal-700 mb-3 font-sans">{period}</h4>
+                    <div className="space-y-2">
+                      {periodItems.map(({ item, originalIdx }) => (
+                        <div key={originalIdx} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group font-medium font-sans font-bold">
+                          <div className="flex-1 pr-4 font-sans font-bold">
+                            <p className="font-bold text-gray-800 text-sm truncate uppercase font-sans font-bold">{item.name}</p>
+                            <div className="flex gap-3 mt-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest font-sans font-bold">
+                              <span>{item.calories} Cal</span>
+                              <span>{item.protein}g Prot</span>
+                              {item.station && <span>• {item.station}</span>}
+                            </div>
+                          </div>
+                          <button onClick={() => removeItem(originalIdx)} className="p-2 text-gray-300 hover:text-red-500 transition-colors font-sans font-bold"><Trash2 className="w-5 h-5 font-sans" /></button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </>
           }
         </div>
         {plate.length > 0 && (

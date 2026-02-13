@@ -1466,26 +1466,27 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
             </form>
           </div>
         </div>
-        )}
-
-        {activeTab === 'manage' && (
-          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-            <MenuItemsTable
-              items={menuItems}
-              onDelete={handleDeleteItem}
-              onBulkEdit={handleBulkEdit}
-              onExport={exportToCSV}
-            />
-          </div>
-        )}
-
-        <BulkEditModal
-          isOpen={showBulkEdit}
-          onClose={() => setShowBulkEdit(false)}
-          selectedItems={bulkEditItems}
-          onSave={applyBulkEdit}
-        />
       </div>
+      )}
+
+      {activeTab === 'manage' && (
+        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+          <MenuItemsTable
+            items={menuItems}
+            onDelete={handleDeleteItem}
+            onBulkEdit={handleBulkEdit}
+            onExport={exportToCSV}
+          />
+        </div>
+      )}
+
+      <BulkEditModal
+        isOpen={showBulkEdit}
+        onClose={() => setShowBulkEdit(false)}
+        selectedItems={bulkEditItems}
+        onSave={applyBulkEdit}
+      />
+    </div>
   );
 }
 

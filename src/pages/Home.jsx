@@ -965,7 +965,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
           // Use LLM for both PDF and XLSX - more reliable
           console.log('Extracting FDA data using AI...');
           fdaResult = await base44.integrations.Core.InvokeLLM({
-            prompt: `Extract FDA nutritional data from this file. For each menu item, extract: name (item name), recipe_number (the item number/code), calories, protein (g), carbs (g), fat (g), sodium (mg), fiber (g), sugar (g). Return ALL items as structured JSON array.`,
+            prompt: `Extract FDA nutritional data from this file. For each menu item, extract: name, recipe_number, calories, protein (g), carbs (g), fat (g), saturated_fat (g), unsaturated_fat (g), sodium (mg), fiber (g), sugar (g), cholesterol (mg), vitamin_a (mcg), vitamin_c (mg), vitamin_d (mcg), calcium (mg), iron (mg), potassium (mg). Return ALL items as structured JSON array.`,
             file_urls: [uploadedFiles.fda.url],
             add_context_from_internet: false,
             response_json_schema: {
@@ -982,9 +982,18 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                       protein: { type: "number" },
                       carbs: { type: "number" },
                       fat: { type: "number" },
+                      saturated_fat: { type: "number" },
+                      unsaturated_fat: { type: "number" },
                       sodium: { type: "number" },
                       fiber: { type: "number" },
-                      sugar: { type: "number" }
+                      sugar: { type: "number" },
+                      cholesterol: { type: "number" },
+                      vitamin_a: { type: "number" },
+                      vitamin_c: { type: "number" },
+                      vitamin_d: { type: "number" },
+                      calcium: { type: "number" },
+                      iron: { type: "number" },
+                      potassium: { type: "number" }
                     }
                   }
                 }
@@ -1038,9 +1047,18 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                 protein: match.protein || 0, 
                 carbs: match.carbs || 0, 
                 fat: match.fat || 0, 
+                saturated_fat: match.saturated_fat || 0,
+                unsaturated_fat: match.unsaturated_fat || 0,
                 sodium: match.sodium || 0, 
                 fiber: match.fiber || 0, 
-                sugar: match.sugar || 0 
+                sugar: match.sugar || 0,
+                cholesterol: match.cholesterol || 0,
+                vitamin_a: match.vitamin_a || 0,
+                vitamin_c: match.vitamin_c || 0,
+                vitamin_d: match.vitamin_d || 0,
+                calcium: match.calcium || 0,
+                iron: match.iron || 0,
+                potassium: match.potassium || 0
               };
             } else {
               console.warn(`❌ No FDA match for: ${item.name} (recipe #${item.recipe_number})`);

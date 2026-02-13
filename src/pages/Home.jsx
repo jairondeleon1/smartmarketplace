@@ -138,15 +138,32 @@ function FitIcon({ url, className = "w-6 h-6" }) {
 
 // --- MODALS ---
 
-function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPlate }) {
+function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPlate, user }) {
   const [goal, setGoal] = useState('High Protein');
   const [plan, setPlan] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [changingMeal, setChangingMeal] = useState(null);
+  const [regeneratingMeal, setRegeneratingMeal] = useState(null);
 
   const generatePlan = async () => {
     setIsLoading(true);
-    const prompt = `Plan 5-day meal menu for goal: "${goal}". For each weekday (Monday-Friday), select BOTH a breakfast item AND a lunch item from the menu. Menu Data: ${JSON.stringify(menuItems.map(i => ({id: i.id, name: i.name, day: i.day, meal_period: i.meal_period})))}. Return ONLY JSON with structure: {"Monday": {"breakfast": ID, "lunch": ID}, "Tuesday": {"breakfast": ID, "lunch": ID}, ...}`;
+    
+    // Build user context
+    let userContext = '';
+    if (user) {
+      if (user.dietary_restrictions?.length > 0) {
+        userContext += `User avoids: ${user.dietary_restrictions.join(', ')}. `;
+      }
+      if (user.dietary_preferences?.length > 0) {
+        userContext += `User prefers: ${user.dietary_preferences.join(', ')}. `;
+      }
+      if (user.health_goals?.length > 0) {
+        userContext += `User goals: ${user.health_goals.join(', ')}. `;
+      }
+    }
+    
+    const prompt = `Plan 5-day meal menu for goal: "${goal}". ${userContext}For each weekday (Monday-Friday), select BOTH a breakfast item AND a lunch item from the menu. Prioritize items that match the user's profile and goal. Menu Data: ${JSON.stringify(menuItems.map(i => ({id: i.id, name: i.name, day: i.day, meal_period: i.meal_period, tags: i.tags, allergens: i.allergens})))}. Return ONLY JSON with structure: {"Monday": {"breakfast": ID, "lunch": ID}, "Tuesday": {"breakfast": ID, "lunch": ID}, ...}`;
+    
     try {
       const response = await base44.integrations.Core.InvokeLLM({
         prompt: prompt,
@@ -212,6 +229,51 @@ function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPlate }) {
     }
   };
 
+  const regenerateMeal = async (dayIndex) => {
+    setRegeneratingMeal(dayIndex);
+    const currentEntry = plan[dayIndex];
+    
+    let userContext = '';
+    if (user) {
+      if (user.dietary_restrictions?.length > 0) {
+        userContext += `User avoids: ${user.dietary_restrictions.join(', ')}. `;
+      }
+      if (user.dietary_preferences?.length > 0) {
+        userContext += `User prefers: ${user.dietary_preferences.join(', ')}. `;
+      }
+      if (user.health_goals?.length > 0) {
+        userContext += `User goals: ${user.health_goals.join(', ')}. `;
+      }
+    }
+
+    const prompt = `Select a different ${currentEntry.mealType} item for ${currentEntry.day} that matches goal "${goal}". ${userContext}Avoid ID ${currentEntry.item.id}. Menu Data: ${JSON.stringify(menuItems.filter(i => (i.day === currentEntry.day || i.day === 'Daily Special') && (i.meal_period === currentEntry.mealType)).map(i => ({id: i.id, name: i.name, tags: i.tags, allergens: i.allergens})))}. Return ONLY JSON with {"item_id": NUMBER}`;
+
+    try {
+      const response = await base44.integrations.Core.InvokeLLM({
+        prompt: prompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            item_id: { type: "number" }
+          }
+        }
+      });
+      
+      if (response?.item_id) {
+        const newItem = menuItems.find(i => i.id === response.item_id);
+        if (newItem) {
+          const updatedPlan = [...plan];
+          updatedPlan[dayIndex] = { ...currentEntry, item: newItem };
+          setPlan(updatedPlan);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to regenerate meal', e);
+    } finally {
+      setRegeneratingMeal(null);
+    }
+  };
+
   const clearPlan = () => {
     setPlan(null);
     setChangingMeal(null);
@@ -249,7 +311,7 @@ function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPlate }) {
           {!plan ? (
             <>
               <div className="grid grid-cols-1 gap-2 font-sans font-bold">
-                {['High Protein', 'Vegetarian', 'Balanced Strategy'].map(g => (
+                {['High Protein', 'Balanced Strategy', 'Vegan Meal Prep', 'Vegetarian Week', 'Gluten-Free Week', 'Low Carb Plan', 'Heart Healthy'].map(g => (
                   <button key={g} onClick={() => setGoal(g)} className={`p-4 rounded-xl border-2 text-left transition-all font-sans font-bold ${goal === g ? 'border-teal-500 bg-teal-50 text-teal-900' : 'border-gray-100 text-gray-500'}`}>
                     <span className="uppercase text-xs tracking-widest font-sans font-bold">{g}</span>
                   </button>
@@ -292,10 +354,18 @@ function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPlate }) {
                   </div>
                   <div className="flex gap-2 shrink-0">
                     <button 
+                      onClick={() => regenerateMeal(idx)}
+                      disabled={regeneratingMeal === idx}
+                      className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg transition border border-purple-100 disabled:opacity-50"
+                      title="AI regenerate"
+                    >
+                      {regeneratingMeal === idx ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                    </button>
+                    <button 
                       onClick={() => changeMeal(idx)}
                       className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition border border-blue-100"
                     >
-                      Change Meal
+                      Pick Different
                     </button>
                     <button 
                       onClick={() => removeMeal(idx)}
@@ -1569,7 +1639,7 @@ export default function Home() {
         setPlate={setMyPlate} 
       />
 
-      <WeeklyPlannerModal isOpen={isWeeklyPlannerOpen} onClose={() => setIsWeeklyPlannerOpen(false)} menuItems={menuItems} addToPlate={addToPlate} />
+      <WeeklyPlannerModal isOpen={isWeeklyPlannerOpen} onClose={() => setIsWeeklyPlannerOpen(false)} menuItems={menuItems} addToPlate={addToPlate} user={user} />
 
       <NutritionCharts isOpen={isChartsOpen} onClose={() => setIsChartsOpen(false)} menuItems={menuItems} />
 

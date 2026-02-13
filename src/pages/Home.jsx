@@ -32,11 +32,13 @@ import {
   MilkOff,
   WheatOff,
   NutOff,
-  Info
+  Info,
+  User
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import NutritionCharts from "../components/NutritionCharts";
+import ProfileSettingsModal from "../components/ProfileSettingsModal";
 import jsPDF from 'jspdf';
 
 // --- CONSTANTS ---
@@ -481,8 +483,17 @@ function TrayDetailsModal({ isOpen, onClose, plate, setPlate }) {
 
 function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
   const [showDetails, setShowDetails] = useState(false);
+  const isRecommended = item.matchesGoal;
+  
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full animate-in fade-in zoom-in-95 duration-300 font-sans hover:shadow-md font-medium">
+    <div className={`bg-white rounded-2xl shadow-sm border overflow-hidden flex flex-col h-full animate-in fade-in zoom-in-95 duration-300 font-sans hover:shadow-md font-medium ${
+      isRecommended ? 'border-green-400 ring-2 ring-green-100' : 'border-gray-100'
+    }`}>
+      {isRecommended && (
+        <div className="bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-1 text-white text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 justify-center">
+          <Heart className="w-3 h-3" /> Matches Your Goals
+        </div>
+      )}
       <div className="p-5 flex-1 font-sans font-bold font-medium">
         <div className="flex justify-between items-start mb-2 font-sans font-bold">
           <span className="text-[10px] font-bold uppercase text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full font-sans tracking-tight font-bold">{item.station}</span>
@@ -563,7 +574,7 @@ function TraySummary({ plate, onClick }) {
 
 // --- CORE VIEWS ---
 
-function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen }) {
+function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen, onProfileClick }) {
   return (
     <nav className="bg-slate-800 text-white p-4 shadow-lg sticky top-0 z-50 h-16 flex items-center w-full shrink-0 font-sans font-bold">
       <div className="w-full max-w-5xl mx-auto flex justify-between items-center px-2 font-sans font-bold">
@@ -575,8 +586,12 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen }) {
           <button onClick={() => changeView('customer')} className={view === 'customer' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>Menu</button>
           <button onClick={() => changeView('chat')} className={view === 'chat' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>AI Assistant</button>
           <button onClick={() => changeView('admin')} className={view === 'admin' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>Admin</button>
+          <button onClick={onProfileClick} className="p-2 hover:bg-white/10 rounded-full transition" title="My Profile">
+            <User className="w-5 h-5" />
+          </button>
         </div>
         <div className="md:hidden flex items-center gap-2">
+           <button onClick={onProfileClick} className="p-2" title="My Profile"><User className="w-5 h-5 text-white" /></button>
            <button className="p-2" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>{isMobileMenuOpen ? <X className="text-white" /> : <MenuIcon className="text-white" />}</button>
         </div>
       </div>
@@ -1291,6 +1306,17 @@ export default function Home() {
 
   const [view, setView] = useState('customer');
   
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      try {
+        return await base44.auth.me();
+      } catch {
+        return null;
+      }
+    }
+  });
+
   const { data: menuItems = [], isLoading: isLoadingMenu } = useQuery({
     queryKey: ['menuItems'],
     queryFn: async () => {
@@ -1317,6 +1343,7 @@ export default function Home() {
   const [isTrayModalOpen, setIsTrayModalOpen] = useState(false);
   const [isWeeklyPlannerOpen, setIsWeeklyPlannerOpen] = useState(false);
   const [isChartsOpen, setIsChartsOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [customVegUrl, setCustomVegUrl] = useState("");
   const [customVeganUrl, setCustomVeganUrl] = useState("");
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
@@ -1402,6 +1429,42 @@ export default function Home() {
     setActiveFilters({ vegetarian: false, vegan: false, fit: false });
   };
 
+  const checkItemSuitability = (item) => {
+    if (!user) return { suitable: true, reasons: [] };
+    
+    const reasons = [];
+    let suitable = true;
+
+    // Check dietary restrictions (allergens)
+    const userRestrictions = user.dietary_restrictions || [];
+    const itemAllergens = item.allergens || [];
+    const hasRestricted = userRestrictions.some(restriction => 
+      itemAllergens.some(allergen => allergen.toLowerCase().includes(restriction.toLowerCase()))
+    );
+    if (hasRestricted) {
+      suitable = false;
+      reasons.push('Contains allergen you avoid');
+    }
+
+    // Check dietary preferences
+    const userPreferences = user.dietary_preferences || [];
+    if (userPreferences.includes('Vegan') && !item.tags?.includes('Vegan')) {
+      suitable = false;
+      reasons.push('Not vegan');
+    }
+    if (userPreferences.includes('Vegetarian') && !item.tags?.includes('Vegetarian') && !item.tags?.includes('Vegan')) {
+      suitable = false;
+      reasons.push('Not vegetarian');
+    }
+
+    // Check health goals (highlight matches, don't filter)
+    const userGoals = user.health_goals || [];
+    const itemTags = item.tags || [];
+    const matchesGoal = userGoals.some(goal => itemTags.includes(goal));
+
+    return { suitable, reasons, matchesGoal };
+  };
+
   const filteredItems = menuItems.filter(item => {
     const itemDay = item.day?.split('(')[0].trim() || item.day;
     const matchesDay = selectedDay === 'All Days' || itemDay === selectedDay || itemDay === 'Daily Special';
@@ -1411,6 +1474,10 @@ export default function Home() {
     if (activeFilters.vegan && !item.tags?.includes('Vegan')) return false;
     if (activeFilters.fit && !item.tags?.includes('Fit')) return false;
 
+    // Filter out items with allergens user needs to avoid
+    const { suitable } = checkItemSuitability(item);
+    if (!suitable) return false;
+
     return true;
   }).map(item => {
     // Auto-tag items based on nutritional content
@@ -1418,7 +1485,10 @@ export default function Home() {
     if (item.protein >= 25 && !autoTags.includes('High Protein')) autoTags.push('High Protein');
     if (item.fiber >= 8 && !autoTags.includes('High Fiber')) autoTags.push('High Fiber');
     if ((item.name?.toLowerCase().includes('spicy') || item.description?.toLowerCase().includes('spicy') || item.description?.toLowerCase().includes('cajun') || item.name?.toLowerCase().includes('cajun')) && !autoTags.includes('Spicy')) autoTags.push('Spicy');
-    return { ...item, tags: autoTags };
+    
+    // Add suitability info
+    const suitability = checkItemSuitability({ ...item, tags: autoTags });
+    return { ...item, tags: autoTags, ...suitability };
   }).sort((a, b) => {
     // Sort by meal period: Breakfast -> Lunch -> Dinner -> All Day
     const mealOrder = { 'Breakfast': 0, 'Lunch': 1, 'Dinner': 2, 'All Day': 3 };
@@ -1431,7 +1501,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-stone-50 text-gray-900 font-sans tracking-tight overflow-x-hidden selection:bg-teal-100 selection:text-teal-900 font-bold">
-      <NavBar view={view} changeView={changeView} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />
+      <NavBar view={view} changeView={changeView} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} onProfileClick={() => setIsProfileModalOpen(true)} />
       
       <main className="w-full font-bold">
         {view === 'customer' && (
@@ -1502,6 +1572,8 @@ export default function Home() {
       <WeeklyPlannerModal isOpen={isWeeklyPlannerOpen} onClose={() => setIsWeeklyPlannerOpen(false)} menuItems={menuItems} addToPlate={addToPlate} />
 
       <NutritionCharts isOpen={isChartsOpen} onClose={() => setIsChartsOpen(false)} menuItems={menuItems} />
+
+      <ProfileSettingsModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} user={user} />
       </div>
       );
       }

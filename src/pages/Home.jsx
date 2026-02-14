@@ -1052,8 +1052,8 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   };
 
   const handleProcessAndPublish = async () => {
-    if (!uploadedFiles.weekMenu) {
-      alert('Please upload Week Menu PDF first');
+    if (!uploadedFiles.weekMenu && !uploadedFiles.fda && !uploadedFiles.allergen && !uploadedFiles.ingredients && !uploadedFiles.recipes) {
+      alert('Please upload at least one file to process');
       return;
     }
 
@@ -1062,39 +1062,43 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     let finalItems = [];
 
     try {
-      // Step 1: Week Menu
-      setProcessingStep('Step 1: Week Menu...');
-      setProcessingProgress(20);
+      // Step 1: Week Menu (Optional)
+      if (uploadedFiles.weekMenu) {
+        setProcessingStep('Step 1: Week Menu...');
+        setProcessingProgress(20);
 
-      const weekResult = await base44.integrations.Core.InvokeLLM({
-        prompt: `Extract ALL menu items from this document. For each item extract: name, recipe_number (the number in parentheses), station name, day (Monday/Tuesday/Wednesday/Thursday/Friday/Daily Special), and any description if available. Return as JSON array. Extract EVERY single menu item you find.`,
-        file_urls: [uploadedFiles.weekMenu],
-        response_json_schema: {
-          type: "object",
-          properties: {
-            items: {
-              type: "array",
+        const weekResult = await base44.integrations.Core.InvokeLLM({
+          prompt: `Extract ALL menu items from this document. For each item extract: name, recipe_number (the number in parentheses), station name, day (Monday/Tuesday/Wednesday/Thursday/Friday/Daily Special), and any description if available. Return as JSON array. Extract EVERY single menu item you find.`,
+          file_urls: [uploadedFiles.weekMenu],
+          response_json_schema: {
+            type: "object",
+            properties: {
               items: {
-                type: "object",
-                properties: {
-                  name: { type: "string" },
-                  recipe_number: { type: "string" },
-                  station: { type: "string" },
-                  day: { type: "string" },
-                  description: { type: "string" }
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string" },
+                    recipe_number: { type: "string" },
+                    station: { type: "string" },
+                    day: { type: "string" },
+                    description: { type: "string" }
+                  }
                 }
               }
             }
           }
+        });
+
+        if (weekResult?.items) {
+          console.log(`✅ Extracted ${weekResult.items.length} items from Week Menu`);
+          finalItems = weekResult.items.map((item, idx) => ({ ...item, id: Date.now() + idx }));
         }
-      });
-
-      if (!weekResult?.items) {
-        throw new Error('Week Menu extraction failed');
+      } else {
+        // Use existing menu items as base
+        finalItems = menuItems.map(item => ({ ...item }));
+        console.log(`Using existing ${finalItems.length} menu items as base`);
       }
-
-      console.log(`✅ Extracted ${weekResult.items.length} items from Week Menu`);
-      finalItems = weekResult.items.map((item, idx) => ({ ...item, id: Date.now() + idx }));
 
       setProcessingProgress(35);
 
@@ -1556,15 +1560,15 @@ ${csvChunk}`,
             ))}
           </div>
           <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-800">
-            <div className="font-bold mb-2 flex items-center gap-2">
-              <Info className="w-4 h-4" />
-              Files Uploaded
+          <div className="font-bold mb-2 flex items-center gap-2">
+            <Info className="w-4 h-4" />
+            Files Uploaded
+          </div>
+          <div className="space-y-1 text-blue-700 mb-3">
+            <div className="flex items-center gap-2">
+              {uploadedFiles.weekMenu ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-300" />}
+              <span>Week Menu</span>
             </div>
-            <div className="space-y-1 text-blue-700 mb-3">
-              <div className="flex items-center gap-2">
-                {uploadedFiles.weekMenu ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-300" />}
-                <span>Week Menu (Required)</span>
-              </div>
               <div className="flex items-center gap-2">
                 {uploadedFiles.fda ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-300" />}
                 <span>FDA Nutrition</span>
@@ -1598,7 +1602,7 @@ ${csvChunk}`,
             ) : (
               <button
                 onClick={handleProcessAndPublish}
-                disabled={!uploadedFiles.weekMenu}
+                disabled={!uploadedFiles.weekMenu && !uploadedFiles.fda && !uploadedFiles.allergen && !uploadedFiles.ingredients && !uploadedFiles.recipes}
                 className="w-full py-3 bg-teal-600 text-white rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
               >
                 <Sparkles className="w-4 h-4" />

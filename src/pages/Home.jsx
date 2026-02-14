@@ -1383,6 +1383,61 @@ ${csvChunk}`,
         return item;
       });
 
+      // Step 6: Generate ingredients for items that don't have them
+      const itemsNeedingIngredients = finalItems.filter(item => !item.ingredients || item.ingredients.length < 5);
+      
+      if (itemsNeedingIngredients.length > 0) {
+        setProcessingStep('Generating Missing Ingredients...');
+        setProcessingProgress(90);
+        console.log(`🔍 Generating ingredients for ${itemsNeedingIngredients.length} items`);
+        
+        try {
+          const ingredientsPrompt = `Generate realistic ingredient lists for these menu items. Each ingredient list should be detailed and accurate for the dish. Return as JSON.\n\nItems:\n${itemsNeedingIngredients.map(i => `- ${i.name}`).join('\n')}`;
+          
+          const ingredientsResult = await base44.integrations.Core.InvokeLLM({
+            prompt: ingredientsPrompt,
+            response_json_schema: {
+              type: "object",
+              properties: {
+                items: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string" },
+                      ingredients: { type: "string" }
+                    }
+                  }
+                }
+              }
+            }
+          });
+          
+          if (ingredientsResult?.items && Array.isArray(ingredientsResult.items)) {
+            console.log('✅ AI Ingredients generated:', ingredientsResult.items.length);
+            let ingredientsMatched = 0;
+            finalItems = finalItems.map(item => {
+              if (!item.ingredients || item.ingredients.length < 5) {
+                const match = ingredientsResult.items.find(i => {
+                  const iName = i.name.toLowerCase().trim();
+                  const itemName = item.name.toLowerCase().trim();
+                  return iName.includes(itemName) || itemName.includes(iName) || iName.slice(0, 15) === itemName.slice(0, 15);
+                });
+                if (match?.ingredients) {
+                  ingredientsMatched++;
+                  console.log(`  ✓ Generated ingredients for: ${item.name}`);
+                  return { ...item, ingredients: match.ingredients };
+                }
+              }
+              return item;
+            });
+            console.log(`Ingredients: Generated ${ingredientsMatched} of ${itemsNeedingIngredients.length} items`);
+          }
+        } catch (error) {
+          console.error('Ingredient generation failed:', error);
+        }
+      }
+
       // Publish to menu
       setProcessingStep('Publishing Menu...');
       setProcessingProgress(100);

@@ -1037,7 +1037,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       setProcessingProgress(20);
 
       const weekResult = await base44.integrations.Core.InvokeLLM({
-        prompt: `Extract menu items: name, recipe_number, station, day (Monday/Tuesday/Wednesday/Thursday/Friday/Daily Special), description. JSON array.`,
+        prompt: `Extract ALL menu items from this document. For each item extract: name, recipe_number (the number in parentheses), station name, day (Monday/Tuesday/Wednesday/Thursday/Friday/Daily Special), and any description if available. Return as JSON array. Extract EVERY single menu item you find.`,
         file_urls: [uploadedFiles.weekMenu],
         response_json_schema: {
           type: "object",
@@ -1063,7 +1063,9 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         throw new Error('Week Menu extraction failed');
       }
 
+      console.log(`✅ Extracted ${weekResult.items.length} items from Week Menu`);
       finalItems = weekResult.items.map((item, idx) => ({ ...item, id: Date.now() + idx }));
+
       setProcessingProgress(35);
 
       // Step 2: FDA (optional)
@@ -1345,6 +1347,8 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       setProcessingProgress(100);
       console.log('📊 FINAL MENU DATA (first 3 items):', finalItems.slice(0, 3));
       console.log('📊 Total items with FDA data:', finalItems.filter(i => i.calories > 0).length);
+      console.log('📊 Items with descriptions:', finalItems.filter(i => i.description && i.description.length > 10).length);
+      console.log('📊 Items with ingredients:', finalItems.filter(i => i.ingredients).length);
       setMenuItems(finalItems);
       setUploadedFiles({ weekMenu: null, fda: null, allergen: null, ingredients: null });
       

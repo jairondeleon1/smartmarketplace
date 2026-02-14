@@ -606,16 +606,6 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
             </div>
           )}
 
-          {item.recipe_instructions && (
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-3">
-              <div className="flex items-center gap-2 mb-2">
-                <ChefHat className="w-4 h-4 text-blue-600" />
-                <span className="text-xs font-bold text-blue-800 uppercase tracking-wider">How to Make</span>
-              </div>
-              <p className="text-sm text-blue-900 leading-relaxed whitespace-pre-line">{item.recipe_instructions}</p>
-            </div>
-          )}
-
           <NutritionDetailView item={item} />
 
           {item.allergens && item.allergens.length > 0 && (
@@ -854,8 +844,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     weekMenu: null,
     fda: null,
     allergen: null,
-    ingredients: null,
-    recipes: null
+    ingredients: null
   });
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [bulkEditItems, setBulkEditItems] = useState([]);
@@ -1034,25 +1023,8 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     }
   };
 
-  const handleRecipesUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setIsSyncing("recipes");
-    try {
-      const fileUrl = await uploadFile(file);
-      console.log('✅ Recipe file uploaded:', fileUrl);
-      setUploadedFiles(prev => ({ ...prev, recipes: fileUrl }));
-    } catch (error) {
-      console.error('Recipe upload error:', error);
-      alert('Recipe upload failed: ' + (error?.message || 'Network error'));
-    } finally {
-      setIsSyncing(null);
-    }
-  };
-
   const handleProcessAndPublish = async () => {
-    if (!uploadedFiles.weekMenu && !uploadedFiles.fda && !uploadedFiles.allergen && !uploadedFiles.ingredients && !uploadedFiles.recipes) {
+    if (!uploadedFiles.weekMenu && !uploadedFiles.fda && !uploadedFiles.allergen && !uploadedFiles.ingredients) {
       alert('Please upload at least one file to process');
       return;
     }
@@ -1401,54 +1373,6 @@ ${csvChunk}`,
         }
       }
 
-      // Step 5: Process Recipe Instructions if uploaded
-      if (uploadedFiles.recipes) {
-        setProcessingStep('Processing Recipe Instructions...');
-        console.log('🔍 Step 5: Processing Recipe Instructions...');
-        
-        try {
-          const recipeResult = await base44.integrations.Core.InvokeLLM({
-            prompt: `Extract cooking instructions from this recipe document. For each recipe, extract: recipe_number (the numeric ID) and recipe_instructions (step-by-step cooking instructions). Return as JSON array.`,
-            file_urls: [uploadedFiles.recipes],
-            response_json_schema: {
-              type: "object",
-              properties: {
-                items: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      recipe_number: { type: "string" },
-                      recipe_instructions: { type: "string" }
-                    }
-                  }
-                }
-              }
-            }
-          });
-
-          if (recipeResult?.items && Array.isArray(recipeResult.items)) {
-            console.log('✅ Recipe instructions extracted:', recipeResult.items.length);
-            let matchCount = 0;
-            const normalizeRecipe = (num) => String(num).trim().replace(/^0+/, '');
-            
-            finalItems = finalItems.map(item => {
-              const itemRecipe = normalizeRecipe(item.recipe_number || '');
-              const match = recipeResult.items.find(rec => normalizeRecipe(rec.recipe_number || '') === itemRecipe);
-              if (match && match.recipe_instructions) {
-                matchCount++;
-                console.log(`  ✅ Recipe match: ${item.name}`);
-                return { ...item, recipe_instructions: match.recipe_instructions };
-              }
-              return item;
-            });
-            console.log(`✅ Recipes: Matched ${matchCount} of ${finalItems.length} items`);
-          }
-        } catch (error) {
-          console.error('❌ Recipe processing error:', error);
-        }
-      }
-
       // Remove Vegan tag from fried items
       finalItems = finalItems.map(item => {
         const isFried = (item.name?.toLowerCase().includes('fried') || item.description?.toLowerCase().includes('fried'));
@@ -1466,7 +1390,7 @@ ${csvChunk}`,
       console.log('📊 Items with descriptions:', finalItems.filter(i => i.description && i.description.length > 10).length);
       console.log('📊 Items with ingredients:', finalItems.filter(i => i.ingredients).length);
       setMenuItems(finalItems);
-      setUploadedFiles({ weekMenu: null, fda: null, allergen: null, ingredients: null, recipes: null });
+      setUploadedFiles({ weekMenu: null, fda: null, allergen: null, ingredients: null });
       
       setTimeout(() => {
         alert(`✅ Published ${finalItems.length} menu items! Check browser console (F12) for details.`);
@@ -1488,8 +1412,7 @@ ${csvChunk}`,
     { label: "1. Week Menu PDF", type: "week-menu", icon: Calendar, accept: ".pdf", handler: handleWeekMenuUpload, desc: "Menu items with recipe #s" }, 
     { label: "2. FDA Nutrition File", type: "fda", icon: Sparkles, accept: ".pdf,.xlsx,.xls", handler: handleFDAUpload, desc: "Match by recipe #" }, 
     { label: "3. Allergen PDF", type: "allergen", icon: AlertTriangle, accept: ".pdf", handler: handleAllergenUpload, desc: "Match by recipe #" },
-    { label: "4. Ingredients CSV", type: "ingredients", icon: FileText, accept: ".csv", handler: handleIngredientsUpload, desc: "Match by recipe #" },
-    { label: "5. Recipe Instructions", type: "recipes", icon: ChefHat, accept: ".pdf,.xlsx,.xls", handler: handleRecipesUpload, desc: "Cooking steps by recipe #" }
+    { label: "4. Ingredients CSV", type: "ingredients", icon: FileText, accept: ".csv", handler: handleIngredientsUpload, desc: "Match by recipe #" }
   ];
 
   return (
@@ -1581,10 +1504,6 @@ ${csvChunk}`,
                 {uploadedFiles.ingredients ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-300" />}
                 <span>Ingredients</span>
               </div>
-              <div className="flex items-center gap-2">
-                {uploadedFiles.recipes ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-300" />}
-                <span>Recipe Instructions</span>
-              </div>
               </div>
             {isSyncing === "publish" ? (
               <div className="space-y-2">
@@ -1602,7 +1521,7 @@ ${csvChunk}`,
             ) : (
               <button
                 onClick={handleProcessAndPublish}
-                disabled={!uploadedFiles.weekMenu && !uploadedFiles.fda && !uploadedFiles.allergen && !uploadedFiles.ingredients && !uploadedFiles.recipes}
+                disabled={!uploadedFiles.weekMenu && !uploadedFiles.fda && !uploadedFiles.allergen && !uploadedFiles.ingredients}
                 className="w-full py-3 bg-teal-600 text-white rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
               >
                 <Sparkles className="w-4 h-4" />

@@ -849,14 +849,22 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [bulkEditItems, setBulkEditItems] = useState([]);
 
-  const uploadFile = async (file) => {
+  const uploadFile = async (file, retries = 3) => {
     if (!file) throw new Error('No file provided');
-    if (file.size > 10 * 1024 * 1024) throw new Error('File too large (max 10MB)');
+    if (file.size > 5 * 1024 * 1024) throw new Error(`File too large (max 5MB). Your file is ${Math.round(file.size / 1024 / 1024)}MB. Please compress or split the file.`);
     
-    const result = await base44.integrations.Core.UploadFile({ file });
-    if (!result?.file_url) throw new Error('Upload failed - no URL returned');
-    
-    return result.file_url;
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const result = await base44.integrations.Core.UploadFile({ file });
+        if (!result?.file_url) throw new Error('Upload failed - no URL returned');
+        return result.file_url;
+      } catch (error) {
+        if (attempt === retries) {
+          throw new Error(`Upload failed after ${retries} attempts: ${error?.message || 'Network error'}. Please try a smaller file or check your connection.`);
+        }
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
   };
 
   const readFileAsText = (file) => {

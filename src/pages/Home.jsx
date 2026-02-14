@@ -1007,11 +1007,13 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   const handleIngredientsUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     setIsSyncing("ingredients");
     try {
       const text = await readFileAsText(file);
       if (!text || text.length === 0) throw new Error('File is empty');
+      console.log('✅ Ingredients CSV uploaded, length:', text.length);
+      console.log('First 200 chars:', text.slice(0, 200));
       setUploadedFiles(prev => ({ ...prev, ingredients: text }));
     } catch (error) {
       console.error('Ingredients upload error:', error);
@@ -1265,14 +1267,33 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         }
       }
 
-      // Step 4: Process Ingredients if uploaded - match by recipe number and extract dietary tags
+      // Step 4: Process Ingredients if uploaded - match by recipe number
       if (uploadedFiles.ingredients) {
-        setProcessingStep('Processing Ingredients...');
-        console.log('Step 4: Processing Ingredients CSV...');
+        setProcessingStep('Processing Ingredients CSV...');
+        console.log('🔍 Step 4: Processing Ingredients CSV...');
+        console.log('CSV length:', uploadedFiles.ingredients.length);
         
         try {
+          // Split into smaller chunks if needed
+          const maxChars = 8000;
+          const csvChunk = uploadedFiles.ingredients.slice(0, maxChars);
+          
+          console.log('Sending to LLM, chunk size:', csvChunk.length);
+          
           const ingredientsResult = await base44.integrations.Core.InvokeLLM({
-            prompt: `Parse this CSV data carefully. Extract for each row: recipe_number (the numeric ID), ingredients (the complete comma-separated ingredient list), is_vegan (true/false), is_vegetarian (true/false), is_fit (true/false). Return ALL rows as structured JSON array.\n\nCSV Data:\n${uploadedFiles.ingredients.slice(0, 5000)}`,
+            prompt: `You are parsing a CSV file with menu ingredients. The CSV has columns for recipe number, ingredients, and dietary flags.
+
+IMPORTANT: Extract ALL rows from this CSV. For each row, extract:
+- recipe_number: The numeric recipe ID (could be in first column)
+- ingredients: The full ingredient list (long text field with commas)
+- is_vegan: true if marked vegan, false otherwise
+- is_vegetarian: true if marked vegetarian, false otherwise  
+- is_fit: true if marked fit, false otherwise
+
+Return ALL rows as a JSON array. Do not skip any rows.
+
+CSV Data:
+${csvChunk}`,
             add_context_from_internet: false,
             response_json_schema: {
               type: "object",
@@ -1294,19 +1315,30 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
             }
           });
 
-          if (ingredientsResult?.items && Array.isArray(ingredientsResult.items)) {
-            console.log('✅ Ingredients Data extracted:', ingredientsResult.items.length, 'items');
-            console.log('Sample:', ingredientsResult.items[0]);
-            let matchCount = 0;
+          console.log('LLM Response:', ingredientsResult);
+
+          if (ingredientsResult?.items && Array.isArray(ingredientsResult.items) && ingredientsResult.items.length > 0) {
+            console.log('✅ Extracted', ingredientsResult.items.length, 'ingredient records from CSV');
+            console.log('Sample record:', ingredientsResult.items[0]);
             
-            const normalizeRecipe = (num) => String(num).trim().replace(/^0+/, '').toLowerCase();
+            let matchCount = 0;
+            const normalizeRecipe = (num) => String(num).trim().replace(/^0+/, '');
+            
+            console.log('Attempting to match with menu items...');
+            console.log('Sample menu recipe numbers:', finalItems.slice(0, 5).map(i => i.recipe_number));
+            console.log('Sample CSV recipe numbers:', ingredientsResult.items.slice(0, 5).map(i => i.recipe_number));
             
             finalItems = finalItems.map(item => {
-              const normalizedItemRecipe = normalizeRecipe(item.recipe_number || '');
-              const match = ingredientsResult.items.find(ing => normalizeRecipe(ing.recipe_number || '') === normalizedItemRecipe);
-              if (match && match.ingredients) {
+              const itemRecipe = normalizeRecipe(item.recipe_number || '');
+              const match = ingredientsResult.items.find(ing => {
+                const ingRecipe = normalizeRecipe(ing.recipe_number || '');
+                return ingRecipe === itemRecipe;
+              });
+              
+              if (match && match.ingredients && match.ingredients.length > 5) {
                 matchCount++;
-                console.log(`  ✓ Matched Ingredients by recipe #${item.recipe_number}: ${item.name} - ${match.ingredients.slice(0, 50)}...`);
+                console.log(`  ✅ Match #${matchCount}: Recipe ${item.recipe_number} -> ${item.name}`);
+                console.log(`     Ingredients: ${match.ingredients.slice(0, 100)}...`);
                 
                 const csvTags = [];
                 if (match.is_vegan) csvTags.push('Vegan');
@@ -1318,14 +1350,18 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                 
                 return { ...item, ingredients: match.ingredients.trim(), tags: mergedTags };
               } else {
-                console.warn(`  ⚠️ No Ingredients match for recipe #${item.recipe_number}: ${item.name}`);
+                if (item.recipe_number) {
+                  console.log(`  ⚠️ No match for Recipe ${item.recipe_number}: ${item.name}`);
+                }
                 return item;
               }
             });
-            console.log(`✅ Ingredients: Matched ${matchCount} of ${finalItems.length} items`);
-            console.log('Items with ingredients:', finalItems.filter(i => i.ingredients).length);
+            
+            console.log(`✅ Ingredients: Successfully matched ${matchCount} of ${finalItems.length} items`);
+            console.log('✅ Total items with ingredients now:', finalItems.filter(i => i.ingredients && i.ingredients.length > 5).length);
           } else {
-            console.error('❌ Ingredients extraction failed - no items returned');
+            console.error('❌ No ingredient data extracted from CSV');
+            alert('Warning: Could not extract ingredient data from CSV. Check console for details.');
           }
         } catch (error) {
           console.error('❌ Ingredients processing error:', error);

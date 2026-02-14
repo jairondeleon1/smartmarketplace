@@ -42,6 +42,7 @@ import ProfileSettingsModal from "../components/ProfileSettingsModal";
 import NutritionDetailView from "../components/NutritionDetailView";
 import BulkEditModal from "../components/admin/BulkEditModal";
 import MenuItemsTable from "../components/admin/MenuItemsTable";
+import AllergenNoticeModal from "../components/AllergenNoticeModal";
 import jsPDF from 'jspdf';
 
 // --- CONSTANTS ---
@@ -1795,6 +1796,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-stone-50 text-gray-900 font-sans tracking-tight overflow-x-hidden selection:bg-teal-100 selection:text-teal-900 font-bold">
+      <AllergenNoticeModal />
       <NavBar view={view} changeView={changeView} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} onProfileClick={() => setIsProfileModalOpen(true)} />
       
       <main className="w-full font-bold">

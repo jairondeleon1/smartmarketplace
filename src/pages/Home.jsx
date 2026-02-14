@@ -1156,40 +1156,59 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       console.log('Step 2.5: Generating AI Descriptions...');
 
       const itemsNeedingDescriptions = finalItems.filter(item => 
-        !item.description || item.description.length < 10 || item.description.toLowerCase().includes(item.name.toLowerCase())
+        !item.description || item.description.length < 15
       );
 
-      if (itemsNeedingDescriptions.length > 0) {
-        const descPrompt = `Generate brief, appetizing 1-sentence descriptions for these menu items. Make each description unique and descriptive (NOT just the item name). Return as JSON array with name and description fields.\n\nItems:\n${itemsNeedingDescriptions.map(i => `- ${i.name}`).join('\n')}`;
+      console.log('Items needing descriptions:', itemsNeedingDescriptions.length);
 
-        const descResult = await base44.integrations.Core.InvokeLLM({
-          prompt: descPrompt,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              items: {
-                type: "array",
+      if (itemsNeedingDescriptions.length > 0) {
+        try {
+          const descPrompt = `Generate brief, appetizing 1-sentence descriptions (15-25 words each) for these menu items. Each description should be unique and descriptive. Return as JSON.\n\nItems:\n${itemsNeedingDescriptions.map(i => `- ${i.name}`).join('\n')}`;
+
+          const descResult = await base44.integrations.Core.InvokeLLM({
+            prompt: descPrompt,
+            response_json_schema: {
+              type: "object",
+              properties: {
                 items: {
-                  type: "object",
-                  properties: {
-                    name: { type: "string" },
-                    description: { type: "string" }
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string" },
+                      description: { type: "string" }
+                    }
                   }
                 }
               }
             }
-          }
-        });
-
-        if (descResult?.items) {
-          console.log('AI Descriptions generated:', descResult.items.length);
-          finalItems = finalItems.map(item => {
-            const match = descResult.items.find(d => d.name.toLowerCase().includes(item.name.toLowerCase().slice(0, 10)));
-            if (match && (!item.description || item.description.length < 10)) {
-              return { ...item, description: match.description };
-            }
-            return item;
           });
+
+          if (descResult?.items && Array.isArray(descResult.items)) {
+            console.log('✅ AI Descriptions generated:', descResult.items.length);
+            let descMatched = 0;
+            finalItems = finalItems.map(item => {
+              if (!item.description || item.description.length < 15) {
+                const match = descResult.items.find(d => {
+                  const dName = d.name.toLowerCase().trim();
+                  const iName = item.name.toLowerCase().trim();
+                  return dName.includes(iName) || iName.includes(dName) || 
+                         dName.slice(0, 15) === iName.slice(0, 15);
+                });
+                if (match?.description) {
+                  descMatched++;
+                  console.log(`  ✓ Matched description for: ${item.name}`);
+                  return { ...item, description: match.description };
+                }
+              }
+              return item;
+            });
+            console.log(`Descriptions: Applied ${descMatched} of ${itemsNeedingDescriptions.length} items`);
+          } else {
+            console.warn('⚠️ Description generation returned no items');
+          }
+        } catch (error) {
+          console.error('Description generation failed:', error);
         }
       }
 
@@ -1246,59 +1265,69 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
 
       // Step 4: Process Ingredients if uploaded - match by recipe number and extract dietary tags
       if (uploadedFiles.ingredients) {
-        const ingredientsResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `Parse this CSV data and extract recipe_number, full ingredient lists, and dietary tags (Vegan, Vegetarian, Fit). Look for these indicators in the CSV columns. Return as structured JSON.\n\nCSV Data:\n${uploadedFiles.ingredients}`,
-          add_context_from_internet: false,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              items: {
-                type: "array",
+        setProcessingStep('Processing Ingredients...');
+        console.log('Step 4: Processing Ingredients CSV...');
+        
+        try {
+          const ingredientsResult = await base44.integrations.Core.InvokeLLM({
+            prompt: `Parse this CSV data carefully. Extract for each row: recipe_number (the numeric ID), ingredients (the complete comma-separated ingredient list), is_vegan (true/false), is_vegetarian (true/false), is_fit (true/false). Return ALL rows as structured JSON array.\n\nCSV Data:\n${uploadedFiles.ingredients.slice(0, 5000)}`,
+            add_context_from_internet: false,
+            response_json_schema: {
+              type: "object",
+              properties: {
                 items: {
-                  type: "object",
-                  properties: {
-                    recipe_number: { type: "string" },
-                    ingredients: { type: "string" },
-                    is_vegan: { type: "boolean" },
-                    is_vegetarian: { type: "boolean" },
-                    is_fit: { type: "boolean" }
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      recipe_number: { type: "string" },
+                      ingredients: { type: "string" },
+                      is_vegan: { type: "boolean" },
+                      is_vegetarian: { type: "boolean" },
+                      is_fit: { type: "boolean" }
+                    }
                   }
                 }
               }
             }
-          }
-        });
-
-        if (ingredientsResult?.items) {
-          console.log('Ingredients Data extracted:', ingredientsResult.items);
-          let matchCount = 0;
-          
-          const normalizeRecipe = (num) => String(num).trim().replace(/^0+/, '').toLowerCase();
-          
-          finalItems = finalItems.map(item => {
-            const normalizedItemRecipe = normalizeRecipe(item.recipe_number || '');
-            const match = ingredientsResult.items.find(ing => normalizeRecipe(ing.recipe_number || '') === normalizedItemRecipe);
-            if (match) {
-              matchCount++;
-              console.log(`✓ Matched Ingredients by recipe #${item.recipe_number}: ${item.name}`);
-              
-              // Build tags array from ingredients CSV data
-              const csvTags = [];
-              if (match.is_vegan) csvTags.push('Vegan');
-              if (match.is_vegetarian) csvTags.push('Vegetarian');
-              if (match.is_fit) csvTags.push('Fit');
-              
-              // Merge with existing tags from allergen file
-              const existingTags = item.tags || [];
-              const mergedTags = [...new Set([...existingTags, ...csvTags])];
-              
-              return { ...item, ingredients: match.ingredients, tags: mergedTags };
-            } else {
-              console.warn(`⚠️ No Ingredients match for recipe #${item.recipe_number}: ${item.name}`);
-              return item;
-            }
           });
-          console.log(`Ingredients: Matched ${matchCount} of ${finalItems.length} items`);
+
+          if (ingredientsResult?.items && Array.isArray(ingredientsResult.items)) {
+            console.log('✅ Ingredients Data extracted:', ingredientsResult.items.length, 'items');
+            console.log('Sample:', ingredientsResult.items[0]);
+            let matchCount = 0;
+            
+            const normalizeRecipe = (num) => String(num).trim().replace(/^0+/, '').toLowerCase();
+            
+            finalItems = finalItems.map(item => {
+              const normalizedItemRecipe = normalizeRecipe(item.recipe_number || '');
+              const match = ingredientsResult.items.find(ing => normalizeRecipe(ing.recipe_number || '') === normalizedItemRecipe);
+              if (match && match.ingredients) {
+                matchCount++;
+                console.log(`  ✓ Matched Ingredients by recipe #${item.recipe_number}: ${item.name} - ${match.ingredients.slice(0, 50)}...`);
+                
+                const csvTags = [];
+                if (match.is_vegan) csvTags.push('Vegan');
+                if (match.is_vegetarian) csvTags.push('Vegetarian');
+                if (match.is_fit) csvTags.push('Fit');
+                
+                const existingTags = item.tags || [];
+                const mergedTags = [...new Set([...existingTags, ...csvTags])];
+                
+                return { ...item, ingredients: match.ingredients.trim(), tags: mergedTags };
+              } else {
+                console.warn(`  ⚠️ No Ingredients match for recipe #${item.recipe_number}: ${item.name}`);
+                return item;
+              }
+            });
+            console.log(`✅ Ingredients: Matched ${matchCount} of ${finalItems.length} items`);
+            console.log('Items with ingredients:', finalItems.filter(i => i.ingredients).length);
+          } else {
+            console.error('❌ Ingredients extraction failed - no items returned');
+          }
+        } catch (error) {
+          console.error('❌ Ingredients processing error:', error);
+          alert('Warning: Ingredients processing failed - ' + error.message);
         }
       }
 

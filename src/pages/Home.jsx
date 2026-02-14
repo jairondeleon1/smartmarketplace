@@ -597,12 +597,12 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
       {showDetails && (
         <div className="px-5 pb-5 animate-in slide-in-from-top-2 font-sans">
           {item.ingredients && (
-            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 mb-3">
-              <div className="flex items-center gap-1.5 mb-2">
-                <Info className="w-3 h-3 text-slate-400" />
-                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Ingredients</span>
+            <div className="bg-teal-50 border border-teal-100 rounded-xl p-4 mb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Info className="w-4 h-4 text-teal-600" />
+                <span className="text-xs font-bold text-teal-800 uppercase tracking-wider">Ingredients</span>
               </div>
-              <p className="text-[10px] text-slate-600 leading-snug font-medium">{item.ingredients}</p>
+              <p className="text-sm text-teal-900 leading-relaxed">{item.ingredients}</p>
             </div>
           )}
           

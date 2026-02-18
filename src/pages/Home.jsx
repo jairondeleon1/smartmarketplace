@@ -609,13 +609,13 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
 
           <NutritionDetailView item={item} />
 
-          {item.allergens && item.allergens.length > 0 && (
-            <div className="mt-3 bg-red-50 border border-red-100 rounded-lg p-3">
-              <div className="text-red-600 font-bold uppercase text-[10px] tracking-widest">
-                Contains: {item.allergens.join(', ')}
+          {item.allergens && item.allergens.filter(a => !['Garlic', 'Gluten', 'Onion'].includes(a)).length > 0 && (
+              <div className="mt-3 bg-red-50 border border-red-100 rounded-lg p-3">
+                <div className="text-red-600 font-bold uppercase text-[10px] tracking-widest">
+                  Contains: {item.allergens.filter(a => !['Garlic', 'Gluten', 'Onion'].includes(a)).join(', ')}
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
       )}
     </div>

@@ -827,8 +827,9 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
   };
 
   return (
-    <div className="fixed inset-0 top-16 flex flex-col bg-stone-50 z-40 font-sans">
-      <div className="flex-1 overflow-y-auto p-5 space-y-6">
+    <div className="fixed inset-0 flex flex-col bg-stone-50 dark:bg-slate-950 z-40 font-sans"
+      style={{ top: 'calc(4rem + env(safe-area-inset-top))', overscrollBehaviorY: 'none' }}>
+      <div className="flex-1 overflow-y-auto p-5 space-y-6" style={{ overscrollBehaviorY: 'none' }}>
         {chatHistory.map((msg, idx) => (
           <div key={idx} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
             <div className={`max-w-[85%] rounded-2xl p-5 text-sm leading-relaxed shadow-sm font-medium ${msg.role === 'user' ? 'bg-teal-800 text-white rounded-tr-none' : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'}`}>

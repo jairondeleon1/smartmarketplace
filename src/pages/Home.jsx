@@ -1207,6 +1207,7 @@ export default function Home() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [chatNavFrom, setChatNavFrom] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   const [selectedDay, setSelectedDay] = useState(getCurrentDay());
   const [chatHistory, setChatHistory] = useState([{ role: 'ai', content: "Hello! I am your Marketplace Assistant. How may I assist your choices today?" }]);
   const [userQuery, setUserQuery] = useState('');

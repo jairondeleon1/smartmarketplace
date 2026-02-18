@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { 
   ChefHat, 
   MessageSquare, 
@@ -43,7 +44,35 @@ import NutritionDetailView from "../components/NutritionDetailView";
 import BulkEditModal from "../components/admin/BulkEditModal";
 import MenuItemsTable from "../components/admin/MenuItemsTable";
 import AllergenNoticeModal from "../components/AllergenNoticeModal";
+import usePullToRefresh from "../components/usePullToRefresh";
 import jsPDF from 'jspdf';
+
+// Framer Motion slide variants for iOS-style push/pop
+const slideVariants = {
+  enterFromRight: { x: '100%', opacity: 0 },
+  enterFromLeft:  { x: '-30%', opacity: 0 },
+  center:         { x: 0, opacity: 1 },
+  exitToRight:    { x: '100%', opacity: 0 },
+  exitToLeft:     { x: '-30%', opacity: 0 },
+};
+const VIEW_ORDER = ['customer', 'chat', 'admin'];
+
+function PullToRefreshIndicator({ pullDistance, isPulling, isRefreshing, threshold = 72 }) {
+  if (!isPulling && !isRefreshing) return null;
+  return (
+    <div className="flex items-center justify-center transition-all duration-200 overflow-hidden"
+      style={{ height: isRefreshing ? 48 : pullDistance }}>
+      <div className="flex flex-col items-center gap-1">
+        {isRefreshing
+          ? <Loader2 className="w-6 h-6 text-teal-500 animate-spin" />
+          : <RefreshCw className={`w-6 h-6 text-teal-500 transition-transform ${pullDistance >= threshold ? 'rotate-180' : ''}`} />}
+        <span className="text-[10px] text-teal-600 font-bold uppercase tracking-widest">
+          {isRefreshing ? 'Refreshing...' : pullDistance >= threshold ? 'Release to refresh' : 'Pull to refresh'}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 // --- CONSTANTS ---
 const VEGAN_URL = "https://i.postimg.cc/MH7cDSz4/vegan.png"; 

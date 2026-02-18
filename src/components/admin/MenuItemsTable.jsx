@@ -60,19 +60,39 @@ export default function MenuItemsTable({ items, onDelete, onBulkEdit, onExport }
             className="pl-10"
           />
         </div>
+        {/* Mobile: Drawer; Desktop: native select */}
+        <button
+          className="md:hidden flex items-center gap-1 px-4 py-2 rounded-lg border border-gray-200 text-sm font-bold text-gray-700 bg-white"
+          onClick={() => setDrawerOpen(true)}
+        >
+          {DAY_OPTIONS.find(o => o.value === filterDay)?.label || 'All Days'}
+          <ChevronDown className="w-3 h-3 ml-1 text-gray-400" />
+        </button>
         <select
           value={filterDay}
           onChange={(e) => setFilterDay(e.target.value)}
-          className="px-4 py-2 rounded-lg border border-gray-200 text-sm font-bold"
+          className="hidden md:block px-4 py-2 rounded-lg border border-gray-200 text-sm font-bold"
         >
-          <option value="all">All Days</option>
-          <option value="Monday">Monday</option>
-          <option value="Tuesday">Tuesday</option>
-          <option value="Wednesday">Wednesday</option>
-          <option value="Thursday">Thursday</option>
-          <option value="Friday">Friday</option>
-          <option value="Daily Special">Daily Special</option>
+          {DAY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
+        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+          <DrawerContent>
+            <DrawerHeader className="text-left">
+              <DrawerTitle className="text-xs font-bold uppercase tracking-widest text-gray-500">Filter by Day</DrawerTitle>
+            </DrawerHeader>
+            <div className="pb-8 px-4 space-y-1">
+              {DAY_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => { setFilterDay(opt.value); setDrawerOpen(false); }}
+                  className={`w-full text-left px-4 py-3 rounded-xl font-bold text-sm transition ${filterDay === opt.value ? 'bg-slate-800 text-white' : 'hover:bg-gray-100 text-gray-700'}`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </DrawerContent>
+        </Drawer>
         <Button onClick={onExport} variant="outline" size="sm">
           <Download className="w-4 h-4 mr-2" /> Export CSV
         </Button>

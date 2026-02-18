@@ -92,7 +92,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
               {ALLERGENS.map(allergen => (
                 <button
                   key={allergen}
-                  onClick={() => toggleItem(allergen, restrictions, setRestrictions)}
+                  onClick={() => toggleItem(allergen, restrictions, setRestrictions, 'restrictions')}
                   className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all border-2 ${
                     restrictions.includes(allergen)
                       ? 'bg-red-500 text-white border-red-600'

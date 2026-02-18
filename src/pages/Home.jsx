@@ -1821,8 +1821,11 @@ export default function Home() {
     if (!matchesDay) return false;
 
     if (activeFilters.vegetarian && !item.tags?.includes('Vegetarian') && !item.tags?.includes('Vegan')) return false;
-    if (activeFilters.vegan && !item.tags?.includes('Vegan')) return false;
-    if (activeFilters.fit && !item.tags?.includes('Fit')) return false;
+      if (activeFilters.vegan && !item.tags?.includes('Vegan')) return false;
+      if (activeFilters.fit) {
+        const isFit = (item.calories || 0) <= 250 && (item.saturated_fat || 0) <= 3 && (item.sugar || 0) <= 20 && (item.sodium || 0) <= 230;
+        if (!isFit) return false;
+      }
 
     // Filter out items with allergens user needs to avoid
     const { suitable } = checkItemSuitability(item);

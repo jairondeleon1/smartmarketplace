@@ -417,5 +417,6 @@ export default function MenuPage({ menuItems: menuItemsProp, setMenuItems, user,
       <TrayDetailsModal isOpen={isTrayModalOpen} onClose={() => setIsTrayModalOpen(false)} plate={myPlate} setPlate={setMyPlate} />
       <WeeklyPlannerModal isOpen={isWeeklyPlannerOpen} onClose={() => setIsWeeklyPlannerOpen(false)} menuItems={menuItems} addToPlate={addToPlate} user={user} />
     </div>
+    </div>
   );
 }

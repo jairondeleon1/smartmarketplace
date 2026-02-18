@@ -1320,7 +1320,9 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-stone-50 dark:bg-slate-950 text-gray-900 dark:text-gray-100 font-sans tracking-tight overflow-x-hidden selection:bg-teal-100 selection:text-teal-900 font-bold" style={{ overscrollBehaviorY: 'none' }}>
       <AllergenNoticeModal />
-      <NavBar view={view} changeView={changeView} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} onProfileClick={() => setIsProfileModalOpen(true)} />
+      <div className="hidden md:block">
+        <NavBar view={view} changeView={changeView} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} onProfileClick={() => setIsProfileModalOpen(true)} />
+      </div>
       
       <main className="w-full font-bold overflow-hidden">
         <AnimatePresence mode="wait" initial={false}>

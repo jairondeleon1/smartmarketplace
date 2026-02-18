@@ -1094,7 +1094,8 @@ export default function Home() {
   }, []);
 
   const [view, setView] = useState('customer');
-  
+  const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
+
   const { data: user } = useQuery({
     queryKey: ['user'],
     queryFn: async () => { try { return await base44.auth.me(); } catch { return null; } }
@@ -1141,7 +1142,14 @@ export default function Home() {
   const [activeFilters, setActiveFilters] = useState({ vegetarian: false, vegan: false, fit: false });
   const dayScrollRef = useRef(null);
 
-  const changeView = (v) => { setView(v); setIsMobileMenuOpen(false); window.scrollTo(0,0); };
+  const changeView = (v) => {
+    const from = VIEW_ORDER.indexOf(view);
+    const to = VIEW_ORDER.indexOf(v);
+    setDirection(to >= from ? 1 : -1);
+    setView(v);
+    setIsMobileMenuOpen(false);
+    window.scrollTo(0, 0);
+  };
 
   const scrollToDay = (day) => {
     if (dayScrollRef.current) {

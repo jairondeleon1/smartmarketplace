@@ -42,16 +42,17 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await base44.auth.updateMe({
-        dietary_restrictions: restrictions,
-        dietary_preferences: preferences,
-        health_goals: goals
-      });
-      queryClient.invalidateQueries({ queryKey: ['user'] });
-      onClose();
-    } catch (error) {
-      alert('Error saving profile: ' + error.message);
-    } finally {
+        await base44.auth.updateMe({
+          dietary_restrictions: restrictions,
+          dietary_preferences: preferences,
+          health_goals: goals
+        });
+        queryClient.invalidateQueries({ queryKey: ['user'] });
+        toast.success('Profile saved!');
+        onClose();
+      } catch (error) {
+        toast.error('Error saving profile: ' + error.message);
+      } finally {
       setIsSaving(false);
     }
   };

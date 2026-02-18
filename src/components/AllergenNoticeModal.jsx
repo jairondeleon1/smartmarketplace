@@ -6,14 +6,10 @@ export default function AllergenNoticeModal() {
   const [step, setStep] = useState(1);
 
   useEffect(() => {
-    const hasSeenNotice = localStorage.getItem('allergen_notice_seen');
-    if (!hasSeenNotice) {
-      setIsOpen(true);
-    }
+    setIsOpen(true);
   }, []);
 
   const handleClose = () => {
-    localStorage.setItem('allergen_notice_seen', 'true');
     setIsOpen(false);
   };
 

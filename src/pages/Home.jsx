@@ -507,6 +507,41 @@ function TraySummary({ plate, onClick }) {
   );
 }
 
+// --- MOBILE DRAWER SELECT ---
+function MobileDrawerSelect({ value, onChange, options, label }) {
+  const [open, setOpen] = useState(false);
+  const current = options.find(o => o.value === value);
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-1 px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 bg-white border-gray-100 text-gray-600 transition active:scale-95"
+      >
+        {current?.label || label}
+        <ChevronDown className="w-3 h-3 ml-1 text-gray-400" />
+      </button>
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerContent>
+          <DrawerHeader className="text-left">
+            <DrawerTitle className="text-xs font-bold uppercase tracking-widest text-gray-500">{label}</DrawerTitle>
+          </DrawerHeader>
+          <div className="pb-8 px-4 space-y-1">
+            {options.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => { onChange(opt.value); setOpen(false); }}
+                className={`w-full text-left px-4 py-3 rounded-xl font-bold text-sm transition ${value === opt.value ? 'bg-slate-800 text-white' : 'hover:bg-gray-100 text-gray-700'}`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    </>
+  );
+}
+
 // --- ROUTE VIEWS ---
 
 function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, selectedDay, setSelectedDay, activeFilters, toggleFilter, clearFilters, filteredItems, dayScrollRef, addToPlate, myPlate, setMyPlate, isTrayModalOpen, setIsTrayModalOpen, isWeeklyPlannerOpen, setIsWeeklyPlannerOpen, user }) {

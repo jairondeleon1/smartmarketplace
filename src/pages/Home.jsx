@@ -1909,13 +1909,13 @@ export default function Home() {
   const trayTotals = myPlate.reduce((acc, item) => acc + (item.calories || 0), 0);
 
   return (
-    <div className="min-h-screen bg-stone-50 text-gray-900 font-sans tracking-tight overflow-x-hidden selection:bg-teal-100 selection:text-teal-900 font-bold">
+    <div className="min-h-screen bg-stone-50 dark:bg-slate-950 text-gray-900 dark:text-gray-100 font-sans tracking-tight overflow-x-hidden selection:bg-teal-100 selection:text-teal-900 font-bold" style={{ overscrollBehaviorY: 'none' }}>
       <AllergenNoticeModal />
       <NavBar view={view} changeView={changeView} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} onProfileClick={() => setIsProfileModalOpen(true)} />
       
       <main className="w-full font-bold">
         {view === 'customer' && (
-          <div className="max-w-5xl mx-auto p-4 space-y-8 pb-32 font-sans overflow-x-hidden font-bold">
+          <div className="max-w-5xl mx-auto p-4 space-y-8 pb-36 md:pb-32 font-sans overflow-x-hidden font-bold" style={{ overscrollBehaviorY: 'none' }}>
              <div className="text-center space-y-6 pt-10 font-sans font-bold">
                 <div className="flex justify-center">
                   <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698cee888040f55d6a3c5040/5f703ba08_SmartMenuIQ38x10.png" alt="SmartMenu IQ" className="max-w-md w-full px-4" />

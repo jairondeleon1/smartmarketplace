@@ -1831,10 +1831,13 @@ export default function Home() {
     return true;
   }).map(item => {
     // Auto-tag items based on nutritional content
-    const autoTags = [...(item.tags || [])];
-    if (item.protein >= 25 && !autoTags.includes('High Protein')) autoTags.push('High Protein');
-    if (item.fiber >= 8 && !autoTags.includes('High Fiber')) autoTags.push('High Fiber');
-    if ((item.name?.toLowerCase().includes('spicy') || item.description?.toLowerCase().includes('spicy') || item.description?.toLowerCase().includes('cajun') || item.name?.toLowerCase().includes('cajun')) && !autoTags.includes('Spicy')) autoTags.push('Spicy');
+      const autoTags = (item.tags || []).filter(t => t !== 'Fit'); // remove old Fit tag, recalculate
+      if (item.protein >= 25 && !autoTags.includes('High Protein')) autoTags.push('High Protein');
+      if (item.fiber >= 8 && !autoTags.includes('High Fiber')) autoTags.push('High Fiber');
+      if ((item.name?.toLowerCase().includes('spicy') || item.description?.toLowerCase().includes('spicy') || item.description?.toLowerCase().includes('cajun') || item.name?.toLowerCase().includes('cajun')) && !autoTags.includes('Spicy')) autoTags.push('Spicy');
+      // Fit criteria: ≤250 cal, ≤3g saturated fat, ≤20g sugar, ≤230mg sodium
+      const isFit = (item.calories || 0) <= 250 && (item.saturated_fat || 0) <= 3 && (item.sugar || 0) <= 20 && (item.sodium || 0) <= 230;
+      if (isFit && !autoTags.includes('Fit')) autoTags.push('Fit');
     
     // Add suitability info
     const suitability = checkItemSuitability({ ...item, tags: autoTags });

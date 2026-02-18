@@ -669,7 +669,8 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen, onPro
         <div className="hidden md:flex gap-6 items-center text-sm font-bold uppercase tracking-widest font-sans font-bold">
           <button onClick={() => changeView('customer')} className={view === 'customer' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>Menu</button>
           <button onClick={() => changeView('chat')} className={view === 'chat' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>AI Assistant</button>
-          <button onClick={() => changeView('admin')} className={view === 'admin' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>Admin</button>
+            <a href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-slate-300 opacity-70 hover:text-white hover:opacity-100 transition">30 Day Challenge</a>
+            <button onClick={() => changeView('admin')} className={view === 'admin' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>Admin</button>
           <button onClick={onProfileClick} className="p-2 hover:bg-white/10 rounded-full transition" title="My Profile">
             <User className="w-5 h-5" />
           </button>

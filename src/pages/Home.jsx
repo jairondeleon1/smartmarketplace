@@ -1326,39 +1326,69 @@ export default function Home() {
       <AllergenNoticeModal />
       <NavBar isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} onProfileClick={() => setIsProfileModalOpen(true)} />
 
-      <main className="w-full font-bold overflow-hidden">
+      <main className="w-full font-bold overflow-hidden relative">
         {/* Hidden-mount strategy: all tabs stay mounted, only active one is visible */}
-        {/* This preserves scroll position and internal state across tab switches */}
+        {/* Framer Motion AnimatePresence fades/slides the active tab in/out */}
 
         {/* MENU tab */}
-        <div style={{ display: topRoute === '/menu' && !isItemDetail ? 'block' : 'none' }}>
-          <CustomerView {...sharedCustomerProps} />
-        </div>
+        <AnimatePresence mode="wait" initial={false}>
+          {topRoute === '/menu' && !isItemDetail && (
+            <motion.div
+              key="menu"
+              initial={{ opacity: 0, x: directionRef.current > 0 ? 40 : -40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: directionRef.current > 0 ? -40 : 40 }}
+              transition={{ type: 'tween', duration: 0.22, ease: 'easeInOut' }}
+            >
+              <CustomerView {...sharedCustomerProps} />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* CHAT tab */}
-        <div style={{ display: topRoute === '/chat' ? 'block' : 'none' }}>
-          <ChatView chatHistory={chatHistory} isTyping={isTyping} userQuery={userQuery} setUserQuery={setUserQuery} handleSendChat={handleSendChat} />
-        </div>
+        <AnimatePresence mode="wait" initial={false}>
+          {topRoute === '/chat' && (
+            <motion.div
+              key="chat"
+              initial={{ opacity: 0, x: directionRef.current > 0 ? 40 : -40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: directionRef.current > 0 ? -40 : 40 }}
+              transition={{ type: 'tween', duration: 0.22, ease: 'easeInOut' }}
+            >
+              <ChatView chatHistory={chatHistory} isTyping={isTyping} userQuery={userQuery} setUserQuery={setUserQuery} handleSendChat={handleSendChat} showBack={chatNavFrom === '/menu'} onBack={() => navigate('/menu')} />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ADMIN tab — only mount after first visit to avoid overhead */}
         {(topRoute === '/admin' || isAdminLoggedIn) && (
-          <div style={{ display: topRoute === '/admin' ? 'block' : 'none' }}>
-            {!isAdminLoggedIn ? (
-              <div className="flex items-center justify-center min-h-[calc(100vh-100px)] p-6 tracking-tight font-sans font-bold">
-                <form onSubmit={(e) => { e.preventDefault(); if (e.target.pw.value === 'admin123') setIsAdminLoggedIn(true); else toast.error('Invalid password'); }} className="bg-white p-14 rounded-[3.5rem] shadow-2xl w-full max-w-sm border border-gray-100 text-center space-y-8 animate-in zoom-in-95 font-sans font-medium">
-                  <div className="bg-teal-50 p-6 rounded-3xl inline-block border border-teal-100 shadow-inner"><Lock className="w-10 h-10 text-teal-800" /></div>
-                  <div className="space-y-1 font-sans font-bold">
-                    <h2 className="text-2xl font-bold uppercase tracking-tight text-slate-900 leading-none tracking-widest">Matrix Hub</h2>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-3 tracking-[0.2em]">Personnel Authorization Required</p>
+          <AnimatePresence mode="wait" initial={false}>
+            {topRoute === '/admin' && (
+              <motion.div
+                key="admin"
+                initial={{ opacity: 0, x: directionRef.current > 0 ? 40 : -40 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: directionRef.current > 0 ? -40 : 40 }}
+                transition={{ type: 'tween', duration: 0.22, ease: 'easeInOut' }}
+              >
+                {!isAdminLoggedIn ? (
+                  <div className="flex items-center justify-center min-h-[calc(100vh-100px)] p-6 tracking-tight font-sans font-bold">
+                    <form onSubmit={(e) => { e.preventDefault(); if (e.target.pw.value === 'admin123') setIsAdminLoggedIn(true); else toast.error('Invalid password'); }} className="bg-white p-14 rounded-[3.5rem] shadow-2xl w-full max-w-sm border border-gray-100 text-center space-y-8 animate-in zoom-in-95 font-sans font-medium">
+                      <div className="bg-teal-50 p-6 rounded-3xl inline-block border border-teal-100 shadow-inner"><Lock className="w-10 h-10 text-teal-800" /></div>
+                      <div className="space-y-1 font-sans font-bold">
+                        <h2 className="text-2xl font-bold uppercase tracking-tight text-slate-900 leading-none tracking-widest">Matrix Hub</h2>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-3 tracking-[0.2em]">Personnel Authorization Required</p>
+                      </div>
+                      <input name="pw" type="password" className="w-full p-5 border-none rounded-2xl bg-gray-100 outline-none focus:ring-4 focus:ring-teal-100 font-bold text-center tracking-[0.4em] shadow-inner text-lg" placeholder="••••" />
+                      <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Verify Access</button>
+                    </form>
                   </div>
-                  <input name="pw" type="password" className="w-full p-5 border-none rounded-2xl bg-gray-100 outline-none focus:ring-4 focus:ring-teal-100 font-bold text-center tracking-[0.4em] shadow-inner text-lg" placeholder="••••" />
-                  <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Verify Access</button>
-                </form>
-              </div>
-            ) : (
-              <AdminView menuItems={menuItems} setMenuItems={setMenuItems} onLogout={() => setIsAdminLoggedIn(false)} customVegUrl={customVegUrl} setCustomVegUrl={setCustomVegUrl} customVeganUrl={customVeganUrl} setCustomVeganUrl={setCustomVeganUrl} newItem={newItem} setNewItem={setNewItem} handleAddItem={handleAddItem} handleDeleteItem={handleDeleteItem} queryClient={queryClient} />
+                ) : (
+                  <AdminView menuItems={menuItems} setMenuItems={setMenuItems} onLogout={() => setIsAdminLoggedIn(false)} customVegUrl={customVegUrl} setCustomVegUrl={setCustomVegUrl} customVeganUrl={customVeganUrl} setCustomVeganUrl={setCustomVeganUrl} newItem={newItem} setNewItem={setNewItem} handleAddItem={handleAddItem} handleDeleteItem={handleDeleteItem} queryClient={queryClient} />
+                )}
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
         )}
 
         {/* Fallback redirect for unknown routes */}

@@ -584,7 +584,7 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
         ) : (
           <p className="text-gray-400 text-sm leading-relaxed mb-4 italic font-sans font-medium">No description available</p>
         )}
-        <div className="flex flex-wrap gap-1.5 mb-4 font-sans font-bold">{item.tags?.map(tag => <Badge key={tag}>{tag}</Badge>)}</div>
+        <div className="flex flex-wrap gap-1.5 mb-4 font-sans font-bold">{item.tags?.filter(tag => ['High Protein', 'High Fiber', 'Vegan', 'Vegetarian', 'Fit', 'Spicy', 'Dairy Free', 'Low Carb', 'Heart Healthy'].includes(tag)).map(tag => <Badge key={tag}>{tag}</Badge>)}</div>
         <div className="grid grid-cols-3 gap-2 text-center py-3 bg-gray-50 rounded-xl mb-4 border border-gray-100/50 font-bold font-bold">
           <div><span className="block text-sm font-bold text-gray-700 font-sans font-bold">{item.calories}</span><span className="text-[9px] text-gray-400 uppercase font-bold font-sans tracking-widest font-bold">Cals</span></div>
           <div><span className="block text-sm font-bold text-gray-700 font-sans font-bold">{item.protein}g</span><span className="text-[9px] text-gray-400 uppercase font-bold font-sans tracking-widest font-bold">Prot</span></div>

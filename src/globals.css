@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Disable rubber-band overscroll globally */
+html, body {
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Safe area support */
+:root {
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+
+/* user-select: none for interactive elements */
+button, a, nav, [role="tab"], [role="button"] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Keep text selectable in content areas */
+p, .selectable, input, textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}

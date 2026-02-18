@@ -1100,12 +1100,13 @@ export default function Home() {
     prevPathRef.current = location.pathname;
   }, [location.pathname]);
 
-  // Redirect / → /menu
+  // Redirect / or /Home → /menu
   useEffect(() => {
-    if (location.pathname === '/' || location.pathname === '/Home') {
+    const p = location.pathname;
+    if (p === '/' || p === '/Home' || p === '/home' || !ROUTE_ORDER.some(r => p.startsWith(r))) {
       navigate('/menu', { replace: true });
     }
-  }, []);
+  }, [location.pathname]);
 
   // Dark mode
   useEffect(() => {

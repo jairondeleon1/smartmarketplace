@@ -748,6 +748,13 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
   return (
     <div className="fixed inset-0 flex flex-col bg-stone-50 dark:bg-slate-950 z-40 font-sans"
       style={{ top: 'calc(4rem + env(safe-area-inset-top))', overscrollBehaviorY: 'none' }}>
+      {showBack && (
+        <div className="shrink-0 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-700 px-4 py-2 flex items-center">
+          <button onClick={onBack} className="flex items-center gap-1.5 text-teal-700 font-bold text-sm uppercase tracking-widest active:scale-95 transition">
+            <ChevronLeft className="w-4 h-4" /> Back to Menu
+          </button>
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto p-5 space-y-6" style={{ overscrollBehaviorY: 'none' }}>
         {chatHistory.map((msg, idx) => (
           <div key={idx} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>

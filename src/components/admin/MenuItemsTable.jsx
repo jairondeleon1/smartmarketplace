@@ -18,6 +18,7 @@ export default function MenuItemsTable({ items, onDelete, onBulkEdit, onExport }
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
   const [filterDay, setFilterDay] = useState('all');
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

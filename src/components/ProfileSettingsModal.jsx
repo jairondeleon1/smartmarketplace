@@ -142,7 +142,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
               {HEALTH_GOALS.map(goal => (
                 <button
                   key={goal}
-                  onClick={() => toggleItem(goal, goals, setGoals)}
+                  onClick={() => toggleItem(goal, goals, setGoals, 'goals')}
                   className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all border-2 ${
                     goals.includes(goal)
                       ? 'bg-blue-600 text-white border-blue-700'

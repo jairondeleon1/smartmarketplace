@@ -1249,104 +1249,78 @@ export default function Home() {
       
       <main className="w-full font-bold overflow-hidden">
         <AnimatePresence mode="wait" initial={false}>
-        {view === 'customer' && (
-          <CustomerView
-            key="customer"
-            direction={direction}
-            menuItems={menuItems}
-            user={user}
-            queryClient={queryClient}
-            customVegUrl={customVegUrl}
-            customVeganUrl={customVeganUrl}
-            selectedDay={selectedDay}
-            setSelectedDay={setSelectedDay}
-            activeFilters={activeFilters}
-            toggleFilter={toggleFilter}
-            clearFilters={clearFilters}
-            filteredItems={filteredItems}
-            dayScrollRef={dayScrollRef}
-            addToPlate={addToPlate}
-            myPlate={myPlate}
-            setMyPlate={setMyPlate}
-            isTrayModalOpen={isTrayModalOpen}
-            setIsTrayModalOpen={setIsTrayModalOpen}
-            isWeeklyPlannerOpen={isWeeklyPlannerOpen}
-            setIsWeeklyPlannerOpen={setIsWeeklyPlannerOpen}
-            changeView={changeView}
-          />
-        )}
-        {view === 'chat' && (
-          <motion.div key="chat"
-            variants={slideVariants}
-            initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'}
-            animate="center"
-            exit={direction > 0 ? 'exitToLeft' : 'exitToRight'}
-            transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
-            <ChatView chatHistory={chatHistory} isTyping={isTyping} userQuery={userQuery} setUserQuery={setUserQuery} handleSendChat={handleSendChat} />
-          </motion.div>
-        )}
-        {view === 'admin' && !isAdminLoggedIn && (
-          <motion.div key="admin-lock"
-            variants={slideVariants}
-            initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'}
-            animate="center"
-            exit={direction > 0 ? 'exitToLeft' : 'exitToRight'}
-            transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
-            <div className="text-center space-y-6 pt-10 font-sans font-bold">
-              <div className="flex justify-center">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698cee888040f55d6a3c5040/5f703ba08_SmartMenuIQ38x10.png" alt="SmartMenu IQ" className="max-w-md w-full px-4" />
-              </div>
-              <div className="flex flex-col gap-4 items-center max-w-xl mx-auto px-2 font-sans font-bold">
-                <button id="week-planner" onClick={() => setIsWeeklyPlannerOpen(true)} className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 border border-slate-800 font-sans font-bold uppercase tracking-widest text-xs active:scale-95 transition-all">
-                  <Wand className="w-5 h-5 text-teal-400" /> Plan My Whole Week Meal
-                </button>
-                <div id="ai-banner" onClick={() => changeView('chat')} className="w-full bg-gradient-to-r from-indigo-700 via-purple-600 to-pink-500 rounded-2xl p-5 text-white shadow-2xl cursor-pointer transform transition-all hover:scale-[1.01] flex items-center justify-between text-left border border-white/10 group overflow-hidden font-bold">
-                  <div className="flex items-center gap-4 relative z-10 font-sans font-bold">
-                    <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md border border-white/10"><Sparkles className="w-5 h-5 text-white animate-pulse" /></div>
-                    <div><h3 className="font-bold text-sm uppercase tracking-widest text-white">Ask AI Assistant</h3><p className="text-white/80 text-[11px] font-medium italic opacity-80">Nutrition Guide & Choices</p></div>
+          {view === 'customer' && (
+            <motion.div key="customer"
+              variants={slideVariants}
+              initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'}
+              animate="center"
+              exit={direction > 0 ? 'exitToLeft' : 'exitToRight'}
+              transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
+              <CustomerView
+                menuItems={menuItems}
+                queryClient={queryClient}
+                customVegUrl={customVegUrl}
+                customVeganUrl={customVeganUrl}
+                selectedDay={selectedDay}
+                setSelectedDay={setSelectedDay}
+                activeFilters={activeFilters}
+                toggleFilter={toggleFilter}
+                clearFilters={clearFilters}
+                filteredItems={filteredItems}
+                dayScrollRef={dayScrollRef}
+                addToPlate={addToPlate}
+                myPlate={myPlate}
+                setMyPlate={setMyPlate}
+                isTrayModalOpen={isTrayModalOpen}
+                setIsTrayModalOpen={setIsTrayModalOpen}
+                isWeeklyPlannerOpen={isWeeklyPlannerOpen}
+                setIsWeeklyPlannerOpen={setIsWeeklyPlannerOpen}
+                changeView={changeView}
+                user={user}
+              />
+            </motion.div>
+          )}
+          {view === 'chat' && (
+            <motion.div key="chat"
+              variants={slideVariants}
+              initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'}
+              animate="center"
+              exit={direction > 0 ? 'exitToLeft' : 'exitToRight'}
+              transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
+              <ChatView chatHistory={chatHistory} isTyping={isTyping} userQuery={userQuery} setUserQuery={setUserQuery} handleSendChat={handleSendChat} />
+            </motion.div>
+          )}
+          {view === 'admin' && !isAdminLoggedIn && (
+            <motion.div key="admin-lock"
+              variants={slideVariants}
+              initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'}
+              animate="center"
+              exit={direction > 0 ? 'exitToLeft' : 'exitToRight'}
+              transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
+              <div className="flex items-center justify-center min-h-[calc(100vh-100px)] p-6 tracking-tight font-sans font-bold">
+                <form onSubmit={(e) => { e.preventDefault(); if (e.target.pw.value === 'admin123') setIsAdminLoggedIn(true); }} className="bg-white p-14 rounded-[3.5rem] shadow-2xl w-full max-w-sm border border-gray-100 text-center space-y-8 animate-in zoom-in-95 font-sans font-medium">
+                  <div className="bg-teal-50 p-6 rounded-3xl inline-block border border-teal-100 shadow-inner"><Lock className="w-10 h-10 text-teal-800" /></div>
+                  <div className="space-y-1 font-sans font-bold">
+                    <h2 className="text-2xl font-bold uppercase tracking-tight text-slate-900 leading-none tracking-widest">Matrix Hub</h2>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-3 tracking-[0.2em]">Personnel Authorization Required</p>
                   </div>
-                  <div className="bg-white/20 p-2 rounded-full border border-white/10 text-white transition-transform group-hover:translate-x-1 shadow-inner"><ArrowRight className="w-5 h-5" /></div>
-                </div>
+                  <input name="pw" type="password" className="w-full p-5 border-none rounded-2xl bg-gray-100 outline-none focus:ring-4 focus:ring-teal-100 font-bold text-center tracking-[0.4em] shadow-inner text-lg" placeholder="••••" />
+                  <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Verify Access</button>
+                </form>
               </div>
-              
-              <div ref={dayScrollRef} id="day-selector" className="flex w-full overflow-x-auto py-4 px-2 snap-x gap-2 scroll-smooth font-sans font-bold [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                {DAYS.map(d => (
-                  <button key={d} data-day={d} onClick={() => setSelectedDay(d)} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all snap-start shadow-sm border font-sans font-bold ${selectedDay === d ? 'bg-slate-800 text-white border-slate-900 shadow-lg scale-105' : 'bg-white border-gray-100 text-gray-400 font-medium tracking-widest'}`}>{d}</button>
-                ))}
-              </div>
-
-              <div id="dietary-filters" className="flex flex-wrap justify-center gap-2 font-sans font-bold font-medium">
-                <button onClick={() => toggleFilter('vegetarian')} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 font-sans font-bold ${activeFilters.vegetarian ? 'bg-green-50 border-green-500 text-green-900' : 'bg-white border-gray-100 text-gray-400'}`}><VegProgramIcon url={customVegUrl} className="w-4 h-4" /> Veg</button>
-                <button onClick={() => toggleFilter('vegan')} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 font-sans font-bold ${activeFilters.vegan ? 'bg-green-50 border-green-500 text-green-900' : 'bg-white border-gray-100 text-gray-400'}`}><VeganProgramIcon url={customVeganUrl} className="w-4 h-4" /> Vegan</button>
-                <button onClick={() => toggleFilter('fit')} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 font-sans font-bold ${activeFilters.fit ? 'bg-blue-50 border-blue-500 text-blue-900' : 'bg-white border-gray-100 text-gray-400'}`}><FitIcon className="w-4 h-4" /> Fit</button>
-                {Object.values(activeFilters).some(Boolean) && <button onClick={clearFilters} className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition"><XCircle className="w-5 h-5" /></button>}
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-2 font-sans font-bold font-medium">
-              {filteredItems.length > 0 ? filteredItems.map(item => <MenuItemCard key={item.id} item={item} addToPlate={addToPlate} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} />) : 
-              <div className="col-span-full py-20 text-center space-y-3">
-                <div className="text-gray-400 font-bold uppercase tracking-widest text-sm">No menu items match your filters</div>
-                <div className="text-xs text-gray-400">Total Items: {menuItems.length} | Selected Day: {selectedDay}</div>
-                <button onClick={() => { setSelectedDay('All Days'); clearFilters(); }} className="px-4 py-2 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700">Show All Items</button>
-              </div>}
-            </div>
-          </div>
-        )}
-        {view === 'chat' && <ChatView chatHistory={chatHistory} isTyping={isTyping} userQuery={userQuery} setUserQuery={setUserQuery} handleSendChat={handleSendChat} />}
-        {view === 'admin' && !isAdminLoggedIn && (
-          <div className="flex items-center justify-center min-h-[calc(100vh-100px)] p-6 tracking-tight font-sans font-bold">
-            <form onSubmit={(e) => { e.preventDefault(); if (e.target.pw.value === 'admin123') setIsAdminLoggedIn(true); }} className="bg-white p-14 rounded-[3.5rem] shadow-2xl w-full max-w-sm border border-gray-100 text-center space-y-8 animate-in zoom-in-95 font-sans font-medium">
-              <div className="bg-teal-50 p-6 rounded-3xl inline-block border border-teal-100 shadow-inner"><Lock className="w-10 h-10 text-teal-800" /></div>
-              <div className="space-y-1 font-sans font-bold">
-                <h2 className="text-2xl font-bold uppercase tracking-tight text-slate-900 leading-none tracking-widest">Matrix Hub</h2>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-3 tracking-[0.2em]">Personnel Authorization Required</p>
-              </div>
-              <input name="pw" type="password" className="w-full p-5 border-none rounded-2xl bg-gray-100 outline-none focus:ring-4 focus:ring-teal-100 font-bold text-center tracking-[0.4em] shadow-inner text-lg" placeholder="••••" />
-              <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Verify Access</button>
-            </form>
-          </div>
-        )}
-        {view === 'admin' && isAdminLoggedIn && <AdminView menuItems={menuItems} setMenuItems={setMenuItems} onLogout={() => setIsAdminLoggedIn(false)} customVegUrl={customVegUrl} setCustomVegUrl={setCustomVegUrl} customVeganUrl={customVeganUrl} setCustomVeganUrl={setCustomVeganUrl} newItem={newItem} setNewItem={setNewItem} handleAddItem={handleAddItem} handleDeleteItem={(id) => setMenuItems(menuItems.filter(i => i.id !== id))} />}
+            </motion.div>
+          )}
+          {view === 'admin' && isAdminLoggedIn && (
+            <motion.div key="admin"
+              variants={slideVariants}
+              initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'}
+              animate="center"
+              exit={direction > 0 ? 'exitToLeft' : 'exitToRight'}
+              transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
+              <AdminView menuItems={menuItems} setMenuItems={setMenuItems} onLogout={() => setIsAdminLoggedIn(false)} customVegUrl={customVegUrl} setCustomVegUrl={setCustomVegUrl} customVeganUrl={customVeganUrl} setCustomVeganUrl={setCustomVeganUrl} newItem={newItem} setNewItem={setNewItem} handleAddItem={handleAddItem} handleDeleteItem={(id) => setMenuItems(menuItems.filter(i => i.id !== id))} queryClient={queryClient} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
       
       <MobileBottomNav view={view} changeView={changeView} onProfileClick={() => setIsProfileModalOpen(true)} />

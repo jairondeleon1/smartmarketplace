@@ -406,7 +406,7 @@ function MenuItemDetailModal({ menuItems, addToPlate }) {
             <p className="text-[10px] text-teal-400 font-bold uppercase tracking-widest">{item.station} • {item.day}</p>
             <h3 className="font-bold text-lg uppercase tracking-tight text-white leading-tight">{item.name}</h3>
           </div>
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/10 rounded-full transition"><X className="w-6 h-6 text-white" /></button>
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/10 rounded-full transition"><ChevronLeft className="w-6 h-6 text-white" /></button>
         </div>
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {item.description && item.description.toLowerCase() !== item.name.toLowerCase() && (

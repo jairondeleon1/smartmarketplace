@@ -117,7 +117,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
               {DIET_PREFERENCES.map(pref => (
                 <button
                   key={pref}
-                  onClick={() => toggleItem(pref, preferences, setPreferences)}
+                  onClick={() => toggleItem(pref, preferences, setPreferences, 'preferences')}
                   className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all border-2 ${
                     preferences.includes(pref)
                       ? 'bg-green-600 text-white border-green-700'

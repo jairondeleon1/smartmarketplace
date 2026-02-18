@@ -1310,10 +1310,6 @@ export default function Home() {
     return (mealOrder[a.meal_period || 'Lunch'] ?? 1) - (mealOrder[b.meal_period || 'Lunch'] ?? 1);
   });
 
-  // Determine the top-level route key for AnimatePresence (ignore /menu/item/*)
-  const topRoute = ROUTE_ORDER.find(r => location.pathname.startsWith(r)) || '/menu';
-  const direction = directionRef.current;
-
   const sharedCustomerProps = {
     menuItems, queryClient, customVegUrl, customVeganUrl, selectedDay, setSelectedDay,
     activeFilters, toggleFilter, clearFilters, filteredItems, dayScrollRef, addToPlate,
@@ -1321,46 +1317,54 @@ export default function Home() {
     isWeeklyPlannerOpen, setIsWeeklyPlannerOpen, user
   };
 
+  const isItemDetail = location.pathname.startsWith('/menu/item/');
+  const topRoute = ROUTE_ORDER.find(r => location.pathname.startsWith(r)) || '/menu';
+  const direction = directionRef.current;
+
   return (
     <div className="min-h-screen bg-stone-50 dark:bg-slate-950 text-gray-900 dark:text-gray-100 font-sans tracking-tight overflow-x-hidden selection:bg-teal-100 selection:text-teal-900 font-bold" style={{ overscrollBehaviorY: 'none' }}>
       <AllergenNoticeModal />
       <NavBar isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} onProfileClick={() => setIsProfileModalOpen(true)} />
 
       <main className="w-full font-bold overflow-hidden">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={topRoute}
-            variants={slideVariants}
-            initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'}
-            animate="center"
-            exit={direction > 0 ? 'exitToLeft' : 'exitToRight'}
-            transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
-          >
-            <Routes location={location}>
-              <Route path="/menu" element={<CustomerView {...sharedCustomerProps} />} />
-              <Route path="/menu/item/:id" element={<CustomerView {...sharedCustomerProps} />} />
-              <Route path="/chat" element={<ChatView chatHistory={chatHistory} isTyping={isTyping} userQuery={userQuery} setUserQuery={setUserQuery} handleSendChat={handleSendChat} />} />
-              <Route path="/admin" element={
-                !isAdminLoggedIn ? (
-                  <div className="flex items-center justify-center min-h-[calc(100vh-100px)] p-6 tracking-tight font-sans font-bold">
-                    <form onSubmit={(e) => { e.preventDefault(); if (e.target.pw.value === 'admin123') setIsAdminLoggedIn(true); else toast.error('Invalid password'); }} className="bg-white p-14 rounded-[3.5rem] shadow-2xl w-full max-w-sm border border-gray-100 text-center space-y-8 animate-in zoom-in-95 font-sans font-medium">
-                      <div className="bg-teal-50 p-6 rounded-3xl inline-block border border-teal-100 shadow-inner"><Lock className="w-10 h-10 text-teal-800" /></div>
-                      <div className="space-y-1 font-sans font-bold">
-                        <h2 className="text-2xl font-bold uppercase tracking-tight text-slate-900 leading-none tracking-widest">Matrix Hub</h2>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-3 tracking-[0.2em]">Personnel Authorization Required</p>
-                      </div>
-                      <input name="pw" type="password" className="w-full p-5 border-none rounded-2xl bg-gray-100 outline-none focus:ring-4 focus:ring-teal-100 font-bold text-center tracking-[0.4em] shadow-inner text-lg" placeholder="••••" />
-                      <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Verify Access</button>
-                    </form>
+        {/* Hidden-mount strategy: all tabs stay mounted, only active one is visible */}
+        {/* This preserves scroll position and internal state across tab switches */}
+
+        {/* MENU tab */}
+        <div style={{ display: topRoute === '/menu' && !isItemDetail ? 'block' : 'none' }}>
+          <CustomerView {...sharedCustomerProps} />
+        </div>
+
+        {/* CHAT tab */}
+        <div style={{ display: topRoute === '/chat' ? 'block' : 'none' }}>
+          <ChatView chatHistory={chatHistory} isTyping={isTyping} userQuery={userQuery} setUserQuery={setUserQuery} handleSendChat={handleSendChat} />
+        </div>
+
+        {/* ADMIN tab — only mount after first visit to avoid overhead */}
+        {(topRoute === '/admin' || isAdminLoggedIn) && (
+          <div style={{ display: topRoute === '/admin' ? 'block' : 'none' }}>
+            {!isAdminLoggedIn ? (
+              <div className="flex items-center justify-center min-h-[calc(100vh-100px)] p-6 tracking-tight font-sans font-bold">
+                <form onSubmit={(e) => { e.preventDefault(); if (e.target.pw.value === 'admin123') setIsAdminLoggedIn(true); else toast.error('Invalid password'); }} className="bg-white p-14 rounded-[3.5rem] shadow-2xl w-full max-w-sm border border-gray-100 text-center space-y-8 animate-in zoom-in-95 font-sans font-medium">
+                  <div className="bg-teal-50 p-6 rounded-3xl inline-block border border-teal-100 shadow-inner"><Lock className="w-10 h-10 text-teal-800" /></div>
+                  <div className="space-y-1 font-sans font-bold">
+                    <h2 className="text-2xl font-bold uppercase tracking-tight text-slate-900 leading-none tracking-widest">Matrix Hub</h2>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-3 tracking-[0.2em]">Personnel Authorization Required</p>
                   </div>
-                ) : (
-                  <AdminView menuItems={menuItems} setMenuItems={setMenuItems} onLogout={() => setIsAdminLoggedIn(false)} customVegUrl={customVegUrl} setCustomVegUrl={setCustomVegUrl} customVeganUrl={customVeganUrl} setCustomVeganUrl={setCustomVeganUrl} newItem={newItem} setNewItem={setNewItem} handleAddItem={handleAddItem} handleDeleteItem={handleDeleteItem} queryClient={queryClient} />
-                )
-              } />
-              <Route path="*" element={<Navigate to="/menu" replace />} />
-            </Routes>
-          </motion.div>
-        </AnimatePresence>
+                  <input name="pw" type="password" className="w-full p-5 border-none rounded-2xl bg-gray-100 outline-none focus:ring-4 focus:ring-teal-100 font-bold text-center tracking-[0.4em] shadow-inner text-lg" placeholder="••••" />
+                  <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Verify Access</button>
+                </form>
+              </div>
+            ) : (
+              <AdminView menuItems={menuItems} setMenuItems={setMenuItems} onLogout={() => setIsAdminLoggedIn(false)} customVegUrl={customVegUrl} setCustomVegUrl={setCustomVegUrl} customVeganUrl={customVeganUrl} setCustomVeganUrl={setCustomVeganUrl} newItem={newItem} setNewItem={setNewItem} handleAddItem={handleAddItem} handleDeleteItem={handleDeleteItem} queryClient={queryClient} />
+            )}
+          </div>
+        )}
+
+        {/* Fallback redirect for unknown routes */}
+        <Routes location={location}>
+          <Route path="*" element={null} />
+        </Routes>
       </main>
 
       {/* Item detail modal rendered on top (route-driven, uses navigate(-1) to go back) */}

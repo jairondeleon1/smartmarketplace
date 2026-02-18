@@ -1970,6 +1970,8 @@ export default function Home() {
         {view === 'admin' && isAdminLoggedIn && <AdminView menuItems={menuItems} setMenuItems={setMenuItems} onLogout={() => setIsAdminLoggedIn(false)} customVegUrl={customVegUrl} setCustomVegUrl={setCustomVegUrl} customVeganUrl={customVeganUrl} setCustomVeganUrl={setCustomVeganUrl} newItem={newItem} setNewItem={setNewItem} handleAddItem={handleAddItem} handleDeleteItem={(id) => setMenuItems(menuItems.filter(i => i.id !== id))} />}
       </main>
       
+      <MobileBottomNav view={view} changeView={changeView} onProfileClick={() => setIsProfileModalOpen(true)} />
+
       {view === 'customer' && <TraySummary plate={myPlate} onClick={() => setIsTrayModalOpen(true)} />}
       
       <TrayDetailsModal 

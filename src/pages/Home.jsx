@@ -7,8 +7,11 @@ import {
   ArrowRight, Loader2, Menu as MenuIcon, X, Send, Calendar,
   ShoppingBag, XCircle, Upload, FileText, CheckCircle, RefreshCw,
   Lock, Wand, Settings, Sparkles, Heart, Download, AlertTriangle,
-  Info, User
+  Info, User, ChevronLeft, ChevronDown
 } from 'lucide-react';
+import {
+  Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose
+} from "@/components/ui/drawer";
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import NutritionCharts from "../components/NutritionCharts";

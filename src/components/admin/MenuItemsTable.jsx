@@ -1,7 +1,18 @@
 import React, { useState } from 'react';
-import { Search, Filter, Download, Edit, Trash2, CheckSquare, Square } from 'lucide-react';
+import { Search, Download, Edit, Trash2, CheckSquare, Square, ChevronDown } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+
+const DAY_OPTIONS = [
+  { value: 'all', label: 'All Days' },
+  { value: 'Monday', label: 'Monday' },
+  { value: 'Tuesday', label: 'Tuesday' },
+  { value: 'Wednesday', label: 'Wednesday' },
+  { value: 'Thursday', label: 'Thursday' },
+  { value: 'Friday', label: 'Friday' },
+  { value: 'Daily Special', label: 'Daily Special' },
+];
 
 export default function MenuItemsTable({ items, onDelete, onBulkEdit, onExport }) {
   const [searchTerm, setSearchTerm] = useState('');

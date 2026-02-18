@@ -184,6 +184,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
               </div>
             </div>
           )}
+          </div>
         </div>
 
         <div className="p-6 bg-gray-50 border-t border-gray-200 shrink-0 flex gap-3">

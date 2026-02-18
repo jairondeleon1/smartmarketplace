@@ -1116,8 +1116,17 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
               <form onSubmit={handleAddItem} className="space-y-4">
                 <input type="text" placeholder="Dish Name" className="w-full p-4 border rounded-xl bg-gray-50 text-sm font-bold border-gray-100 outline-none" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} required />
                 <textarea placeholder="Ingredients List (e.g. Flour, Sugar, Milk...)" className="w-full p-4 border rounded-xl bg-gray-50 text-sm font-bold border-gray-100 outline-none resize-none h-24" value={newItem.ingredients || ''} onChange={e => setNewItem({...newItem, ingredients: e.target.value})} />
-                <div className="grid grid-cols-2 gap-3">
-                  <select className="p-4 border rounded-xl bg-gray-50 text-sm font-bold border-gray-100 outline-none cursor-pointer" value={newItem.day} onChange={e => setNewItem({...newItem, day: e.target.value})}>
+                <div className="grid grid-cols-2 gap-3 items-center">
+                  {/* Mobile: drawer; Desktop: native select */}
+                  <div className="md:hidden">
+                    <MobileDrawerSelect
+                      value={newItem.day}
+                      onChange={v => setNewItem({...newItem, day: v})}
+                      label="Day"
+                      options={DAYS.filter(d => d !== 'All Days').map(d => ({ value: d, label: d }))}
+                    />
+                  </div>
+                  <select className="hidden md:block p-4 border rounded-xl bg-gray-50 text-sm font-bold border-gray-100 outline-none cursor-pointer" value={newItem.day} onChange={e => setNewItem({...newItem, day: e.target.value})}>
                     {DAYS.filter(d => d !== 'All Days').map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
                   <input type="number" placeholder="Cals" className="p-4 border rounded-xl bg-gray-50 text-sm font-bold border-gray-100 outline-none" value={newItem.calories} onChange={e => setNewItem({...newItem, calories: e.target.value})} />

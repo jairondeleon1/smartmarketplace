@@ -489,7 +489,7 @@ function TraySummary({ plate, onClick }) {
   const totals = plate.reduce((acc, item) => ({ calories: acc.calories + (item.calories || 0), protein: acc.protein + (item.protein || 0) }), { calories: 0, protein: 0 });
   return (
     <div onClick={onClick} className="fixed left-1/2 -translate-x-1/2 bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 text-white rounded-full shadow-2xl px-6 py-3 z-[45] flex items-center gap-4 border border-teal-500/30 cursor-pointer font-sans backdrop-blur-sm hover:shadow-teal-500/20 hover:shadow-xl transition-all hover:scale-105 animate-in slide-in-from-bottom-4 duration-500 select-none"
-      style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom) + 0.5rem)' }}>
+      style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 4.5rem)' }}>
       <div className="flex items-center gap-3">
         <div className="bg-teal-500 p-2.5 rounded-full shadow-lg relative">
           <ShoppingBag className="w-4 h-4 text-white" />

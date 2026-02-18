@@ -151,6 +151,42 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
           </div>
         </div>
 
+        {/* Delete Account */}
+        <div className="bg-red-50 border border-red-100 rounded-2xl p-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Trash2 className="w-5 h-5 text-red-600" />
+            <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">Delete Account</h4>
+          </div>
+          <p className="text-xs text-gray-600 mb-4">Permanently delete your account and all associated data. This action cannot be undone.</p>
+          {!showDeleteConfirm ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="px-4 py-2 rounded-xl text-xs font-bold uppercase border-2 bg-white text-red-600 border-red-300 hover:bg-red-50 transition"
+            >
+              Delete My Account
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-xs font-bold text-red-700 bg-red-100 rounded-lg p-3">Are you absolutely sure? This cannot be undone.</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 py-2 bg-white text-gray-700 rounded-xl font-bold uppercase text-xs border border-gray-200 hover:bg-gray-100 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={isDeletingAccount}
+                  className="flex-1 py-2 bg-red-600 text-white rounded-xl font-bold uppercase text-xs hover:bg-red-700 transition disabled:opacity-50"
+                >
+                  {isDeletingAccount ? 'Deleting...' : 'Confirm Delete'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="p-6 bg-gray-50 border-t border-gray-200 shrink-0 flex gap-3">
           <button
             onClick={onClose}

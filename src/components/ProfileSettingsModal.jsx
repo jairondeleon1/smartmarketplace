@@ -151,7 +151,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
           </div>
         </div>
 
-        {/* Delete Account */}
+        {/* Delete Account - inside scrollable area */}
         <div className="bg-red-50 border border-red-100 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-3">
             <Trash2 className="w-5 h-5 text-red-600" />

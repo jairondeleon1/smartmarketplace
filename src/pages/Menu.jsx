@@ -171,6 +171,33 @@ function TraySummary({ plate, onClick }) {
   );
 }
 
+function NavBar({ onProfileClick }) {
+  const navigate = useNavigate();
+  return (
+    <nav className="bg-slate-800 text-white shadow-lg sticky top-0 z-50 w-full shrink-0 font-sans font-bold select-none"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="h-16 flex items-center w-full px-4">
+        <div className="w-full max-w-5xl mx-auto flex justify-between items-center px-2">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
+            <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698cee888040f55d6a3c5040/066c08658_SmartMenuIQ100x100.png" alt="SmartMenu IQ Logo" className="w-8 h-8 rounded-full" />
+            <h1 className="text-xl font-bold uppercase tracking-widest text-white">SmartMenu IQ</h1>
+          </div>
+          <div className="hidden md:flex gap-6 items-center text-sm font-bold uppercase tracking-widest">
+            <button onClick={() => navigate('/')} className="text-white border-b-2 border-teal-400 pb-1">Menu</button>
+            <button onClick={() => navigate('/chat')} className="text-slate-300 opacity-70">AI Assistant</button>
+            {onProfileClick && <button onClick={onProfileClick} className="p-2 hover:bg-white/10 rounded-full transition"><User className="w-5 h-5" /></button>}
+          </div>
+          {onProfileClick && (
+            <div className="md:hidden flex items-center gap-2">
+              <button onClick={onProfileClick} className="p-2"><User className="w-5 h-5 text-white" /></button>
+            </div>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+}
+
 export default function MenuPage({ menuItems: menuItemsProp, setMenuItems, user, customVegUrl, customVeganUrl }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();

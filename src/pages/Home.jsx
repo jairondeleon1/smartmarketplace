@@ -648,6 +648,7 @@ function NavBar({ isMobileMenuOpen, setIsMobileMenuOpen, onProfileClick }) {
           <NavLink to="/menu" onClick={() => setIsMobileMenuOpen(false)} className="text-left font-bold">Daily Menu</NavLink>
           <NavLink to="/chat" onClick={() => setIsMobileMenuOpen(false)} className="text-left font-bold">AI Assistant</NavLink>
           <a href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-left font-bold">30 Day Challenge</a>
+          <NavLink to="/admin" onClick={() => setIsMobileMenuOpen(false)} className="text-left font-bold hidden md:block">Admin</NavLink>
         </div>
       )}
     </nav>

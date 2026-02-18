@@ -12,6 +12,8 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
   const [preferences, setPreferences] = useState([]);
   const [goals, setGoals] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {

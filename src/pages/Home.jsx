@@ -869,7 +869,8 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
         )}
         <div ref={chatEndRef} className="h-20" />
       </div>
-      <div className="bg-white border-t border-gray-100 p-4 pb-10 flex gap-3 shrink-0">
+      <div className="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-700 p-4 flex gap-3 shrink-0 md:pb-4"
+        style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom) + 4rem)' }}>
         <input type="text" value={userQuery} onChange={e => setUserQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendChat()} className="flex-1 p-4 rounded-xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-teal-500 font-bold text-sm tracking-tight" placeholder="Ask about nutrition, allergens, menu items..."/>
         <button onClick={() => handleSendChat()} className="bg-teal-800 text-white p-4 rounded-xl shadow-lg active:scale-90 transition-all hover:bg-teal-900"><Send className="w-5 h-5" /></button>
       </div>

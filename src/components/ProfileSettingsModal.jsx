@@ -60,11 +60,11 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
   const handleDeleteAccount = async () => {
     setIsDeletingAccount(true);
     try {
-      await base44.auth.logout('/');
-    } catch (error) {
-      alert('Error deleting account: ' + error.message);
-      setIsDeletingAccount(false);
-    }
+        await base44.auth.logout('/');
+      } catch (error) {
+        toast.error('Error: ' + error.message);
+        setIsDeletingAccount(false);
+      }
   };
 
   if (!isOpen) return null;

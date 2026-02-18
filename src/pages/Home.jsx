@@ -1247,9 +1247,51 @@ export default function Home() {
       <AllergenNoticeModal />
       <NavBar view={view} changeView={changeView} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} onProfileClick={() => setIsProfileModalOpen(true)} />
       
-      <main className="w-full font-bold">
+      <main className="w-full font-bold overflow-hidden">
+        <AnimatePresence mode="wait" initial={false}>
         {view === 'customer' && (
-          <div className="max-w-5xl mx-auto p-4 space-y-8 pb-36 md:pb-32 font-sans overflow-x-hidden font-bold" style={{ overscrollBehaviorY: 'none' }}>
+          <CustomerView
+            key="customer"
+            direction={direction}
+            menuItems={menuItems}
+            user={user}
+            queryClient={queryClient}
+            customVegUrl={customVegUrl}
+            customVeganUrl={customVeganUrl}
+            selectedDay={selectedDay}
+            setSelectedDay={setSelectedDay}
+            activeFilters={activeFilters}
+            toggleFilter={toggleFilter}
+            clearFilters={clearFilters}
+            filteredItems={filteredItems}
+            dayScrollRef={dayScrollRef}
+            addToPlate={addToPlate}
+            myPlate={myPlate}
+            setMyPlate={setMyPlate}
+            isTrayModalOpen={isTrayModalOpen}
+            setIsTrayModalOpen={setIsTrayModalOpen}
+            isWeeklyPlannerOpen={isWeeklyPlannerOpen}
+            setIsWeeklyPlannerOpen={setIsWeeklyPlannerOpen}
+            changeView={changeView}
+          />
+        )}
+        {view === 'chat' && (
+          <motion.div key="chat"
+            variants={slideVariants}
+            initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'}
+            animate="center"
+            exit={direction > 0 ? 'exitToLeft' : 'exitToRight'}
+            transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
+            <ChatView chatHistory={chatHistory} isTyping={isTyping} userQuery={userQuery} setUserQuery={setUserQuery} handleSendChat={handleSendChat} />
+          </motion.div>
+        )}
+        {view === 'admin' && !isAdminLoggedIn && (
+          <motion.div key="admin-lock"
+            variants={slideVariants}
+            initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'}
+            animate="center"
+            exit={direction > 0 ? 'exitToLeft' : 'exitToRight'}
+            transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
             <div className="text-center space-y-6 pt-10 font-sans font-bold">
               <div className="flex justify-center">
                 <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698cee888040f55d6a3c5040/5f703ba08_SmartMenuIQ38x10.png" alt="SmartMenu IQ" className="max-w-md w-full px-4" />

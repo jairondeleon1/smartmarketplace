@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Check, User, AlertTriangle, Heart, Target, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 const ALLERGENS = ['Milk', 'Wheat', 'Egg', 'Soy', 'Fish', 'Shellfish', 'Tree Nuts', 'Peanuts', 'Gluten'];
 const DIET_PREFERENCES = ['Vegan', 'Vegetarian'];

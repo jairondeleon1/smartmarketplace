@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { X, Check, User, AlertTriangle, Heart, Target, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 
 const ALLERGENS = ['Milk', 'Wheat', 'Egg', 'Soy', 'Fish', 'Shellfish', 'Tree Nuts', 'Peanuts', 'Gluten'];
 const DIET_PREFERENCES = ['Vegan', 'Vegetarian'];
@@ -42,17 +41,16 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-        await base44.auth.updateMe({
-          dietary_restrictions: restrictions,
-          dietary_preferences: preferences,
-          health_goals: goals
-        });
-        queryClient.invalidateQueries({ queryKey: ['user'] });
-        toast.success('Profile saved!');
-        onClose();
-      } catch (error) {
-        toast.error('Error saving profile: ' + error.message);
-      } finally {
+      await base44.auth.updateMe({
+        dietary_restrictions: restrictions,
+        dietary_preferences: preferences,
+        health_goals: goals
+      });
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+      onClose();
+    } catch (error) {
+      alert('Error saving profile: ' + error.message);
+    } finally {
       setIsSaving(false);
     }
   };
@@ -60,11 +58,11 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
   const handleDeleteAccount = async () => {
     setIsDeletingAccount(true);
     try {
-        await base44.auth.logout('/');
-      } catch (error) {
-        toast.error('Error: ' + error.message);
-        setIsDeletingAccount(false);
-      }
+      await base44.auth.logout('/');
+    } catch (error) {
+      alert('Error deleting account: ' + error.message);
+      setIsDeletingAccount(false);
+    }
   };
 
   if (!isOpen) return null;

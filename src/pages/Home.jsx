@@ -1689,6 +1689,17 @@ export default function Home() {
     return (day === 'Saturday' || day === 'Sunday') ? 'Monday' : day;
   };
 
+  // Dark mode system listener
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const apply = (e) => {
+      document.documentElement.classList.toggle('dark', e.matches);
+    };
+    apply(mq);
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+
   const [view, setView] = useState('customer');
   
   const { data: user } = useQuery({

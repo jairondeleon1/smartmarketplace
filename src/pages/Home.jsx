@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { 
   ChefHat, 
   MessageSquare, 
@@ -36,30 +37,13 @@ import {
   User
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import NutritionCharts from "../components/NutritionCharts";
+import { useQuery } from '@tanstack/react-query';
 import ProfileSettingsModal from "../components/ProfileSettingsModal";
-import NutritionDetailView from "../components/NutritionDetailView";
-import BulkEditModal from "../components/admin/BulkEditModal";
-import MenuItemsTable from "../components/admin/MenuItemsTable";
 import AllergenNoticeModal from "../components/AllergenNoticeModal";
-import jsPDF from 'jspdf';
+import MenuPage from './Menu';
+import ChatPage from './Chat';
+import AdminPage from './Admin';
 
-// --- CONSTANTS ---
-const VEGAN_URL = "https://i.postimg.cc/MH7cDSz4/vegan.png"; 
-const VEG_URL = "https://i.postimg.cc/hvsDvPDt/vegetarian.png";
-const FIT_URL = "https://i.postimg.cc/KjQkB6SF/fit.png";
-
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Daily Special', 'All Days'];
-
-const SUGGESTIONS = [
-  { text: "What is for lunch on Thursday?", icon: Calendar, color: "text-blue-500", bg: "bg-blue-50" },
-  { text: "Which items are low in sodium?", icon: Heart, color: "text-rose-500", bg: "bg-rose-50" },
-  { text: "Show me high protein options", icon: Zap, color: "text-amber-500", bg: "bg-amber-50" },
-  { text: "Any shellfish allergens?", icon: AlertTriangle, color: "text-orange-500", bg: "bg-orange-50" }
-];
-
-// MENU DATA FROM PDF: Week of Feb 16 - Feb 20, 2026
 const DEFAULT_MENU = [
   // MONDAY (Feb 16)
   { id: 1, station: "Main - Comfort", name: 'Chicken Parmesan', description: 'Breaded chicken breast topped with marinara and melted mozzarella.', ingredients: 'Chicken Breast, Breadcrumbs, Marinara Sauce, Mozzarella Cheese, Parmesan Cheese, Egg, Flour, Spices.', calories: 650, protein: 45, carbs: 35, fat: 32, saturated_fat: 12, unsaturated_fat: 20, sodium: 1150, fiber: 4, sugar: 6, cholesterol: 145, vitamin_a: 380, vitamin_c: 8, vitamin_d: 1.2, calcium: 420, iron: 3.8, potassium: 520, tags: ['High Protein'], allergens: ['Milk', 'Wheat', 'Egg'], day: 'Monday' },
@@ -87,62 +71,89 @@ const DEFAULT_MENU = [
   { id: 8, station: "Dessert", name: 'Coconut Key Lime Cookie', description: 'Sweet cookie with zesty lime and coconut.', ingredients: 'Flour, Sugar, Butter, Coconut, Lime Zest, Eggs, Baking Soda.', calories: 180, protein: 2, carbs: 24, fat: 9, saturated_fat: 6, unsaturated_fat: 3, sodium: 120, fiber: 1, sugar: 14, cholesterol: 28, vitamin_a: 120, vitamin_c: 4, vitamin_d: 0.4, calcium: 28, iron: 0.8, potassium: 65, tags: ['Vegetarian'], allergens: ['Wheat', 'Milk', 'Egg', 'Coconut'], day: 'Daily Special' }
 ];
 
-// --- UI HELPERS ---
+function NavBar({ onProfileClick }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const isSubPage = location.pathname !== '/';
 
-function Badge({ children }) {
-  const colors = {
-    blue: 'bg-blue-100 text-blue-800 border-blue-200',
-    green: 'bg-green-200 text-green-900 border-green-300',
-    yellow: 'bg-yellow-100 text-yellow-900 border-yellow-200',
-    orange: 'bg-orange-100 text-orange-800 border-orange-200',
-    purple: 'bg-purple-100 text-purple-800 border-purple-200',
-    red: 'bg-rose-100 text-rose-800 border-rose-200',
-    teal: 'bg-teal-100 text-teal-800 border-teal-200',
-  };
-  let color = colors.blue;
-  const text = typeof children === 'string' ? children : '';
-  if (text.includes('Vegan')) color = colors.green;
-  if (text.includes('Vegetarian') && !text.includes('Vegan')) color = colors.yellow;
-  if (text.includes('Protein')) color = colors.purple;
-  if (text.includes('Fiber')) color = colors.teal;
-  if (text.includes('Heart') || text.includes('Sodium') || text.includes('Spicy')) color = colors.red;
-  return <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase ${color}`}>{children}</span>;
-}
-
-function FormattedText({ text }) {
-  if (!text) return null;
-  const parts = text.split(/(\*\*.*?\*\*)/g);
   return (
-    <span>
-      {parts.map((part, i) => (part.startsWith('**') && part.endsWith('**')) ? <strong key={i} className="font-bold">{part.slice(2, -2)}</strong> : <span key={i}>{part}</span>)}
-    </span>
+    <nav className="bg-slate-800 dark:bg-slate-900 text-white shadow-lg sticky top-0 z-50 w-full shrink-0 font-sans font-bold select-none"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="h-16 flex items-center w-full px-4">
+        <div className="w-full max-w-5xl mx-auto flex justify-between items-center px-2">
+          {isSubPage ? (
+            <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-teal-400 hover:text-teal-300 transition">
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm font-bold uppercase tracking-widest">Back</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
+              <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698cee888040f55d6a3c5040/066c08658_SmartMenuIQ100x100.png" alt="SmartMenu IQ Logo" className="w-8 h-8 rounded-full" />
+              <h1 className="text-xl font-bold uppercase tracking-widest text-white">SmartMenu IQ</h1>
+            </div>
+          )}
+          <div className="hidden md:flex gap-6 items-center text-sm font-bold uppercase tracking-widest">
+            <button onClick={() => navigate('/')} className={location.pathname === '/' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>Menu</button>
+            <button onClick={() => navigate('/chat')} className={location.pathname === '/chat' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>AI Assistant</button>
+            <a href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-slate-300 opacity-70 hover:text-white hover:opacity-100 transition">30 Day Challenge</a>
+            <button onClick={() => navigate('/admin')} className={location.pathname === '/admin' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>Admin</button>
+            <button onClick={onProfileClick} className="p-2 hover:bg-white/10 rounded-full transition" title="My Profile">
+              <User className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="md:hidden flex items-center gap-2">
+            <button onClick={onProfileClick} className="p-2" title="My Profile"><User className="w-5 h-5 text-white" /></button>
+            <button className="p-2" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>{isMobileMenuOpen ? <X className="text-white" /> : <MenuIcon className="text-white" />}</button>
+          </div>
+        </div>
+      </div>
+      {isMobileMenuOpen && (
+        <div className="fixed top-0 left-0 right-0 bg-slate-800 dark:bg-slate-900 border-t border-slate-700 shadow-xl md:hidden z-[110] flex flex-col p-4 gap-4 font-bold uppercase text-sm tracking-widest text-white"
+          style={{ top: 'calc(4rem + env(safe-area-inset-top))' }}>
+          <button onClick={() => { navigate('/'); setIsMobileMenuOpen(false); }} className="text-left font-bold">Daily Menu</button>
+          <button onClick={() => { navigate('/chat'); setIsMobileMenuOpen(false); }} className="text-left font-bold">AI Assistant</button>
+          <a href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-left font-bold">30 Day Challenge</a>
+          <button onClick={() => { navigate('/admin'); setIsMobileMenuOpen(false); }} className="text-left font-bold">Admin</button>
+        </div>
+      )}
+    </nav>
   );
 }
 
-function VegProgramIcon({ url, className = "w-6 h-6" }) {
-  const [error, setError] = useState(false);
-  const src = url || VEG_URL;
-  if (error) return <Leaf className={`${className} text-teal-600`} />;
-  return <img src={src} alt="Vegetarian" className={`${className} object-contain`} onError={() => setError(true)} />;
+function MobileBottomNav({ onProfileClick }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const tabs = [
+    { id: '/', label: 'Menu', icon: Utensils },
+    { id: '/chat', label: 'AI Assistant', icon: MessageSquare },
+    { id: 'settings', label: 'Settings', icon: Settings },
+  ];
+  return (
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-700 z-50 select-none"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <div className="flex items-stretch">
+        {tabs.map(({ id, label, icon: Icon }) => {
+          const isActive = id === 'settings' ? false : location.pathname === id;
+          return (
+            <button
+              key={id}
+              onClick={() => id === 'settings' ? onProfileClick() : navigate(id)}
+              className={`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-colors ${
+                isActive ? 'text-teal-600 dark:text-teal-400' : 'text-gray-400 dark:text-slate-500'
+              }`}
+            >
+              <Icon className="w-5 h-5" />
+              <span className="text-[9px] font-bold uppercase tracking-widest">{label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
 }
 
-function VeganProgramIcon({ url, className = "w-6 h-6" }) {
-  const [error, setError] = useState(false);
-  const src = url || VEGAN_URL;
-  if (error) return <CheckCircle className={`${className} text-teal-800`} />;
-  return <img src={src} alt="Vegan" className={`${className} object-contain`} onError={() => setError(true)} />;
-}
-
-function FitIcon({ url, className = "w-6 h-6" }) {
-  const [error, setError] = useState(false);
-  const src = url || FIT_URL;
-  if (error) return <Zap className={`${className} text-blue-600`} />;
-  return <img src={src} alt="Fit" className={`${className} object-contain`} onError={() => setError(true)} />;
-}
-
-// --- MODALS ---
-
-function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPlate, user }) {
+function PageTransition({ children }) {
   const [goal, setGoal] = useState('High Protein');
   const [plan, setPlan] = useState(null);
   const [isLoading, setIsLoading] = useState(false);

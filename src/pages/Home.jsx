@@ -685,9 +685,8 @@ function MobileBottomNav({ onProfileClick }) {
   );
 }
 
-function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendChat }) {
+function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendChat, showBack, onBack }) {
   const chatEndRef = useRef(null);
-  const navigate = useNavigate();
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatHistory, isTyping]);
 
   const VisualMessage = ({ content }) => {

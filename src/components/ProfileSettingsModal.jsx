@@ -188,17 +188,10 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
         </div>
 
         <div className="p-6 bg-gray-50 border-t border-gray-200 shrink-0 flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-3 bg-white text-gray-700 rounded-xl font-bold uppercase text-xs border border-gray-200 hover:bg-gray-100 transition"
-          >
+          <button onClick={onClose} className="flex-1 py-3 bg-white text-gray-700 rounded-xl font-bold uppercase text-xs border border-gray-200 hover:bg-gray-100 transition">
             Cancel
           </button>
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="flex-1 py-3 bg-teal-600 text-white rounded-xl font-bold uppercase text-xs hover:bg-teal-700 transition disabled:opacity-50"
-          >
+          <button onClick={handleSave} disabled={isSaving} className="flex-1 py-3 bg-teal-600 text-white rounded-xl font-bold uppercase text-xs hover:bg-teal-700 transition disabled:opacity-50">
             {isSaving ? 'Saving...' : 'Save Profile'}
           </button>
         </div>

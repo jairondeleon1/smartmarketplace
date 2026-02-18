@@ -24,12 +24,18 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
     }
   }, [user]);
 
-  const toggleItem = (item, list, setList) => {
-    if (list.includes(item)) {
-      setList(list.filter(i => i !== item));
-    } else {
-      setList([...list, item]);
-    }
+  // Optimistic toggle: update local state immediately, then persist in background
+  const toggleItem = (item, list, setList, field) => {
+    const newList = list.includes(item) ? list.filter(i => i !== item) : [...list, item];
+    setList(newList);
+    // Persist optimistically in the background
+    const patch = {};
+    if (field === 'restrictions') patch.dietary_restrictions = newList;
+    if (field === 'preferences') patch.dietary_preferences = newList;
+    if (field === 'goals') patch.health_goals = newList;
+    base44.auth.updateMe(patch).then(() => {
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+    });
   };
 
   const handleSave = async () => {

@@ -336,6 +336,8 @@ export default function MenuPage({ menuItems: menuItemsProp, setMenuItems, user,
   });
 
   return (
+    <div className="min-h-screen bg-stone-50 text-gray-900 font-sans font-bold" style={{ overscrollBehaviorY: 'none' }}>
+      <NavBar />
     <div
       ref={mainRef}
       className="max-w-5xl mx-auto p-4 space-y-8 pb-36 md:pb-32 overflow-x-hidden overflow-y-auto"

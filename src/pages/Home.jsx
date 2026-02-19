@@ -303,20 +303,20 @@ function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPlate, user }) {
           ) : (
             <div className="space-y-3 text-sm font-sans font-bold">
               {plan.map((entry, idx) => (
-                <div key={idx} className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-slate-800 font-sans">
+                <div key={idx} className="flex flex-col gap-2 p-4 bg-gray-50 rounded-2xl border border-gray-100 font-bold text-slate-800 font-sans">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-teal-700 text-[10px] uppercase font-bold">{entry.day.slice(0,3)}</span>
                       <span className="text-gray-400 text-[10px] uppercase">•</span>
                       <span className="text-gray-600 text-[10px] uppercase font-bold">{entry.mealType}</span>
                     </div>
-                    <span className="text-sm truncate block">{entry.item.name}</span>
+                    <span className="text-sm block">{entry.item.name}</span>
                   </div>
-                  <div className="flex gap-2 shrink-0">
-                    <button onClick={() => regenerateMeal(idx)} disabled={regeneratingMeal === idx} className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg transition border border-purple-100 disabled:opacity-50" title="AI regenerate">
-                      {regeneratingMeal === idx ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                  <div className="flex gap-2">
+                    <button onClick={() => regenerateMeal(idx)} disabled={regeneratingMeal === idx} className="flex items-center justify-center gap-1 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg transition border border-purple-100 disabled:opacity-50" title="AI regenerate">
+                      {regeneratingMeal === idx ? <Loader2 className="w-3 h-3 animate-spin" /> : <><RefreshCw className="w-3 h-3" /><span>Regenerate</span></>}
                     </button>
-                    <button onClick={() => changeMeal(idx)} className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition border border-blue-100">Pick Different</button>
+                    <button onClick={() => changeMeal(idx)} className="flex-1 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition border border-blue-100">Pick Different</button>
                     <button onClick={() => removeMeal(idx)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition" title="Remove meal"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>

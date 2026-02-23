@@ -291,8 +291,8 @@ function DisclaimerFooter() {
           <div>
             <p className="font-bold text-gray-800 mb-1 uppercase tracking-wide text-[10px]">Nutrition Information & Disclaimer</p>
           </div>
-          <p>2,000 calories per day is used for general nutrition advice based on guidance from the U.S. Food and Drug Administration (FDA). However, individual calorie needs may vary.</p>
-          <p>Nutrient values are based on data from the U.S. Department of Agriculture (USDA) FoodData Central database and information provided by our suppliers.</p>
+          <p>2,000 calories per day is used for general nutrition advice based on guidance from the <a href="https://www.fda.gov/food" target="_blank" rel="noopener noreferrer" className="text-teal-600 font-bold hover:underline">U.S. Food and Drug Administration (FDA)</a>. However, individual calorie needs may vary.</p>
+          <p>Nutrient values are based on data from the <a href="https://fdc.nal.usda.gov/" target="_blank" rel="noopener noreferrer" className="text-teal-600 font-bold hover:underline">U.S. Department of Agriculture (USDA)</a> FoodData Central database and information provided by our suppliers.</p>
           <p>Unplanned product substitutions, changes in product specifications, preparation methods, and portion sizes may result in variations in nutrient content.</p>
           <p>We handle and prepare egg, milk, wheat, shellfish, fish, soy, peanut, tree nut products, and other potential allergens in our food production areas. Guests with food allergies or specific dietary concerns should speak with a manager for individualized assistance.</p>
           <p>Trans fat values reflect naturally occurring trans fat in animal proteins and dairy products. No added/artificial trans fats are used in our standard recipes.</p>

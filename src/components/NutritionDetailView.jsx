@@ -267,6 +267,40 @@ export default function NutritionDetailView({ item }) {
           </div>
         </div>
       )}
+
+      {/* Disclaimer Footer */}
+      <DisclaimerFooter />
+    </div>
+  );
+}
+
+function DisclaimerFooter() {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="mt-4 border-t border-gray-100 pt-3">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="text-[10px] text-teal-600 font-bold uppercase tracking-widest hover:underline flex items-center gap-1"
+      >
+        <Info className="w-3 h-3" />
+        Nutrition Information based on FDA and USDA guidelines. View full disclaimer
+      </button>
+      {expanded && (
+        <div className="mt-3 bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3 text-[11px] text-gray-600 leading-relaxed">
+          <div>
+            <p className="font-bold text-gray-800 mb-1 uppercase tracking-wide text-[10px]">Nutrition Information & Disclaimer</p>
+          </div>
+          <p>2,000 calories per day is used for general nutrition advice based on guidance from the U.S. Food and Drug Administration (FDA). However, individual calorie needs may vary.</p>
+          <p>Nutrient values are based on data from the U.S. Department of Agriculture (USDA) FoodData Central database and information provided by our suppliers.</p>
+          <p>Unplanned product substitutions, changes in product specifications, preparation methods, and portion sizes may result in variations in nutrient content.</p>
+          <p>We handle and prepare egg, milk, wheat, shellfish, fish, soy, peanut, tree nut products, and other potential allergens in our food production areas. Guests with food allergies or specific dietary concerns should speak with a manager for individualized assistance.</p>
+          <p>Trans fat values reflect naturally occurring trans fat in animal proteins and dairy products. No added/artificial trans fats are used in our standard recipes.</p>
+          <p><span className="font-bold text-gray-700">"-"</span> A dash indicates no value is currently available.</p>
+          <p><span className="font-bold text-gray-700">"+"</span> A plus indicates the value was calculated using available data where some components were missing.</p>
+          <p className="italic text-gray-500">This information is provided for transparency and informational purposes only and is not intended as medical advice.</p>
+        </div>
+      )}
     </div>
   );
 }

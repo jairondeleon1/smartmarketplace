@@ -107,6 +107,29 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+
+          {/* GPC Status Banner */}
+          {gpcActive && (
+            <div className="bg-green-50 border border-green-300 rounded-2xl p-4 flex items-center gap-3">
+              <ShieldCheck className="w-5 h-5 text-green-600 shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-green-800 uppercase tracking-wide">Opt-Out Preference Signal Honored</p>
+                <p className="text-xs text-green-700 mt-0.5">Your browser sent a Global Privacy Control (GPC) signal. Data processing has been limited accordingly.</p>
+              </div>
+            </div>
+          )}
+
+          {/* Privacy Status */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-slate-500" />
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-widest">Privacy Status</span>
+            </div>
+            <span className={`text-xs font-bold px-3 py-1 rounded-full ${gpcActive ? 'bg-green-100 text-green-800' : 'bg-slate-200 text-slate-600'}`}>
+              {gpcActive ? '🔒 Opted Out (GPC Active)' : 'Standard Mode'}
+            </span>
+          </div>
+
           {/* Disclaimer Acceptance */}
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex gap-3 items-start">
             <input

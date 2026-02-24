@@ -1210,6 +1210,8 @@ export default function Home() {
   const [customVegUrl, setCustomVegUrl] = useState("");
   const [customVeganUrl, setCustomVeganUrl] = useState("");
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [showAINotice, setShowAINotice] = useState(false);
+  const [aiNoticeSeen, setAiNoticeSeen] = useState(() => localStorage.getItem('aiNoticeSeen') === 'true');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState(getCurrentDay());
   const [chatHistory, setChatHistory] = useState([{ role: 'ai', content: "Hello! I am your Marketplace Assistant. How may I assist your choices today?" }]);

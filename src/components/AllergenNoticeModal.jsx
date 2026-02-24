@@ -41,7 +41,7 @@ export default function AllergenNoticeModal() {
               </p>
               <p className="text-gray-700 text-sm leading-relaxed">
                 If you have a food allergy or special dietary need, please{' '}
-                <span className="font-bold text-red-700">speak with a manager</span> before making your selection.
+                <span className="font-bold text-red-700">speak with an Ingredient Ambassador</span> at our Marketplace before making your selection.
               </p>
 
               <button

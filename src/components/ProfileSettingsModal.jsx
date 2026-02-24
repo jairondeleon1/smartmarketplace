@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, User, AlertTriangle, Heart, Target, Trash2, ShieldAlert, ShieldCheck, Download, Shield, ExternalLink } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
-import { useQueryClient } from '@tanstack/react-query';
 
 const ALLERGENS = ['Milk', 'Wheat', 'Egg', 'Soy', 'Fish', 'Shellfish', 'Tree Nuts', 'Peanuts', 'Sesame', 'Gluten'];
 const SEVERE_ALLERGENS = ['Shellfish', 'Tree Nuts', 'Peanuts', 'Fish', 'Sesame'];

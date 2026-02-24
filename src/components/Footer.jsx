@@ -149,6 +149,30 @@ We aim to conform to the Web Content Accessibility Guidelines (WCAG) 2.1 Level A
 
 **Feedback**
 If you experience any accessibility barriers while using SmartMenu IQ, please contact your site administrator so we can address the issue promptly.`
+  },
+  aitransparency: {
+    title: 'AI Transparency & Data Handling',
+    content: `Last Updated: February 2026
+
+**A. How Our AI Works**
+SmartMenuIQ utilizes large language models (LLMs) to interpret complex menu data and match it against your saved preferences. This process involves "Prompt Engineering," where your dietary profile is compared against menu databases to highlight potential matches or risks.
+
+**B. The "Human-in-the-Loop" Requirement**
+While our AI is highly capable, it is not a "certified nutritionist." SmartMenuIQ is a decision-support tool, not a medical diagnostic tool.
+
+User Responsibility: The user maintains final responsibility for food consumption.
+
+Allergy Warning: Because menu formulations at restaurants can change without notice, our AI may not always reflect the most current "real-world" kitchen practices.
+
+**C. Technical Processing & Third Parties**
+To provide high-quality responses, your anonymized queries may be transmitted to third-party AI infrastructure providers.
+
+Anonymization: We strip direct identifiers from your profile before a prompt is sent to a third-party model.
+
+No Training on Your Data: We contractually request (where possible) that our providers do not use SmartMenuIQ user prompts to train their future public models.
+
+**D. Session Persistence**
+To protect your privacy, SmartMenuIQ does not maintain a permanent, searchable database of your chat history on our cloud servers. Once you clear your cache or end your session, the conversational context is purged from our active memory.`
   }
 };
 

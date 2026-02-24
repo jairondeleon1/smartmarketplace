@@ -175,7 +175,7 @@ export default function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPl
               })}
               <div className="flex gap-2 pt-2">
                 <button onClick={() => setPlan(null)} className="flex-1 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 font-bold uppercase text-xs rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-all tracking-widest">Clear Plan</button>
-                <button onClick={() => { plan.forEach(e => addToPlate(e.item)); onClose(); }} className="flex-1 py-3 bg-slate-900 dark:bg-teal-600 text-white font-bold uppercase text-xs rounded-xl active:scale-95 transition-all tracking-widest">Add All to Tray</button>
+                <button onClick={() => { plan.forEach(e => addToPlate({ ...e.item, _planDay: e.day, _planMealType: e.mealType })); onClose(); }} className="flex-1 py-3 bg-slate-900 dark:bg-teal-600 text-white font-bold uppercase text-xs rounded-xl active:scale-95 transition-all tracking-widest">Add All to Tray</button>
               </div>
             </div>
           )}

@@ -45,6 +45,7 @@ import BulkEditModal from "../components/admin/BulkEditModal";
 import MenuItemsTable from "../components/admin/MenuItemsTable";
 import AllergenNoticeModal from "../components/AllergenNoticeModal";
 import usePullToRefresh from "../components/usePullToRefresh";
+import Footer from "../components/Footer";
 import jsPDF from 'jspdf';
 
 // Framer Motion slide variants for iOS-style push/pop

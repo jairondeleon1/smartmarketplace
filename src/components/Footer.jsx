@@ -164,7 +164,7 @@ All menu items are prepared in shared kitchen environments. Cross-contact with a
 Allergen information is provided based on standard recipes and supplier data. Unplanned substitutions or preparation changes may affect allergen content.
 
 **High-Risk Individuals**
-Guests with severe food allergies or anaphylaxis risk should exercise extreme caution and speak directly with a manager before consuming any item. We cannot guarantee a completely allergen-free environment.
+Guests with severe food allergies or anaphylaxis risk should exercise extreme caution and speak directly with an Ingredient Ambassador at our Marketplace before consuming any item. We cannot guarantee a completely allergen-free environment.
 
 **Special Dietary Requests**
 For individualized assistance with food allergies or dietary restrictions, please speak with an Ingredient Ambassador or Marketplace manager.

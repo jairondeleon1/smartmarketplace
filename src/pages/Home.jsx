@@ -1424,6 +1424,7 @@ export default function Home() {
 
       <NutritionCharts isOpen={isChartsOpen} onClose={() => setIsChartsOpen(false)} menuItems={menuItems} />
       <ProfileSettingsModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} user={user} />
+      <AITransparencyModal isOpen={showAINotice} onAccept={handleAINoticeAccept} />
       <Footer />
     </div>
   );

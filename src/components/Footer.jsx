@@ -150,6 +150,35 @@ We aim to conform to the Web Content Accessibility Guidelines (WCAG) 2.1 Level A
 **Feedback**
 If you experience any accessibility barriers while using SmartMenu IQ, please contact your site administrator so we can address the issue promptly.`
   },
+  healthdisclaimer: {
+    title: 'Nutrition & Health Disclaimer',
+    content: `Last Updated: February 2026
+
+**1. Not Medical Advice (The "Safe Harbor" Clause)**
+The insights, nutritional calculations, and AI-generated suggestions provided by SmartMenuIQ are for informational and educational purposes only.
+
+No Doctor-Patient Relationship: Use of this app does not create a professional-client or medical-patient relationship.
+
+Consult Professionals: This platform is not a substitute for the clinical judgment of a healthcare professional. Always seek the advice of a physician, registered dietitian, or certified nutritionist regarding any medical condition, weight management program, or specific dietary restriction.
+
+Emergency Situations: Never disregard professional medical advice or delay seeking it because of something you read on SmartMenuIQ.
+
+**2. Accuracy of Nutritional Data**
+Nutritional values (calories, macros, vitamins) are mathematical estimates and should be treated as such.
+
+Variability in Preparation: Actual nutritional content may vary significantly based on portion sizes, regional ingredient sourcing, "secret" recipes, and individual preparation methods used by kitchen staff.
+
+Supplier Data: SmartMenuIQ relies on third-party data and restaurant-provided information. We cannot guarantee that this data is always current, complete, or error-free.
+
+Cross-Contamination: Our AI cannot account for real-time kitchen conditions, such as shared fryers or cross-contact with allergens.
+
+**3. Assumption of Risk**
+By using SmartMenuIQ, you acknowledge that you are doing so at your own risk.
+
+User Verification: You are responsible for verifying any critical nutritional information (specifically regarding life-threatening allergens) directly with the food provider or restaurant manager before consumption.
+
+Limitation of Liability: SmartMenuIQ, its developers, and its affiliates are not liable for any adverse health effects, allergic reactions, or dissatisfaction resulting from the use of the information provided within the app.`
+  },
   aitransparency: {
     title: 'AI Transparency & Data Handling',
     content: `Last Updated: February 2026

@@ -24,30 +24,23 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
     }
   }, [user]);
 
-  // Optimistic toggle: update local state immediately, then persist in background
-  const toggleItem = (item, list, setList, field) => {
+  const toggleItem = (item, list, setList) => {
     const newList = list.includes(item) ? list.filter(i => i !== item) : [...list, item];
     setList(newList);
-    // Persist optimistically in the background
-    const patch = {};
-    if (field === 'restrictions') patch.dietary_restrictions = newList;
-    if (field === 'preferences') patch.dietary_preferences = newList;
-    if (field === 'goals') patch.health_goals = newList;
-    base44.auth.updateMe(patch).then(() => {
-      queryClient.invalidateQueries({ queryKey: ['user'] });
-    });
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await base44.auth.updateMe({
+      const profileData = {
         dietary_restrictions: restrictions,
         dietary_preferences: preferences,
         health_goals: goals
-      });
+      };
       if (disclaimerAccepted) localStorage.setItem('profileDisclaimerAccepted', 'true');
-      queryClient.invalidateQueries({ queryKey: ['user'] });
+      // Store profile locally since auth may not be available
+      localStorage.setItem('userProfile', JSON.stringify(profileData));
+      if (onProfileUpdate) onProfileUpdate(profileData);
       onClose();
     } catch (error) {
       alert('Error saving profile: ' + error.message);

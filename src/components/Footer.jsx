@@ -4,28 +4,82 @@ import { X } from 'lucide-react';
 const LEGAL_CONTENT = {
   privacy: {
     title: 'Privacy Policy',
-    content: `Last updated: February 2026
+    content: `Last Updated: March 1, 2026
 
-**Information We Collect**
-We collect information you provide directly, including dietary restrictions, preferences, and health goals entered in your profile. We also collect standard platform data such as your name and email address for authentication purposes.
+**1. Introduction**
+Welcome to SmartMenuIQ ("SmartMenuIQ," "we," "our," or "us"). We provide digital menu intelligence and nutritional insights designed to empower your dining choices. Your privacy is not an afterthought; it is built into our architecture.
 
-**How We Use Your Information**
-Your information is used solely to personalize your menu experience, including filtering menu items based on your dietary needs and health goals. We do not sell your personal information to third parties.
+This Privacy Policy describes how we collect, use, and disclose your information when you use our web application (the "Service"). By accessing SmartMenuIQ, you agree to the collection and use of information in accordance with this policy.
 
-**Health-Related Data**
-Any health-related information (dietary restrictions, health goals) you provide is stored securely and used only to improve your in-app experience. This data is not shared with third parties and is not used for marketing purposes.
+**2. Information Collection & Use**
+We operate on a principle of Data Minimization. We only collect the information strictly necessary to provide our nutritional analysis and menu services.
 
-**Data Security**
-All data is encrypted at rest and in transit using industry-standard security measures provided by the Base44 platform.
+**A. Voluntarily Provided "Anonymous Profile" Data**
+To provide personalized insights, you may choose to provide:
 
-**California Residents (CCPA/CPRA)**
-California residents have the right to: know what personal data is collected, request deletion of personal data, and opt out of the sale of personal data. We do not sell personal data. To exercise your rights, contact us at the information below.
+Dietary Preferences & Restrictions: (e.g., Vegan, Gluten-Free, Halal).
+Allergen Information: (e.g., Nut-free, Shellfish-free).
+Health & Wellness Goals: (e.g., Low-sodium, High-protein).
+Interaction Data: Specific menu items you select or "like."
 
-**Data Retention**
-Chat history is stored only for the duration of your session and is not persisted in our database. Profile and menu data is retained as long as your account is active.
+Privacy Note: This data is stored in a localized or pseudonymized profile. We do not require your legal name, home address, or government ID to provide these services.
 
-**Contact**
-For privacy-related inquiries, please contact your site administrator.`
+**B. Technical, Usage, and Analytical Data**
+When you visit SmartMenuIQ, our servers automatically record:
+
+Device Identifiers: IP address (masked/hashed where possible), browser type, and operating system.
+Usage Logs: Pages visited, time spent on the app, and crash reports.
+Cookies & Tracking: We use strictly necessary cookies for session management. We do not use "Third-Party Targeting Cookies" for cross-site advertising.
+
+**C. AI Interactions (Conversational Data)**
+SmartMenuIQ utilizes Artificial Intelligence to answer nutritional queries.
+
+Session-Based: Conversations are primarily stored in your local session.
+Third-Party Processing: We may use providers like OpenAI or Google Gemini. While we strip direct identifiers before sending prompts, these providers process data according to their own safety policies. Do not share sensitive personal info (like medical records) in the chat.
+
+**3. How We Process Your Data**
+We use your information for the following "Business Purposes":
+
+Personalization: Aligning menu options with your specific dietary needs.
+Security: Detecting and preventing fraudulent activity or "Bot" attacks.
+Improvement: Analyzing aggregated, non-identifiable trends to improve our AI's accuracy.
+Communication: Responding to your support requests.
+
+**4. Data Sharing & Disclosure**
+No Sale of Data: We do not "sell" your personal information to third parties for money.
+No Behavioral Advertising: We do not "share" your data with data brokers or ad networks.
+Service Providers: We may share data with trusted vendors (e.g., cloud hosting) who are contractually bound to keep your data confidential.
+Legal Necessity: We may disclose info if required by a court order or to protect the safety of our users.
+
+**5. Data Retention & Deletion**
+User Control: You may delete your profile and dietary preferences at any time via the "Delete Profile" button in the app settings.
+Automatic Purge: Technical logs are automatically purged after 90 days unless required for an ongoing security investigation.
+AI History: Session data is cleared once the browser session is closed or after a period of inactivity.
+
+**6. Regional Rights (California CCPA/CPRA & GDPR)**
+Under various modern privacy laws, you have specific rights:
+
+Right to Know/Access: Request a report of what data we have collected about you.
+Right to Delete: Request that we wipe your data from our systems.
+Right to Correct: Update inaccurate information in your profile.
+Opt-Out of Automated Decision Making: You can choose to browse the menu without AI-driven recommendations.
+Global Privacy Control (GPC): Our app is configured to recognize GPC signals. If your browser sends an opt-out signal, we will automatically treat it as a request to limit data processing.
+
+**7. Security Standards**
+We employ industry-standard AES-256 encryption for data at rest and TLS/SSL encryption for data in transit. While we strive to protect your data, please remember that no method of transmission over the internet is 100% secure.
+
+**8. Children's Privacy**
+SmartMenuIQ is intended for a general audience. We do not knowingly collect personal data from children under 13 (or 16 in certain jurisdictions). If you become aware that a child has provided us with personal data, please contact us immediately.
+
+**9. Changes to This Policy**
+We may update this policy to reflect changes in law or our services. If we make significant changes, we will notify you via a prominent notice on our homepage or within the app interface.
+
+**10. Contact Information**
+For privacy-related inquiries or to exercise your data rights, please contact:
+
+SmartMenuIQ Privacy Team
+Email: jairon.deleon@compass-usa.com
+Attn: Data Privacy Officer`
   },
   terms: {
     title: 'Terms of Service',

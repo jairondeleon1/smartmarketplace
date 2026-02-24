@@ -68,6 +68,17 @@ export default function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPl
 
   const availableMeals = changingMeal !== null ? menuItems.filter(item => item.day === plan[changingMeal].day || item.day === 'Daily Special') : [];
 
+  // Group plan entries by day for display
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const planByDay = days.reduce((acc, day) => {
+    acc[day] = plan ? plan.filter(e => e.day === day) : [];
+    return acc;
+  }, {});
+
+  const availableSides = addingSideTo !== null
+    ? menuItems.filter(item => (item.day === addingSideTo || item.day === 'Daily Special') && !plan.find(e => e.day === addingSideTo && e.item.id === item.id))
+    : [];
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4 font-sans">
       <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden animate-in zoom-in-95 flex flex-col">

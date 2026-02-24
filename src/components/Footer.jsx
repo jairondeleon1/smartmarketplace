@@ -83,31 +83,72 @@ Attn: Data Privacy Officer`
   },
   terms: {
     title: 'Terms of Service',
-    content: `Last updated: February 2026
+    content: `Last Updated: March 1, 2026
 
-**Acceptance of Terms**
-By accessing and using SmartMenu IQ, you accept and agree to be bound by these Terms of Service.
+**1. Acceptance of the Agreement**
+By accessing or using the SmartMenuIQ web application (the "Service"), you enter into a legally binding contract with SmartMenuIQ (a division of Follow the Jays Inc.). If you do not agree to these Terms, you must immediately cease use of the Service. Your continued use constitutes "Active Consent."
 
-**Use of Service**
-SmartMenu IQ is provided for informational and meal-planning purposes only. You agree to use the service only for lawful purposes and in accordance with these Terms.
+**2. The Nature of the Service (Informational Only)**
+SmartMenuIQ is a decision-support tool. We provide menu analysis, nutritional transparency, and AI-driven insights.
 
-**Nutritional Information Disclaimer**
-Nutritional information provided is based on data from the U.S. Department of Agriculture (USDA) FoodData Central database and supplier information. Values are estimates and may vary due to product substitutions, preparation methods, and portion sizes.
+No Professional Advice: We are not a medical organization, a hospital, or a registered dietitian firm.
 
-**Not Medical Advice**
-The information provided by SmartMenu IQ, including nutritional data, AI assistant responses, and dietary suggestions, is for informational purposes only and does not constitute medical advice, diagnosis, or treatment. Always consult a qualified healthcare professional for medical guidance.
+The "Final Check" Rule: You acknowledge that the Service is a secondary reference. The primary source of truth for food safety is the establishment preparing the food and its physical labeling.
 
-**AI Assistant**
-The AI assistant provides general information based on available menu data. Responses are automated and may not always be accurate. Do not rely on AI responses for medical or allergy-critical decisions.
+**3. Eligibility & Minor Safety**
+Age Limit: You must be at least 13 years of age.
 
-**Allergen Warning**
-While we strive to provide accurate allergen information, we cannot guarantee the absence of any allergen due to shared preparation areas. Always speak with a manager if you have severe food allergies.
+Parental Consent: Users between 13 and 18 years old represent that they have the permission of a parent or guardian.
 
-**Limitation of Liability**
-SmartMenu IQ and its operators are not liable for any damages arising from use of this service, including but not limited to reliance on nutritional or allergen information.
+California Minor Protections: Pursuant to the California Age-Appropriate Design Code, we strive to provide a "privacy by default" experience for all users.
 
-**Changes to Terms**
-We reserve the right to modify these terms at any time. Continued use of the service constitutes acceptance of updated terms.`
+**4. Anonymous User Profiles**
+To enhance your experience, you may create an Anonymous Profile.
+
+No PII: You agree not to enter "Personally Identifiable Information" (like your full name, SSN, or home address) into free-text fields.
+
+Self-Management: You are the sole custodian of your profile settings. You may exercise your "Right to be Forgotten" at any time by using the in-app "Delete Profile" feature, which permanently scrubs your preferences from our active session cache.
+
+**5. AI-Generated Content & Limitations**
+SmartMenuIQ utilizes Large Language Models (LLMs). By using these AI features, you agree to the following:
+
+Probabilistic Outputs: AI generates responses based on patterns, not necessarily "facts." It may produce inaccurate information regarding ingredients or calorie counts.
+
+The "Hallucination" Waiver: SmartMenuIQ is not liable for "AI Hallucinations" (instances where the AI provides confident but false information).
+
+Third-Party Processing: Prompts are processed by third-party providers (e.g., OpenAI, Google). While we anonymize data, you agree to their underlying processing terms.
+
+**6. Medical & Allergy Disclaimer (Crucial)**
+Strict Liability Waiver: SmartMenuIQ disclaims all liability for allergic reactions, foodborne illnesses, or any adverse health event resulting from reliance on the Service.
+
+Ingredient Changes: Restaurants frequently change suppliers or preparation methods without updating digital databases. SmartMenuIQ cannot track "real-time" kitchen substitutions.
+
+**7. Intellectual Property & License**
+Ownership: The "SmartMenuIQ" name, the "IQ" analysis logic, the source code, and all UI designs are the exclusive property of SmartMenuIQ and its parent company.
+
+Limited License: We grant you a personal, non-exclusive, non-transferable license to use the app for personal, non-commercial use. You may not "scrape" our AI-generated data to build a competing database.
+
+**8. Acceptable Use Policy**
+You agree not to:
+
+- Use the Service to "stress-test" or find vulnerabilities in our AI.
+- Input "Prompts" designed to bypass safety filters (Jailbreaking).
+- Use any automated bot or "spider" to access the Service without our written consent.
+
+**9. Disclaimer of Warranties**
+THE SERVICE IS PROVIDED "AS IS." TO THE MAXIMUM EXTENT PERMITTED BY LAW, WE DISCLAIM ALL WARRANTIES, INCLUDING THE WARRANTY OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR DIETARY PURPOSE. WE DO NOT GUARANTEE THE ACCURACY OF NUTRITIONAL DATA.
+
+**10. Limitation of Liability**
+To the maximum extent permitted by California law, SmartMenuIQ's total liability for any claim arising out of your use of the Service shall not exceed $100.00 USD or the amount you paid to use the Service in the last month, whichever is lower.
+
+**11. Governing Law & Dispute Resolution**
+Jurisdiction: These Terms are governed by the laws of the State of California.
+
+Arbitration: You agree that any dispute that cannot be resolved through informal negotiation will be settled through binding arbitration in Orange County, Florida (or a mutually agreed-upon virtual forum), rather than in court.
+
+**12. Contact Information**
+SmartMenuIQ Legal Team
+Email: jairon.deleon@compass-usa.com`
   },
   allergens: {
     title: 'Allergen Policy',

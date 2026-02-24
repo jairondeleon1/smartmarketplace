@@ -74,7 +74,7 @@ export default function AllergenNoticeModal() {
             <div className="p-8 space-y-4">
               <p className="text-gray-700 text-lg leading-relaxed">
                 For more information about <span className="font-bold text-red-600">allergens</span>,
-                please talk to the <span className="font-bold text-slate-900">Ingredient Ambassador</span>.
+                please talk to an <span className="font-bold text-slate-900">Ingredient Ambassador</span>.
               </p>
 
               <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">

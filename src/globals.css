@@ -1,10 +1,10 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Disable rubber-band overscroll globally */
+/* Safe scroll */
 html, body {
-  overscroll-behavior-y: none;
   -webkit-overflow-scrolling: touch;
 }
 

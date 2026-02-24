@@ -216,7 +216,7 @@ Cross-Contamination: Our AI cannot account for real-time kitchen conditions, suc
 **3. Assumption of Risk**
 By using SmartMenuIQ, you acknowledge that you are doing so at your own risk.
 
-User Verification: You are responsible for verifying any critical nutritional information (specifically regarding life-threatening allergens) directly with the food provider or restaurant manager before consumption.
+User Verification: You are responsible for verifying any critical nutritional information (specifically regarding life-threatening allergens) directly with an Ingredient Ambassador at our Marketplace before consumption.
 
 Limitation of Liability: SmartMenuIQ, its developers, and its affiliates are not liable for any adverse health effects, allergic reactions, or dissatisfaction resulting from the use of the information provided within the app.`
   },

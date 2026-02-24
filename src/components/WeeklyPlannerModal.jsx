@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Wand, Loader2, RefreshCw, Trash2 } from 'lucide-react';
+import { X, Wand, Loader2, RefreshCw, Trash2, Plus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 export default function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPlate, user }) {

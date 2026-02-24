@@ -1471,7 +1471,7 @@ export default function Home() {
         <NavBar view={view} changeView={changeView} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} onProfileClick={() => setIsProfileModalOpen(true)} />
       </div>
       
-      <main className="w-full font-bold overflow-hidden">
+      <main className="w-full font-bold">
         <AnimatePresence mode="wait" initial={false}>
           {view === 'customer' && (
             <motion.div key="customer"

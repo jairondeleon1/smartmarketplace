@@ -628,6 +628,13 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
         )}
       </div>
 
+      {/* Persistent AI Insights Disclaimer */}
+      <div className="mx-2 py-3 px-4 bg-amber-50 border border-amber-200 rounded-xl text-center">
+        <p className="text-[10px] text-amber-800 font-bold leading-relaxed">
+          ⚠️ <span className="uppercase tracking-widest">Disclaimer:</span> Estimates only. AI insights are not medical advice. Verify allergens with staff before eating.
+        </p>
+      </div>
+
       <TraySummary plate={myPlate} onClick={() => setIsTrayModalOpen(true)} />
       <TrayDetailsModal isOpen={isTrayModalOpen} onClose={() => setIsTrayModalOpen(false)} plate={myPlate} setPlate={setMyPlate} />
       <WeeklyPlannerModal isOpen={isWeeklyPlannerOpen} onClose={() => setIsWeeklyPlannerOpen(false)} menuItems={menuItems} addToPlate={addToPlate} user={user} />

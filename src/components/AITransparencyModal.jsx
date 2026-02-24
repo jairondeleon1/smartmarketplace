@@ -6,29 +6,29 @@ const POINTS = [
     icon: Info,
     color: 'text-blue-500',
     bg: 'bg-blue-50',
-    title: 'Information, Not Advice',
-    body: 'AI insights are for informational purposes only. Our AI is not a doctor or registered dietitian. Always verify ingredients with restaurant staff if you have a life-threatening allergy.'
+    title: 'How Our AI Works',
+    body: 'SmartMenuIQ uses large language models (LLMs) and prompt engineering to compare your dietary profile against menu databases — highlighting matches and potential risks. It is a decision-support tool, not a certified nutritionist or medical diagnostic tool. You maintain final responsibility for food choices.'
   },
   {
     icon: AlertTriangle,
     color: 'text-amber-500',
     bg: 'bg-amber-50',
-    title: 'Accuracy',
-    body: 'AI can occasionally "hallucinate" or provide inaccurate data. Always cross-reference high-stakes nutritional info.'
+    title: 'Accuracy & Allergy Warning',
+    body: 'AI can occasionally "hallucinate" or provide outdated data. Menu formulations can change without notice, so our AI may not always reflect real-world kitchen practices. Always verify critical allergen information directly with staff.'
   },
   {
     icon: ShieldCheck,
     color: 'text-teal-500',
     bg: 'bg-teal-50',
-    title: 'Data Handling',
-    body: 'Your chat is stored locally for your current session. We do not sell your conversations, but prompts are processed by third-party AI partners (like OpenAI or Google) to generate responses.'
+    title: 'Third-Party Processing & Anonymization',
+    body: 'Your queries may be transmitted to third-party AI infrastructure providers to generate responses. We strip direct identifiers from your profile before sending prompts. We contractually request that providers do not use SmartMenuIQ prompts to train their future public models.'
   },
   {
     icon: MessageSquare,
     color: 'text-purple-500',
     bg: 'bg-purple-50',
-    title: 'Privacy',
-    body: 'Avoid entering sensitive personal details (e.g., medical IDs or financial info) into the chat.'
+    title: 'Session Persistence & Privacy',
+    body: 'SmartMenuIQ does not maintain a permanent, searchable database of your chat history. Once you clear your cache or end your session, conversational context is purged from active memory. Avoid entering sensitive personal details (e.g., medical IDs) into the chat.'
   }
 ];
 

@@ -40,6 +40,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import NutritionCharts from "../components/NutritionCharts";
 import ProfileSettingsModal from "../components/ProfileSettingsModal";
+import WeeklyPlannerModal from "../components/WeeklyPlannerModal";
 import NutritionDetailView from "../components/NutritionDetailView";
 import BulkEditModal from "../components/admin/BulkEditModal";
 import MenuItemsTable from "../components/admin/MenuItemsTable";

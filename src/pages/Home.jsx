@@ -1264,6 +1264,12 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         </div>
       )}
 
+      {activeTab === 'users' && (
+        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+          <UserManagement />
+        </div>
+      )}
+
       <BulkEditModal isOpen={showBulkEdit} onClose={() => setShowBulkEdit(false)} selectedItems={bulkEditItems} onSave={applyBulkEdit} />
     </div>
   );

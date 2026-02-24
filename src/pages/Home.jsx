@@ -1405,6 +1405,7 @@ export default function Home() {
 
       <NutritionCharts isOpen={isChartsOpen} onClose={() => setIsChartsOpen(false)} menuItems={menuItems} />
       <ProfileSettingsModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} user={user} />
+      <Footer />
     </div>
   );
 }

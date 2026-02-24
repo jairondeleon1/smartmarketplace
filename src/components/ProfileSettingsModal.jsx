@@ -82,6 +82,20 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Disclaimer Acceptance */}
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex gap-3 items-start">
+            <input
+              type="checkbox"
+              id="disclaimer-accept"
+              checked={disclaimerAccepted}
+              onChange={e => setDisclaimerAccepted(e.target.checked)}
+              className="mt-0.5 w-4 h-4 accent-teal-600 shrink-0 cursor-pointer"
+            />
+            <label htmlFor="disclaimer-accept" className="text-xs text-amber-900 leading-relaxed cursor-pointer">
+              I understand that SmartMenuIQ provides <span className="font-bold">estimates only</span> and I am responsible for verifying ingredients and allergens directly with the restaurant or food service staff before consuming any item.
+            </label>
+          </div>
+
           {/* Dietary Restrictions */}
           <div className="bg-red-50 border border-red-100 rounded-2xl p-6">
             <div className="flex items-center gap-2 mb-4">
@@ -105,6 +119,19 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
                 </button>
               ))}
             </div>
+
+            {/* Severe Allergen Warning */}
+            {restrictions.some(r => SEVERE_ALLERGENS.includes(r)) && (
+              <div className="mt-4 bg-red-100 border border-red-300 rounded-xl p-4 flex gap-3 items-start">
+                <ShieldAlert className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-bold text-red-800 uppercase tracking-wide mb-1">Severe Allergy Flagged</p>
+                  <p className="text-xs text-red-700 leading-relaxed">
+                    You've flagged a severe allergy to <span className="font-bold">{restrictions.filter(r => SEVERE_ALLERGENS.includes(r)).join(', ')}</span>. While we highlight matching-free items, please <span className="font-bold">alert your server or cafeteria manager</span> — our data cannot track real-time kitchen cross-contamination or shared fryers.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Dietary Preferences */}

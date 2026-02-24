@@ -1294,7 +1294,7 @@ export default function Home() {
     setIsTyping(true);
     try {
       const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a helpful nutrition assistant for a corporate cafeteria. Context Menu: ${JSON.stringify(menuItems)}. User question: ${textToSend}. Provide helpful, concise answers about the menu items, nutrition, allergens, etc.`
+        prompt: `You are a helpful nutrition assistant for a corporate Marketplace. Context Menu: ${JSON.stringify(menuItems)}. User question: ${textToSend}. Provide helpful, concise answers about the menu items, nutrition, allergens, etc.`
       });
       if (response) setChatHistory(prev => [...prev, { role: 'ai', content: response }]);
     } catch (e) { 

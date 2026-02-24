@@ -16,6 +16,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(() => localStorage.getItem('profileDisclaimerAccepted') === 'true');
+  const [gpcActive] = useState(() => navigator.globalPrivacyControl === true);
   const queryClient = useQueryClient();
 
   useEffect(() => {

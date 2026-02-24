@@ -86,7 +86,7 @@ Attn: Data Privacy Officer`
     content: `Last Updated: March 1, 2026
 
 **1. Acceptance of the Agreement**
-By accessing or using the SmartMenuIQ web application (the "Service"), you enter into a legally binding contract with SmartMenuIQ (a division of Follow the Jays Inc.). If you do not agree to these Terms, you must immediately cease use of the Service. Your continued use constitutes "Active Consent."
+By accessing or using the SmartMenuIQ web application (the "Service"), you enter into a legally binding contract with SmartMenuIQ. If you do not agree to these Terms, you must immediately cease use of the Service. Your continued use constitutes "Active Consent."
 
 **2. The Nature of the Service (Informational Only)**
 SmartMenuIQ is a decision-support tool. We provide menu analysis, nutritional transparency, and AI-driven insights.
@@ -319,7 +319,7 @@ export default function Footer() {
           </div>
           <div className="border-t border-slate-700 pt-4 text-center space-y-1">
             <p className="text-slate-500 text-[10px] uppercase tracking-widest font-bold">
-              © {new Date().getFullYear()} SmartMenu IQ · A Division of Follow the Jays Inc. All rights reserved.
+              © {new Date().getFullYear()} SmartMenu IQ. All rights reserved.
             </p>
             <p className="text-slate-600 text-[10px] leading-relaxed max-w-xl mx-auto">
               Nutritional information is for informational purposes only and does not constitute medical advice. 

@@ -48,6 +48,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
         dietary_preferences: preferences,
         health_goals: goals
       });
+      if (disclaimerAccepted) localStorage.setItem('profileDisclaimerAccepted', 'true');
       queryClient.invalidateQueries({ queryKey: ['user'] });
       onClose();
     } catch (error) {

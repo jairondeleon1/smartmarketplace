@@ -48,6 +48,7 @@ import AllergenNoticeModal from "../components/AllergenNoticeModal";
 import AITransparencyModal from "../components/AITransparencyModal";
 import usePullToRefresh from "../components/usePullToRefresh";
 import Footer from "../components/Footer";
+import AdminGate from "../components/AdminGate";
 import jsPDF from 'jspdf';
 
 // Framer Motion slide variants for iOS-style push/pop

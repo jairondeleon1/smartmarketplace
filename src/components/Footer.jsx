@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, ShieldCheck } from 'lucide-react';
 
 const LEGAL_CONTENT = {
   privacy: {

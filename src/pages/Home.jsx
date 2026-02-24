@@ -578,8 +578,8 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
   return (
     <div
       ref={scrollRef}
-      className="max-w-5xl mx-auto p-4 space-y-8 pb-36 md:pb-32 font-sans overflow-x-hidden font-bold overflow-y-auto"
-      style={{ overscrollBehaviorY: 'none', minHeight: 'calc(100vh - 4rem)' }}
+      className="max-w-5xl mx-auto p-4 space-y-8 pb-36 md:pb-32 font-sans overflow-x-hidden font-bold"
+      style={{ minHeight: 'calc(100vh - 4rem)' }}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}

@@ -279,6 +279,7 @@ function LegalModal({ doc, onClose }) {
 
 export default function Footer() {
   const [activeDoc, setActiveDoc] = useState(null);
+  const [gpcActive] = useState(() => navigator.globalPrivacyControl === true);
 
   const links = [
     { key: 'privacy', label: 'Privacy Policy' },
@@ -293,10 +294,22 @@ export default function Footer() {
     <>
       <footer className="bg-slate-900 text-white mt-8 py-8 px-6">
         <div className="max-w-5xl mx-auto space-y-4">
+
+          {/* GPC Opt-Out Honored Badge */}
+          {gpcActive && (
+            <div className="flex justify-center">
+              <div className="flex items-center gap-2 bg-green-900/40 border border-green-600/40 rounded-full px-4 py-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-green-400" />
+                <span className="text-green-400 text-[10px] font-bold uppercase tracking-widest">Opt-Out Preference Signal Honored</span>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
             {links.map(({ key, label }) => (
               <button
                 key={key}
+                data-footer-link={key}
                 onClick={() => setActiveDoc(key)}
                 className="text-slate-400 hover:text-teal-400 text-xs font-bold uppercase tracking-widest transition-colors"
               >
@@ -306,7 +319,7 @@ export default function Footer() {
           </div>
           <div className="border-t border-slate-700 pt-4 text-center space-y-1">
             <p className="text-slate-500 text-[10px] uppercase tracking-widest font-bold">
-              © {new Date().getFullYear()} SmartMenu IQ. All rights reserved.
+              © {new Date().getFullYear()} SmartMenu IQ · A Division of Follow the Jays Inc. All rights reserved.
             </p>
             <p className="text-slate-600 text-[10px] leading-relaxed max-w-xl mx-auto">
               Nutritional information is for informational purposes only and does not constitute medical advice. 

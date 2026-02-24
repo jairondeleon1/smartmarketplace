@@ -115,27 +115,64 @@ export default function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPl
                 ))}
               </div>
             </div>
+          ) : addingSideTo !== null ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-bold text-sm uppercase text-slate-800 dark:text-slate-200">Add item to {addingSideTo}</h4>
+                <button onClick={() => setAddingSideTo(null)} className="text-xs text-gray-500 hover:text-gray-700 dark:text-slate-400">Cancel</button>
+              </div>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {availableSides.length === 0 ? (
+                  <p className="text-xs text-gray-500 text-center py-4">No additional items available for this day.</p>
+                ) : availableSides.map(item => (
+                  <button key={item.id} onClick={() => { setPlan(prev => [...prev, { day: addingSideTo, mealType: 'Side', item }]); setAddingSideTo(null); }} className="w-full p-3 bg-gray-50 dark:bg-slate-800 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-xl border border-gray-100 dark:border-slate-700 hover:border-teal-200 text-left transition-all">
+                    <div className="font-bold text-sm text-slate-800 dark:text-slate-200">{item.name}</div>
+                    <div className="text-xs text-gray-500 dark:text-slate-400 mt-1">{item.calories} cal • {item.protein}g protein • {item.station}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
           ) : (
-            <div className="space-y-3 text-sm font-bold">
-              {plan.map((entry, idx) => (
-                <div key={idx} className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 text-slate-800 dark:text-slate-200">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-teal-700 dark:text-teal-400 text-[10px] uppercase font-bold">{entry.day.slice(0,3)}</span>
-                      <span className="text-gray-400 text-[10px] uppercase">•</span>
-                      <span className="text-gray-600 dark:text-slate-400 text-[10px] uppercase font-bold">{entry.mealType}</span>
+            <div className="space-y-4 text-sm font-bold">
+              {days.map(day => {
+                const dayEntries = planByDay[day];
+                if (dayEntries.length === 0) return null;
+                return (
+                  <div key={day} className="bg-gray-50 dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-2 bg-slate-100 dark:bg-slate-700">
+                      <span className="text-teal-700 dark:text-teal-400 text-[11px] uppercase font-bold tracking-widest">{day}</span>
+                      <button onClick={() => setAddingSideTo(day)} className="flex items-center gap-1 text-[10px] font-bold uppercase text-teal-600 dark:text-teal-400 hover:text-teal-800 transition">
+                        <Plus className="w-3 h-3" /> Add Item
+                      </button>
                     </div>
-                    <span className="text-sm truncate block">{entry.item.name}</span>
+                    <div className="divide-y divide-gray-100 dark:divide-slate-700">
+                      {dayEntries.map((entry, idx) => {
+                        const globalIdx = plan.indexOf(entry);
+                        return (
+                          <div key={idx} className="flex items-center gap-3 p-3 text-slate-800 dark:text-slate-200">
+                            <div className="flex-1 min-w-0">
+                              <span className="text-gray-500 dark:text-slate-400 text-[10px] uppercase font-bold">{entry.mealType}</span>
+                              <span className="text-sm truncate block">{entry.item.name}</span>
+                              <span className="text-[10px] text-gray-400">{entry.item.calories} cal • {entry.item.protein}g protein</span>
+                            </div>
+                            <div className="flex gap-1 shrink-0">
+                              {entry.mealType !== 'Side' && (
+                                <button onClick={() => regenerateMeal(globalIdx)} disabled={regeneratingMeal === globalIdx} className="p-1.5 text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 rounded-lg transition border border-purple-100 dark:border-purple-800 disabled:opacity-50">
+                                  {regeneratingMeal === globalIdx ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                                </button>
+                              )}
+                              {entry.mealType !== 'Side' && (
+                                <button onClick={() => setChangingMeal(globalIdx)} className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 rounded-lg transition border border-blue-100 dark:border-blue-800">Pick</button>
+                              )}
+                              <button onClick={() => setPlan(prev => prev.filter((_, i) => i !== globalIdx))} className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"><Trash2 className="w-3 h-3" /></button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div className="flex gap-2 shrink-0">
-                    <button onClick={() => regenerateMeal(idx)} disabled={regeneratingMeal === idx} className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 rounded-lg transition border border-purple-100 dark:border-purple-800 disabled:opacity-50">
-                      {regeneratingMeal === idx ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                    </button>
-                    <button onClick={() => setChangingMeal(idx)} className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 rounded-lg transition border border-blue-100 dark:border-blue-800">Pick</button>
-                    <button onClick={() => setPlan(prev => prev.filter((_, i) => i !== idx))} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"><Trash2 className="w-4 h-4" /></button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               <div className="flex gap-2 pt-2">
                 <button onClick={() => setPlan(null)} className="flex-1 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 font-bold uppercase text-xs rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-all tracking-widest">Clear Plan</button>
                 <button onClick={() => { plan.forEach(e => addToPlate(e.item)); onClose(); }} className="flex-1 py-3 bg-slate-900 dark:bg-teal-600 text-white font-bold uppercase text-xs rounded-xl active:scale-95 transition-all tracking-widest">Add All to Tray</button>

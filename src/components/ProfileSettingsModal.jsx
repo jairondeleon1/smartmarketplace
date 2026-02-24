@@ -188,7 +188,10 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
               <Heart className="w-5 h-5 text-green-600" />
               <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">Dietary Preferences</h4>
             </div>
-            <p className="text-xs text-gray-600 mb-4">Choose your dietary lifestyle</p>
+            <p className="text-xs text-gray-600 mb-3">Choose your dietary lifestyle</p>
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4 text-xs text-blue-800 leading-relaxed">
+              🤖 SmartMenuIQ uses AI to match your profile with menu data. You can opt-out of AI-driven insights at any time in Settings.
+            </div>
             <div className="flex flex-wrap gap-2">
               {DIET_PREFERENCES.map(pref => (
                 <button

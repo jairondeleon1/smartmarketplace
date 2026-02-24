@@ -1312,16 +1312,16 @@ export default function Home() {
   const clearFilters = () => setActiveFilters({ vegetarian: false, vegan: false, fit: false });
 
   const checkItemSuitability = (item) => {
-    if (!user) return { suitable: true, reasons: [] };
+    if (!effectiveUser) return { suitable: true, reasons: [] };
     const reasons = []; let suitable = true;
-    const userRestrictions = user.dietary_restrictions || [];
+    const userRestrictions = effectiveUser.dietary_restrictions || [];
     const itemAllergens = item.allergens || [];
     const hasRestricted = userRestrictions.some(restriction => itemAllergens.some(allergen => allergen.toLowerCase().includes(restriction.toLowerCase())));
     if (hasRestricted) { suitable = false; reasons.push('Contains allergen you avoid'); }
-    const userPreferences = user.dietary_preferences || [];
+    const userPreferences = effectiveUser.dietary_preferences || [];
     if (userPreferences.includes('Vegan') && !item.tags?.includes('Vegan')) { suitable = false; reasons.push('Not vegan'); }
     if (userPreferences.includes('Vegetarian') && !item.tags?.includes('Vegetarian') && !item.tags?.includes('Vegan')) { suitable = false; reasons.push('Not vegetarian'); }
-    const userGoals = user.health_goals || [];
+    const userGoals = effectiveUser.health_goals || [];
     const matchesGoal = userGoals.some(goal => (item.tags || []).includes(goal));
     return { suitable, reasons, matchesGoal };
   };

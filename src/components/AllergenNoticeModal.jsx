@@ -45,10 +45,10 @@ export default function AllergenNoticeModal() {
               </p>
 
               <button
-                onClick={() => setStep(2)}
+                onClick={handleClose}
                 className="w-full py-4 bg-gradient-to-r from-red-600 to-red-800 text-white rounded-2xl font-bold uppercase text-sm shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
               >
-                Continue <ChevronRight className="w-4 h-4" />
+                I Understand
               </button>
             </div>
           </>

@@ -59,6 +59,28 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
     }
   };
 
+  const handleDownloadData = () => {
+    const data = {
+      exported_at: new Date().toISOString(),
+      data_range: 'January 1, 2022 – Present',
+      profile: {
+        dietary_restrictions: restrictions,
+        dietary_preferences: preferences,
+        health_goals: goals,
+        disclaimer_accepted: disclaimerAccepted,
+        gpc_opt_out: gpcActive,
+      },
+      note: 'This export contains all profile data associated with your anonymous session.'
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `smartmenuiq_my_data_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleDeleteAccount = async () => {
     setIsDeletingAccount(true);
     try {

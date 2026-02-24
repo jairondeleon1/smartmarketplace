@@ -167,7 +167,7 @@ Allergen information is provided based on standard recipes and supplier data. Un
 Guests with severe food allergies or anaphylaxis risk should exercise extreme caution and speak directly with a manager before consuming any item. We cannot guarantee a completely allergen-free environment.
 
 **Special Dietary Requests**
-For individualized assistance with food allergies or dietary restrictions, please speak with a food service manager.
+For individualized assistance with food allergies or dietary restrictions, please speak with an Ingredient Ambassador or Marketplace manager.
 
 **Regulatory Compliance**
 Our allergen labeling follows guidelines set by the U.S. Food and Drug Administration (FDA) under the Food Allergen Labeling and Consumer Protection Act (FALCPA) and the FASTER Act of 2021.`

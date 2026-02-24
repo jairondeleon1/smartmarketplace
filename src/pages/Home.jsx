@@ -193,6 +193,7 @@ function TrayDetailsModal({ isOpen, onClose, plate, setPlate }) {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
 
+    // Header
     pdf.setFillColor(6, 95, 70);
     pdf.rect(0, 0, pageWidth, 40, 'F');
     pdf.setTextColor(255, 255, 255);
@@ -200,53 +201,104 @@ function TrayDetailsModal({ isOpen, onClose, plate, setPlate }) {
     pdf.setFont(undefined, 'bold');
     pdf.text('SmartMenu IQ', pageWidth / 2, 20, { align: 'center' });
     pdf.setFontSize(10);
-    pdf.text(`NUTRITION SUMMARY • ${new Date().toLocaleDateString()}`, pageWidth / 2, 30, { align: 'center' });
+    pdf.text(`WEEKLY MEAL PLAN • ${new Date().toLocaleDateString()}`, pageWidth / 2, 30, { align: 'center' });
 
-    pdf.setTextColor(30, 41, 59);
-    let yPos = 55;
+    let yPos = 52;
 
-    pdf.setFillColor(6, 95, 70);
-    pdf.rect(20, yPos - 5, pageWidth - 40, 10, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(11);
-    pdf.setFont(undefined, 'bold');
-    pdf.text('MEALS FOR THE WEEK', 25, yPos + 2);
-    yPos += 12;
+    // Group plate items by day then by mealType
+    const DAYS_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Daily Special'];
+    const MEAL_ORDER = ['Breakfast', 'Lunch', 'Dinner', 'Side', 'Dessert', 'All Day'];
 
-    pdf.setTextColor(30, 41, 59);
-    pdf.setFontSize(11);
+    // plate items may or may not have day/mealType — group by day if available
+    const grouped = {};
     plate.forEach(item => {
-      if (yPos > 270) { pdf.addPage(); yPos = 20; }
-      pdf.setFont(undefined, 'bold');
-      pdf.text(item.name, 25, yPos);
-      pdf.setFont(undefined, 'normal');
-      pdf.setFontSize(9);
-      pdf.setTextColor(100, 116, 139);
-      pdf.text(`Station: ${item.station || 'N/A'}`, 25, yPos + 5);
-      pdf.setFontSize(11);
-      pdf.setTextColor(30, 41, 59);
-      pdf.setFont(undefined, 'bold');
-      pdf.text(`${item.calories} CAL`, pageWidth - 20, yPos, { align: 'right' });
-      pdf.setDrawColor(241, 245, 249);
-      pdf.line(25, yPos + 7, pageWidth - 20, yPos + 7);
-      yPos += 15;
+      const day = item._planDay || 'Other';
+      const mealType = item._planMealType || item.meal_period || 'Other';
+      if (!grouped[day]) grouped[day] = {};
+      if (!grouped[day][mealType]) grouped[day][mealType] = [];
+      grouped[day][mealType].push(item);
     });
 
-    yPos += 10;
-    if (yPos > 250) { pdf.addPage(); yPos = 20; }
-    pdf.setFillColor(249, 250, 251);
-    pdf.rect(20, yPos, pageWidth - 40, 30, 'F');
-    pdf.setFontSize(14); pdf.setFont(undefined, 'bold'); pdf.setTextColor(6, 95, 70);
-    pdf.text(`${totals.calories}`, 40, yPos + 15);
-    pdf.setFontSize(8); pdf.setTextColor(148, 163, 184); pdf.text('CALS', 40, yPos + 22);
-    pdf.setFontSize(14); pdf.setTextColor(6, 95, 70); pdf.text(`${totals.protein}g`, 80, yPos + 15);
-    pdf.setFontSize(8); pdf.setTextColor(148, 163, 184); pdf.text('PROTEIN', 80, yPos + 22);
-    pdf.setFontSize(14); pdf.setTextColor(6, 95, 70); pdf.text(`${totals.carbs}g`, 130, yPos + 15);
-    pdf.setFontSize(8); pdf.setTextColor(148, 163, 184); pdf.text('CARBS', 130, yPos + 22);
-    pdf.setFontSize(14); pdf.setTextColor(6, 95, 70); pdf.text(`${totals.sodium}mg`, 170, yPos + 15);
-    pdf.setFontSize(8); pdf.setTextColor(148, 163, 184); pdf.text('SODIUM', 170, yPos + 22);
+    const sortedDays = Object.keys(grouped).sort((a, b) => {
+      const ai = DAYS_ORDER.indexOf(a); const bi = DAYS_ORDER.indexOf(b);
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    });
 
-    pdf.save('Marketplace_Report.pdf');
+    sortedDays.forEach(day => {
+      if (yPos > 260) { pdf.addPage(); yPos = 20; }
+
+      // Day header
+      pdf.setFillColor(15, 118, 110);
+      pdf.rect(15, yPos, pageWidth - 30, 9, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(11);
+      pdf.setFont(undefined, 'bold');
+      pdf.text(day.toUpperCase(), 20, yPos + 6.5);
+      yPos += 14;
+
+      const mealTypes = Object.keys(grouped[day]).sort((a, b) => {
+        const ai = MEAL_ORDER.indexOf(a); const bi = MEAL_ORDER.indexOf(b);
+        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+      });
+
+      mealTypes.forEach(mealType => {
+        if (yPos > 265) { pdf.addPage(); yPos = 20; }
+
+        // Meal type label
+        pdf.setTextColor(100, 116, 139);
+        pdf.setFontSize(8);
+        pdf.setFont(undefined, 'bold');
+        pdf.text(mealType.toUpperCase(), 20, yPos);
+        yPos += 5;
+
+        grouped[day][mealType].forEach(item => {
+          if (yPos > 270) { pdf.addPage(); yPos = 20; }
+
+          pdf.setTextColor(30, 41, 59);
+          pdf.setFontSize(10);
+          pdf.setFont(undefined, 'bold');
+          const nameLines = pdf.splitTextToSize(item.name, pageWidth - 60);
+          pdf.text(nameLines, 22, yPos);
+          pdf.setFont(undefined, 'normal');
+          pdf.setFontSize(8);
+          pdf.setTextColor(107, 114, 128);
+          pdf.text(`${item.calories || 0} cal  •  ${item.protein || 0}g protein  •  ${item.carbs || 0}g carbs`, 22, yPos + (nameLines.length * 4.5));
+          pdf.setFont(undefined, 'bold');
+          pdf.setFontSize(10);
+          pdf.setTextColor(6, 95, 70);
+          pdf.text(`${item.calories || 0}`, pageWidth - 18, yPos, { align: 'right' });
+          pdf.setFontSize(7);
+          pdf.setTextColor(148, 163, 184);
+          pdf.text('CAL', pageWidth - 18, yPos + 4, { align: 'right' });
+
+          pdf.setDrawColor(229, 231, 235);
+          yPos += nameLines.length * 4.5 + 8;
+          pdf.line(20, yPos - 3, pageWidth - 20, yPos - 3);
+        });
+
+        yPos += 4;
+      });
+
+      yPos += 6;
+    });
+
+    // Totals footer
+    if (yPos > 250) { pdf.addPage(); yPos = 20; }
+    yPos += 4;
+    pdf.setFillColor(249, 250, 251);
+    pdf.setDrawColor(229, 231, 235);
+    pdf.rect(15, yPos, pageWidth - 30, 28, 'FD');
+    const cols = [35, 75, 115, 155];
+    const labels = ['TOTAL CALS', 'PROTEIN', 'CARBS', 'SODIUM'];
+    const values = [`${totals.calories}`, `${totals.protein}g`, `${totals.carbs}g`, `${totals.sodium}mg`];
+    cols.forEach((x, i) => {
+      pdf.setFontSize(13); pdf.setFont(undefined, 'bold'); pdf.setTextColor(6, 95, 70);
+      pdf.text(values[i], x, yPos + 13);
+      pdf.setFontSize(7); pdf.setFont(undefined, 'normal'); pdf.setTextColor(148, 163, 184);
+      pdf.text(labels[i], x, yPos + 21);
+    });
+
+    pdf.save('SmartMenuIQ_WeeklyPlan.pdf');
     setTimeout(() => { setIsExporting(false); setShowSuccess(true); setTimeout(() => setShowSuccess(false), 3000); }, 800);
   };
 

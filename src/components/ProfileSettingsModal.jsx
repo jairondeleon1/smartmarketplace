@@ -15,6 +15,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState(() => localStorage.getItem('profileDisclaimerAccepted') === 'true');
   const queryClient = useQueryClient();
 
   useEffect(() => {

@@ -715,108 +715,151 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
   const chatEndRef = useRef(null);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatHistory, isTyping]);
 
-  // Strip markdown symbols and return clean text
+  // Strip markdown heading/bold/italic symbols
   const cleanMarkdown = (text) => text
-    .replace(/^#{1,6}\s+/gm, '')   // ### headings
-    .replace(/\*\*(.*?)\*\*/g, '$1') // **bold**
-    .replace(/\*(.*?)\*/g, '$1')     // *italic*
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
     .trim();
+
+  // Is this line a nutrition/tag/detail bullet (should stay inside a card)?
+  const isDetailLine = (l) =>
+    /calories|protein|carbohydrate|carbs|fat|sodium|fiber|sugar|cholesterol|allergen|tag|station|contain/i.test(l);
+
+  // Is this line a dish name (standalone non-bullet, not intro prose, not a detail)?
+  const isDishName = (l) =>
+    !l.startsWith('-') && !l.startsWith('•') && !l.startsWith('*') &&
+    l.length > 2 && l.length < 100 &&
+    !isDetailLine(l) &&
+    !l.toLowerCase().match(/^(here are|here is|for lunch|for breakfast|on thursday|on monday|on tuesday|on wednesday|on friday|the following|these are|you can|based on|great|enjoy|i recommend|today|this dish|additionally|note:|please)/i);
+
+  // Parse nutrition fields from a set of bullet lines
+  const parseNutritionLines = (bulletLines) => {
+    const d = { calories: null, protein: null, carbs: null, fat: null, saturatedFat: null, sodium: null, fiber: null, sugar: null, cholesterol: null, allergens: null, tags: null, station: null };
+    bulletLines.forEach(raw => {
+      const l = raw.replace(/^[-•*]\s*/, '').trim();
+      const num = (re) => { const m = l.match(re); return m ? parseFloat(m[1]) : null; };
+      if (d.calories == null) d.calories = num(/calories?\s*:?\s*([\d.]+)/i);
+      if (d.protein == null) d.protein = num(/protein\s*:?\s*([\d.]+)/i);
+      if (d.carbs == null) d.carbs = num(/carbohydrates?\s*:?\s*([\d.]+)/i) ?? num(/carbs?\s*:?\s*([\d.]+)/i);
+      if (d.fat == null) d.fat = num(/^fat\s*:?\s*([\d.]+)/i) ?? num(/total fat\s*:?\s*([\d.]+)/i);
+      if (d.saturatedFat == null) d.saturatedFat = num(/saturated fat\s*:?\s*([\d.]+)/i);
+      if (d.sodium == null) d.sodium = num(/sodium\s*:?\s*([\d.]+)/i);
+      if (d.fiber == null) d.fiber = num(/fiber\s*:?\s*([\d.]+)/i);
+      if (d.sugar == null) d.sugar = num(/sugar\s*:?\s*([\d.]+)/i);
+      if (d.cholesterol == null) d.cholesterol = num(/cholesterol\s*:?\s*([\d.]+)/i);
+      const algM = l.match(/allergens?\s*:?\s*(.+)/i);
+      if (algM && !d.allergens) d.allergens = algM[1].trim();
+      const tagM = l.match(/tags?\s*:?\s*(.+)/i);
+      if (tagM && !d.tags) d.tags = tagM[1].trim();
+      const stM = l.match(/station\s*:?\s*(.+)/i);
+      if (stM && !d.station) d.station = stM[1].trim();
+    });
+    return d;
+  };
+
+  // Single menu item card (same style as home page)
+  const MenuCard = ({ name, nutrition, description }) => (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="p-5 space-y-3">
+        {/* Name */}
+        <h4 className="font-bold text-gray-800 text-base leading-tight uppercase tracking-tight">{name}</h4>
+        {description && <p className="text-gray-500 text-xs leading-relaxed">{description}</p>}
+        {nutrition.station && <p className="text-[10px] text-teal-700 font-bold uppercase tracking-widest">{nutrition.station}</p>}
+
+        {/* Primary macros */}
+        {(nutrition.calories != null || nutrition.protein != null || nutrition.carbs != null) && (
+          <div className="grid grid-cols-3 gap-2 text-center py-3 bg-gray-50 rounded-xl border border-gray-100">
+            {nutrition.calories != null && <div><span className="block text-sm font-bold text-gray-800">{nutrition.calories}</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Cals</span></div>}
+            {nutrition.protein != null && <div><span className="block text-sm font-bold text-gray-800">{nutrition.protein}g</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Protein</span></div>}
+            {nutrition.carbs != null && <div><span className="block text-sm font-bold text-gray-800">{nutrition.carbs}g</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Carbs</span></div>}
+          </div>
+        )}
+
+        {/* Secondary stats */}
+        {(nutrition.fat != null || nutrition.sodium != null || nutrition.fiber != null || nutrition.sugar != null || nutrition.cholesterol != null || nutrition.saturatedFat != null) && (
+          <div className="grid grid-cols-3 gap-2 text-center py-2 bg-slate-50 rounded-xl border border-slate-100">
+            {nutrition.fat != null && <div><span className="block text-xs font-bold text-slate-700">{nutrition.fat}g</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Fat</span></div>}
+            {nutrition.saturatedFat != null && <div><span className="block text-xs font-bold text-slate-700">{nutrition.saturatedFat}g</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Sat Fat</span></div>}
+            {nutrition.sodium != null && <div><span className="block text-xs font-bold text-slate-700">{nutrition.sodium}mg</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Sodium</span></div>}
+            {nutrition.fiber != null && <div><span className="block text-xs font-bold text-slate-700">{nutrition.fiber}g</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Fiber</span></div>}
+            {nutrition.sugar != null && <div><span className="block text-xs font-bold text-slate-700">{nutrition.sugar}g</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Sugar</span></div>}
+            {nutrition.cholesterol != null && <div><span className="block text-xs font-bold text-slate-700">{nutrition.cholesterol}mg</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Chol</span></div>}
+          </div>
+        )}
+
+        {/* Tags */}
+        {nutrition.tags && (
+          <div className="flex flex-wrap gap-1">
+            {nutrition.tags.split(/[,;]/).map((t, i) => (
+              <span key={i} className="px-2 py-0.5 bg-teal-50 text-teal-700 border border-teal-100 rounded-full text-[9px] font-bold uppercase tracking-widest">{t.trim()}</span>
+            ))}
+          </div>
+        )}
+
+        {/* Allergens */}
+        {nutrition.allergens && (
+          <div className="bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+            <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest">Contains: </span>
+            <span className="text-[10px] text-red-700">{nutrition.allergens}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   const VisualMessage = ({ content }) => {
     const cleaned = cleanMarkdown(content);
-    const lines = cleaned.split('\n').filter(l => l.trim());
+    const lines = cleaned.split('\n').map(l => l.trim()).filter(Boolean);
 
-    // Try to detect a structured menu-item response:
-    // Look for a standalone item name line followed by bullet stats
-    const nameLineIdx = lines.findIndex(l =>
-      !l.startsWith('-') && !l.startsWith('•') && l.length > 3 && l.length < 80 &&
-      !l.toLowerCase().startsWith('for') && !l.toLowerCase().startsWith('here')
-    );
+    // Split content into segments: each dish name starts a new segment
+    // Segments: { type: 'prose'|'item', text?, name?, bullets[], description? }
+    const segments = [];
+    let current = null;
 
-    // Parse all numeric nutrition bullets from the response
-    const parseNutrition = (allLines) => {
-      const data = { calories: null, protein: null, carbs: null, fat: null, sodium: null, fiber: null, allergens: null };
-      allLines.forEach(line => {
-        const l = line.replace(/^[-•*]\s*/, '');
-        const calM = l.match(/calories?\s*:?\s*(\d+)/i);
-        const proM = l.match(/protein\s*:?\s*(\d+)/i);
-        const carbM = l.match(/carb\w*\s*:?\s*(\d+)/i);
-        const fatM = l.match(/^fat\s*:?\s*(\d+)/i);
-        const sodM = l.match(/sodium\s*:?\s*(\d+)/i);
-        const fibM = l.match(/fiber\s*:?\s*(\d+)/i);
-        const algM = l.match(/allergens?\s*:?\s*(.+)/i);
-        if (calM) data.calories = parseInt(calM[1]);
-        if (proM) data.protein = parseInt(proM[1]);
-        if (carbM) data.carbs = parseInt(carbM[1]);
-        if (fatM) data.fat = parseInt(fatM[1]);
-        if (sodM) data.sodium = parseInt(sodM[1]);
-        if (fibM) data.fiber = parseInt(fibM[1]);
-        if (algM) data.allergens = algM[1].trim();
-      });
-      return data;
-    };
+    lines.forEach(line => {
+      const isBullet = line.startsWith('-') || line.startsWith('•') || line.startsWith('*');
+      if (!isBullet && isDishName(line)) {
+        // New dish card
+        if (current) segments.push(current);
+        current = { type: 'item', name: line, bullets: [], descLines: [] };
+      } else if (current?.type === 'item') {
+        if (isBullet || isDetailLine(line)) {
+          current.bullets.push(line);
+        } else {
+          // Prose inside an item block → treat as description
+          current.descLines.push(line);
+        }
+      } else {
+        // Prose before any dish
+        if (current?.type === 'prose') {
+          current.text += ' ' + line;
+        } else {
+          if (current) segments.push(current);
+          current = { type: 'prose', text: line };
+        }
+      }
+    });
+    if (current) segments.push(current);
 
-    const nutrition = parseNutrition(lines);
-    const hasNutritionData = nutrition.calories || nutrition.protein || nutrition.carbs;
+    // Check if we have any item cards
+    const hasCards = segments.some(s => s.type === 'item' && s.bullets.length > 0);
 
-    // Find an item name: a non-bullet, non-intro line that looks like a dish name
-    const itemNameLine = lines.find(l =>
-      !l.startsWith('-') && !l.startsWith('•') &&
-      !l.toLowerCase().match(/^(for|here|you can|based on|great|i recommend|today|this dish)/i) &&
-      l.length > 3 && l.length < 80 &&
-      !l.match(/calories|protein|carbs|sodium|fat|fiber|allergen/i)
-    );
-
-    // Collect prose lines (intro / outro)
-    const proseLines = lines.filter(l =>
-      !l.startsWith('-') && !l.startsWith('•') &&
-      !l.match(/calories|protein|carbs|sodium|fat|fiber|allergen/i) &&
-      l !== itemNameLine
-    );
-
-    if (hasNutritionData && itemNameLine) {
+    if (hasCards) {
       return (
         <div className="space-y-3">
-          {/* Intro prose */}
-          {proseLines.filter((_, i) => i === 0).map((l, i) => (
-            <p key={i} className="text-slate-700 text-sm leading-relaxed">{l}</p>
-          ))}
-
-          {/* Menu-card style item */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-5">
-              <h4 className="font-bold text-gray-800 text-lg leading-tight mb-3 uppercase tracking-tight">{itemNameLine}</h4>
-
-              {/* Macros grid */}
-              <div className="grid grid-cols-3 gap-2 text-center py-3 bg-gray-50 rounded-xl mb-3 border border-gray-100">
-                {nutrition.calories != null && <div><span className="block text-sm font-bold text-gray-800">{nutrition.calories}</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Cals</span></div>}
-                {nutrition.protein != null && <div><span className="block text-sm font-bold text-gray-800">{nutrition.protein}g</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Protein</span></div>}
-                {nutrition.carbs != null && <div><span className="block text-sm font-bold text-gray-800">{nutrition.carbs}g</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Carbs</span></div>}
-              </div>
-
-              {/* Secondary stats */}
-              {(nutrition.fat != null || nutrition.sodium != null || nutrition.fiber != null) && (
-                <div className="grid grid-cols-3 gap-2 text-center py-2 bg-slate-50 rounded-xl mb-3 border border-slate-100">
-                  {nutrition.fat != null && <div><span className="block text-sm font-bold text-slate-700">{nutrition.fat}g</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Fat</span></div>}
-                  {nutrition.sodium != null && <div><span className="block text-sm font-bold text-slate-700">{nutrition.sodium}mg</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Sodium</span></div>}
-                  {nutrition.fiber != null && <div><span className="block text-sm font-bold text-slate-700">{nutrition.fiber}g</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Fiber</span></div>}
-                </div>
-              )}
-
-              {/* Allergens */}
-              {nutrition.allergens && (
-                <div className="bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                  <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest">Contains: </span>
-                  <span className="text-[10px] text-red-700">{nutrition.allergens}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Outro prose */}
-          {proseLines.slice(1).map((l, i) => (
-            <p key={i} className="text-slate-600 text-sm leading-relaxed italic">{l}</p>
-          ))}
+          {segments.map((seg, i) => {
+            if (seg.type === 'prose') {
+              return <p key={i} className="text-slate-700 text-sm leading-relaxed">{seg.text}</p>;
+            }
+            const nutrition = parseNutritionLines(seg.bullets);
+            const hasData = Object.values(nutrition).some(v => v !== null);
+            if (!hasData && seg.bullets.length === 0) {
+              return <p key={i} className="text-slate-700 text-sm leading-relaxed">{seg.name}</p>;
+            }
+            const description = seg.descLines.join(' ') || null;
+            return <MenuCard key={i} name={seg.name} nutrition={nutrition} description={description} />;
+          })}
         </div>
       );
     }

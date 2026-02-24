@@ -175,7 +175,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
                 <div>
                   <p className="text-xs font-bold text-red-800 uppercase tracking-wide mb-1">Severe Allergy Flagged</p>
                   <p className="text-xs text-red-700 leading-relaxed">
-                    You've flagged a severe allergy to <span className="font-bold">{restrictions.filter(r => SEVERE_ALLERGENS.includes(r)).join(', ')}</span>. While we highlight matching-free items, please <span className="font-bold">alert your server or cafeteria manager</span> — our data cannot track real-time kitchen cross-contamination or shared fryers.
+                    You've flagged a severe allergy to <span className="font-bold">{restrictions.filter(r => SEVERE_ALLERGENS.includes(r)).join(', ')}</span>. While we highlight matching-free items, please <span className="font-bold">alert an Ingredient Ambassador</span> at our Marketplace — our data cannot track real-time kitchen cross-contamination or shared fryers.
                   </p>
                 </div>
               </div>

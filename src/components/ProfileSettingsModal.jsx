@@ -6,7 +6,7 @@ const SEVERE_ALLERGENS = ['Shellfish', 'Tree Nuts', 'Peanuts', 'Fish', 'Sesame']
 const DIET_PREFERENCES = ['Vegan', 'Vegetarian'];
 const HEALTH_GOALS = ['High Protein', 'Low Carb', 'Low Sodium', 'High Fiber'];
 
-export default function ProfileSettingsModal({ isOpen, onClose, user }) {
+export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileUpdate }) {
   const [restrictions, setRestrictions] = useState([]);
   const [preferences, setPreferences] = useState([]);
   const [goals, setGoals] = useState([]);
@@ -15,7 +15,6 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(() => localStorage.getItem('profileDisclaimerAccepted') === 'true');
   const [gpcActive] = useState(() => navigator.globalPrivacyControl === true);
-  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (user) {

@@ -73,12 +73,11 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
 
   const handleDeleteAccount = async () => {
     setIsDeletingAccount(true);
-    try {
-      await base44.auth.logout('/');
-    } catch (error) {
-      alert('Error deleting account: ' + error.message);
-      setIsDeletingAccount(false);
-    }
+    localStorage.removeItem('userProfile');
+    if (onProfileUpdate) onProfileUpdate({ dietary_restrictions: [], dietary_preferences: [], health_goals: [] });
+    setShowDeleteConfirm(false);
+    setIsDeletingAccount(false);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -145,7 +144,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
               {ALLERGENS.map(allergen => (
                 <button
                   key={allergen}
-                  onClick={() => toggleItem(allergen, restrictions, setRestrictions, 'restrictions')}
+                  onClick={() => toggleItem(allergen, restrictions, setRestrictions)}
                   className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all border-2 ${
                     restrictions.includes(allergen)
                       ? 'bg-red-500 text-white border-red-600'
@@ -186,7 +185,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
               {DIET_PREFERENCES.map(pref => (
                 <button
                   key={pref}
-                  onClick={() => toggleItem(pref, preferences, setPreferences, 'preferences')}
+                  onClick={() => toggleItem(pref, preferences, setPreferences)}
                   className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all border-2 ${
                     preferences.includes(pref)
                       ? 'bg-green-600 text-white border-green-700'
@@ -211,7 +210,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
               {HEALTH_GOALS.map(goal => (
                 <button
                   key={goal}
-                  onClick={() => toggleItem(goal, goals, setGoals, 'goals')}
+                  onClick={() => toggleItem(goal, goals, setGoals)}
                   className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all border-2 ${
                     goals.includes(goal)
                       ? 'bg-blue-600 text-white border-blue-700'

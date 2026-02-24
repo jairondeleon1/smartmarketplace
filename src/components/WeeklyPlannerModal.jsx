@@ -8,6 +8,7 @@ export default function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPl
   const [isLoading, setIsLoading] = useState(false);
   const [changingMeal, setChangingMeal] = useState(null);
   const [regeneratingMeal, setRegeneratingMeal] = useState(null);
+  const [addingSideTo, setAddingSideTo] = useState(null); // day string like "Monday"
 
   const generatePlan = async () => {
     setIsLoading(true);

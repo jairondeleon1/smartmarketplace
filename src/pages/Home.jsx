@@ -715,55 +715,118 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
   const chatEndRef = useRef(null);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatHistory, isTyping]);
 
+  // Strip markdown symbols and return clean text
+  const cleanMarkdown = (text) => text
+    .replace(/^#{1,6}\s+/gm, '')   // ### headings
+    .replace(/\*\*(.*?)\*\*/g, '$1') // **bold**
+    .replace(/\*(.*?)\*/g, '$1')     // *italic*
+    .trim();
+
   const VisualMessage = ({ content }) => {
-    const lines = content.split('\n').filter(l => l.trim());
-    const menuItemPattern = /^[\d\*\-•]?\s*\*?\*?([A-Z][^(]+?)\*?\*?\s*[-–:]?\s*(\d+)\s*cal/i;
-    const parsedItems = [];
-    let currentItem = null;
+    const cleaned = cleanMarkdown(content);
+    const lines = cleaned.split('\n').filter(l => l.trim());
 
-    lines.forEach(line => {
-      const match = line.match(menuItemPattern);
-      if (match) {
-        if (currentItem) parsedItems.push(currentItem);
-        currentItem = { name: match[1].trim(), calories: parseInt(match[2]), protein: null, carbs: null, sodium: null, description: '' };
-      } else if (currentItem) {
-        const proteinMatch = line.match(/(\d+)g?\s*prot/i);
-        const carbsMatch = line.match(/(\d+)g?\s*carb/i);
-        const sodiumMatch = line.match(/(\d+)mg?\s*sod/i);
-        if (proteinMatch) currentItem.protein = parseInt(proteinMatch[1]);
-        if (carbsMatch) currentItem.carbs = parseInt(carbsMatch[1]);
-        if (sodiumMatch) currentItem.sodium = parseInt(sodiumMatch[1]);
-        if (!proteinMatch && !carbsMatch && !sodiumMatch && line.trim()) currentItem.description += (currentItem.description ? ' ' : '') + line.trim();
-      }
-    });
-    if (currentItem) parsedItems.push(currentItem);
+    // Try to detect a structured menu-item response:
+    // Look for a standalone item name line followed by bullet stats
+    const nameLineIdx = lines.findIndex(l =>
+      !l.startsWith('-') && !l.startsWith('•') && l.length > 3 && l.length < 80 &&
+      !l.toLowerCase().startsWith('for') && !l.toLowerCase().startsWith('here')
+    );
 
-    if (parsedItems.length > 0) {
+    // Parse all numeric nutrition bullets from the response
+    const parseNutrition = (allLines) => {
+      const data = { calories: null, protein: null, carbs: null, fat: null, sodium: null, fiber: null, allergens: null };
+      allLines.forEach(line => {
+        const l = line.replace(/^[-•*]\s*/, '');
+        const calM = l.match(/calories?\s*:?\s*(\d+)/i);
+        const proM = l.match(/protein\s*:?\s*(\d+)/i);
+        const carbM = l.match(/carb\w*\s*:?\s*(\d+)/i);
+        const fatM = l.match(/^fat\s*:?\s*(\d+)/i);
+        const sodM = l.match(/sodium\s*:?\s*(\d+)/i);
+        const fibM = l.match(/fiber\s*:?\s*(\d+)/i);
+        const algM = l.match(/allergens?\s*:?\s*(.+)/i);
+        if (calM) data.calories = parseInt(calM[1]);
+        if (proM) data.protein = parseInt(proM[1]);
+        if (carbM) data.carbs = parseInt(carbM[1]);
+        if (fatM) data.fat = parseInt(fatM[1]);
+        if (sodM) data.sodium = parseInt(sodM[1]);
+        if (fibM) data.fiber = parseInt(fibM[1]);
+        if (algM) data.allergens = algM[1].trim();
+      });
+      return data;
+    };
+
+    const nutrition = parseNutrition(lines);
+    const hasNutritionData = nutrition.calories || nutrition.protein || nutrition.carbs;
+
+    // Find an item name: a non-bullet, non-intro line that looks like a dish name
+    const itemNameLine = lines.find(l =>
+      !l.startsWith('-') && !l.startsWith('•') &&
+      !l.toLowerCase().match(/^(for|here|you can|based on|great|i recommend|today|this dish)/i) &&
+      l.length > 3 && l.length < 80 &&
+      !l.match(/calories|protein|carbs|sodium|fat|fiber|allergen/i)
+    );
+
+    // Collect prose lines (intro / outro)
+    const proseLines = lines.filter(l =>
+      !l.startsWith('-') && !l.startsWith('•') &&
+      !l.match(/calories|protein|carbs|sodium|fat|fiber|allergen/i) &&
+      l !== itemNameLine
+    );
+
+    if (hasNutritionData && itemNameLine) {
       return (
         <div className="space-y-3">
-          {parsedItems.map((item, idx) => (
-            <div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-4">
-                <h4 className="font-bold text-gray-800 text-base leading-tight mb-3">{item.name}</h4>
-                {item.description && <p className="text-gray-500 text-sm leading-relaxed mb-3">{item.description}</p>}
-                <div className="grid grid-cols-3 gap-2 text-center py-3 bg-gray-50 rounded-xl border border-gray-100/50">
-                  <div><span className="block text-sm font-bold text-gray-700">{item.calories}</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Cals</span></div>
-                  {item.protein && <div><span className="block text-sm font-bold text-gray-700">{item.protein}g</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Prot</span></div>}
-                  {item.carbs && <div><span className="block text-sm font-bold text-gray-700">{item.carbs}g</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Carb</span></div>}
-                </div>
+          {/* Intro prose */}
+          {proseLines.filter((_, i) => i === 0).map((l, i) => (
+            <p key={i} className="text-slate-700 text-sm leading-relaxed">{l}</p>
+          ))}
+
+          {/* Menu-card style item */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-5">
+              <h4 className="font-bold text-gray-800 text-lg leading-tight mb-3 uppercase tracking-tight">{itemNameLine}</h4>
+
+              {/* Macros grid */}
+              <div className="grid grid-cols-3 gap-2 text-center py-3 bg-gray-50 rounded-xl mb-3 border border-gray-100">
+                {nutrition.calories != null && <div><span className="block text-sm font-bold text-gray-800">{nutrition.calories}</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Cals</span></div>}
+                {nutrition.protein != null && <div><span className="block text-sm font-bold text-gray-800">{nutrition.protein}g</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Protein</span></div>}
+                {nutrition.carbs != null && <div><span className="block text-sm font-bold text-gray-800">{nutrition.carbs}g</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Carbs</span></div>}
               </div>
+
+              {/* Secondary stats */}
+              {(nutrition.fat != null || nutrition.sodium != null || nutrition.fiber != null) && (
+                <div className="grid grid-cols-3 gap-2 text-center py-2 bg-slate-50 rounded-xl mb-3 border border-slate-100">
+                  {nutrition.fat != null && <div><span className="block text-sm font-bold text-slate-700">{nutrition.fat}g</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Fat</span></div>}
+                  {nutrition.sodium != null && <div><span className="block text-sm font-bold text-slate-700">{nutrition.sodium}mg</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Sodium</span></div>}
+                  {nutrition.fiber != null && <div><span className="block text-sm font-bold text-slate-700">{nutrition.fiber}g</span><span className="text-[9px] text-gray-400 uppercase font-bold tracking-widest">Fiber</span></div>}
+                </div>
+              )}
+
+              {/* Allergens */}
+              {nutrition.allergens && (
+                <div className="bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                  <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest">Contains: </span>
+                  <span className="text-[10px] text-red-700">{nutrition.allergens}</span>
+                </div>
+              )}
             </div>
+          </div>
+
+          {/* Outro prose */}
+          {proseLines.slice(1).map((l, i) => (
+            <p key={i} className="text-slate-600 text-sm leading-relaxed italic">{l}</p>
           ))}
         </div>
       );
     }
 
+    // Fallback: plain formatted text
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         {lines.map((line, i) => {
-          if (line.startsWith('**') || line.includes('**')) return <div key={i} className="font-bold text-slate-800 text-base mb-2"><FormattedText text={line} /></div>;
           if (line.startsWith('-') || line.startsWith('•')) return (
-            <div key={i} className="flex items-start gap-2 mb-1">
+            <div key={i} className="flex items-start gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-teal-600 mt-2 shrink-0" />
               <span className="text-slate-700 text-sm">{line.replace(/^[-•]\s*/, '')}</span>
             </div>

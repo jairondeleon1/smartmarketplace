@@ -214,6 +214,7 @@ export default function Footer() {
     { key: 'privacy', label: 'Privacy Policy' },
     { key: 'terms', label: 'Terms of Service' },
     { key: 'allergens', label: 'Allergen Policy' },
+    { key: 'aitransparency', label: 'AI Transparency' },
     { key: 'accessibility', label: 'Accessibility' },
   ];
 

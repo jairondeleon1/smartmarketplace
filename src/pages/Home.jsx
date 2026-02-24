@@ -1185,6 +1185,12 @@ export default function Home() {
     queryFn: async () => { try { return await base44.auth.me(); } catch { return null; } }
   });
 
+  const [localProfile, setLocalProfile] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('userProfile') || 'null'); } catch { return null; }
+  });
+
+  const effectiveUser = localProfile ? { ...(user || {}), ...localProfile } : user;
+
   const queryClient = useQueryClient();
 
   const { data: menuItems = [] } = useQuery({

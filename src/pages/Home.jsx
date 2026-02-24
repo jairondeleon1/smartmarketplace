@@ -458,7 +458,109 @@ function TraySummary({ plate, onClick }) {
 
 // --- CUSTOMER VIEW (with pull-to-refresh) ---
 
+const MEAL_TABS = ['Breakfast', 'Lunch', 'All Day'];
+
+function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addToPlate, customVegUrl, customVeganUrl, selectedDay, setSelectedDay, clearFilters }) {
+  // Determine which tabs have items
+  const tabsWithItems = MEAL_TABS.filter(tab => {
+    if (tab === 'All Day') return filteredItems.some(i => !i.meal_period || i.meal_period === 'All Day' || i.meal_period === 'Dinner');
+    return filteredItems.some(i => i.meal_period === tab);
+  });
+
+  // Auto-select first available tab if current has no items
+  const effectiveTab = tabsWithItems.includes(activeMealTab) ? activeMealTab : (tabsWithItems[0] || 'Lunch');
+
+  const tabItems = filteredItems.filter(item => {
+    if (effectiveTab === 'All Day') return !item.meal_period || item.meal_period === 'All Day' || item.meal_period === 'Dinner';
+    return item.meal_period === effectiveTab;
+  });
+
+  // Group by "main" vs "side/extra" — mains are station Main/Pizza/Grill, sides are Soup/Dessert/etc
+  const mainStations = ['main', 'comfort', 'pizza', 'grill', 'chef', 'entree'];
+  const isMain = (item) => mainStations.some(s => (item.station || '').toLowerCase().includes(s));
+  const mains = tabItems.filter(isMain);
+  const sides = tabItems.filter(i => !isMain(i));
+
+  if (tabsWithItems.length === 0) {
+    return (
+      <div className="col-span-full py-20 text-center space-y-3">
+        <div className="text-gray-400 font-bold uppercase tracking-widest text-sm">No menu items match your filters</div>
+        <button onClick={() => { setSelectedDay('All Days'); clearFilters(); }} className="px-4 py-2 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700">Show All Items</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 px-2">
+      {/* Meal Tabs */}
+      {tabsWithItems.length > 1 && (
+        <div className="flex gap-2 bg-white border border-gray-100 rounded-2xl p-1.5 shadow-sm">
+          {tabsWithItems.map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveMealTab(tab)}
+              className={`flex-1 py-2.5 px-4 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all ${
+                effectiveTab === tab
+                  ? 'bg-slate-800 text-white shadow-md'
+                  : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Main Items */}
+      {mains.length > 0 && (
+        <div className="space-y-3">
+          {sides.length > 0 && (
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-gray-100" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-teal-700 bg-teal-50 px-3 py-1 rounded-full border border-teal-100">
+                {effectiveTab === 'Breakfast' ? 'Breakfast' : effectiveTab === 'Lunch' ? 'Lunch' : 'Menu'} Items
+              </span>
+              <div className="h-px flex-1 bg-gray-100" />
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {mains.map(item => (
+              <MenuItemCard key={item.id} item={item} addToPlate={addToPlate} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Sides / Extras */}
+      {sides.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-gray-100" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
+              Sides & Extras
+            </span>
+            <div className="h-px flex-1 bg-gray-100" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sides.map(item => (
+              <MenuItemCard key={item.id} item={item} addToPlate={addToPlate} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tabItems.length === 0 && (
+        <div className="py-12 text-center text-gray-400 font-bold uppercase tracking-widest text-sm">
+          No {effectiveTab} items available
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, selectedDay, setSelectedDay, activeFilters, toggleFilter, clearFilters, filteredItems, dayScrollRef, addToPlate, myPlate, setMyPlate, isTrayModalOpen, setIsTrayModalOpen, isWeeklyPlannerOpen, setIsWeeklyPlannerOpen, changeView, user }) {
+  const [activeMealTab, setActiveMealTab] = useState('Lunch');
+
   const doRefresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ['menuItems'] });
   }, [queryClient]);
@@ -507,17 +609,17 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-2 font-sans font-bold font-medium">
-        {filteredItems.length > 0 ? filteredItems.map(item => (
-          <MenuItemCard key={item.id} item={item} addToPlate={addToPlate} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} />
-        )) : (
-          <div className="col-span-full py-20 text-center space-y-3">
-            <div className="text-gray-400 font-bold uppercase tracking-widest text-sm">No menu items match your filters</div>
-            <div className="text-xs text-gray-400">Total Items: {menuItems.length} | Selected Day: {selectedDay}</div>
-            <button onClick={() => { setSelectedDay('All Days'); clearFilters(); }} className="px-4 py-2 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700">Show All Items</button>
-          </div>
-        )}
-      </div>
+      <MealTabsSection
+        filteredItems={filteredItems}
+        activeMealTab={activeMealTab}
+        setActiveMealTab={setActiveMealTab}
+        addToPlate={addToPlate}
+        customVegUrl={customVegUrl}
+        customVeganUrl={customVeganUrl}
+        selectedDay={selectedDay}
+        setSelectedDay={setSelectedDay}
+        clearFilters={clearFilters}
+      />
 
       {/* Persistent AI Insights Disclaimer */}
       <div className="mx-2 py-3 px-4 bg-amber-50 border border-amber-200 rounded-xl text-center">

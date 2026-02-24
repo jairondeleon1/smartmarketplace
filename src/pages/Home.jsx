@@ -44,6 +44,7 @@ import NutritionDetailView from "../components/NutritionDetailView";
 import BulkEditModal from "../components/admin/BulkEditModal";
 import MenuItemsTable from "../components/admin/MenuItemsTable";
 import AllergenNoticeModal from "../components/AllergenNoticeModal";
+import AITransparencyModal from "../components/AITransparencyModal";
 import usePullToRefresh from "../components/usePullToRefresh";
 import Footer from "../components/Footer";
 import jsPDF from 'jspdf';

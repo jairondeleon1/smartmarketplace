@@ -1222,10 +1222,26 @@ export default function Home() {
   const dayScrollRef = useRef(null);
 
   const changeView = (v) => {
+    if (v === 'chat' && !aiNoticeSeen) {
+      setShowAINotice(true);
+      return;
+    }
     const from = VIEW_ORDER.indexOf(view);
     const to = VIEW_ORDER.indexOf(v);
     setDirection(to >= from ? 1 : -1);
     setView(v);
+    setIsMobileMenuOpen(false);
+    window.scrollTo(0, 0);
+  };
+
+  const handleAINoticeAccept = () => {
+    localStorage.setItem('aiNoticeSeen', 'true');
+    setAiNoticeSeen(true);
+    setShowAINotice(false);
+    const from = VIEW_ORDER.indexOf(view);
+    const to = VIEW_ORDER.indexOf('chat');
+    setDirection(to >= from ? 1 : -1);
+    setView('chat');
     setIsMobileMenuOpen(false);
     window.scrollTo(0, 0);
   };

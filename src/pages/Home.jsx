@@ -1512,17 +1512,7 @@ export default function Home() {
               animate="center"
               exit={direction > 0 ? 'exitToLeft' : 'exitToRight'}
               transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
-              <div className="flex items-center justify-center min-h-[calc(100vh-100px)] p-6 tracking-tight font-sans font-bold">
-                <form onSubmit={(e) => { e.preventDefault(); if (e.target.pw.value === 'admin123') setIsAdminLoggedIn(true); }} className="bg-white p-14 rounded-[3.5rem] shadow-2xl w-full max-w-sm border border-gray-100 text-center space-y-8 animate-in zoom-in-95 font-sans font-medium">
-                  <div className="bg-teal-50 p-6 rounded-3xl inline-block border border-teal-100 shadow-inner"><Lock className="w-10 h-10 text-teal-800" /></div>
-                  <div className="space-y-1 font-sans font-bold">
-                    <h2 className="text-2xl font-bold uppercase tracking-tight text-slate-900 leading-none tracking-widest">Matrix Hub</h2>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-3 tracking-[0.2em]">Personnel Authorization Required</p>
-                  </div>
-                  <input name="pw" type="password" className="w-full p-5 border-none rounded-2xl bg-gray-100 outline-none focus:ring-4 focus:ring-teal-100 font-bold text-center tracking-[0.4em] shadow-inner text-lg" placeholder="••••" />
-                  <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Verify Access</button>
-                </form>
-              </div>
+              <AdminGate onGranted={() => setIsAdminLoggedIn(true)} />
             </motion.div>
           )}
           {view === 'admin' && isAdminLoggedIn && (

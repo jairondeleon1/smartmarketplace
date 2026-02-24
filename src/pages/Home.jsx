@@ -44,6 +44,7 @@ import WeeklyPlannerModal from "../components/WeeklyPlannerModal";
 import NutritionDetailView from "../components/NutritionDetailView";
 import BulkEditModal from "../components/admin/BulkEditModal";
 import MenuItemsTable from "../components/admin/MenuItemsTable";
+import UserManagement from "../components/admin/UserManagement";
 import AllergenNoticeModal from "../components/AllergenNoticeModal";
 import AITransparencyModal from "../components/AITransparencyModal";
 import usePullToRefresh from "../components/usePullToRefresh";

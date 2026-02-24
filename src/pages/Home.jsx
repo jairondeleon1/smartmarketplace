@@ -458,32 +458,40 @@ function TraySummary({ plate, onClick }) {
 
 // --- CUSTOMER VIEW (with pull-to-refresh) ---
 
-const MEAL_TABS = ['Breakfast', 'Lunch', 'All Day'];
+// Detect meal period from station name since DB has meal_period unreliable
+function getMealPeriodFromStation(item) {
+  const station = (item.station || '').toLowerCase();
+  if (station.startsWith('breakfast')) return 'Breakfast';
+  if (station.startsWith('lunch') || station.startsWith('main') || station.startsWith('soup') || station.startsWith('pizza') || station.startsWith('deli') || station.startsWith('grill') || station.startsWith('dessert')) return 'Lunch';
+  // fallback to meal_period field
+  if (item.meal_period === 'Breakfast') return 'Breakfast';
+  return 'Lunch';
+}
+
+// Side station keywords (these are sides/extras, not mains)
+const SIDE_STATION_KEYWORDS = ['soup', 'dessert', 'bakery', 'fruit', 'salad bar', 'beverage'];
+function isSideItem(item) {
+  const station = (item.station || '').toLowerCase();
+  return SIDE_STATION_KEYWORDS.some(k => station.includes(k));
+}
 
 function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addToPlate, customVegUrl, customVeganUrl, selectedDay, setSelectedDay, clearFilters }) {
-  // Determine which tabs have items
-  const tabsWithItems = MEAL_TABS.filter(tab => {
-    if (tab === 'All Day') return filteredItems.some(i => !i.meal_period || i.meal_period === 'All Day' || i.meal_period === 'Dinner');
-    return filteredItems.some(i => i.meal_period === tab);
-  });
+  const breakfastItems = filteredItems.filter(i => getMealPeriodFromStation(i) === 'Breakfast');
+  const lunchItems = filteredItems.filter(i => getMealPeriodFromStation(i) === 'Lunch');
 
-  // Auto-select first available tab if current has no items
+  const tabsWithItems = [];
+  if (breakfastItems.length > 0) tabsWithItems.push('Breakfast');
+  if (lunchItems.length > 0) tabsWithItems.push('Lunch');
+
   const effectiveTab = tabsWithItems.includes(activeMealTab) ? activeMealTab : (tabsWithItems[0] || 'Lunch');
+  const tabItems = effectiveTab === 'Breakfast' ? breakfastItems : lunchItems;
 
-  const tabItems = filteredItems.filter(item => {
-    if (effectiveTab === 'All Day') return !item.meal_period || item.meal_period === 'All Day' || item.meal_period === 'Dinner';
-    return item.meal_period === effectiveTab;
-  });
-
-  // Group by "main" vs "side/extra" — mains are station Main/Pizza/Grill, sides are Soup/Dessert/etc
-  const mainStations = ['main', 'comfort', 'pizza', 'grill', 'chef', 'entree'];
-  const isMain = (item) => mainStations.some(s => (item.station || '').toLowerCase().includes(s));
-  const mains = tabItems.filter(isMain);
-  const sides = tabItems.filter(i => !isMain(i));
+  const mains = tabItems.filter(i => !isSideItem(i));
+  const sides = tabItems.filter(i => isSideItem(i));
 
   if (tabsWithItems.length === 0) {
     return (
-      <div className="col-span-full py-20 text-center space-y-3">
+      <div className="py-20 text-center space-y-3">
         <div className="text-gray-400 font-bold uppercase tracking-widest text-sm">No menu items match your filters</div>
         <button onClick={() => { setSelectedDay('All Days'); clearFilters(); }} className="px-4 py-2 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700">Show All Items</button>
       </div>
@@ -500,9 +508,7 @@ function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addTo
               key={tab}
               onClick={() => setActiveMealTab(tab)}
               className={`flex-1 py-2.5 px-4 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all ${
-                effectiveTab === tab
-                  ? 'bg-slate-800 text-white shadow-md'
-                  : 'text-gray-400 hover:text-gray-600'
+                effectiveTab === tab ? 'bg-slate-800 text-white shadow-md' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
               {tab}
@@ -518,7 +524,7 @@ function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addTo
             <div className="flex items-center gap-3">
               <div className="h-px flex-1 bg-gray-100" />
               <span className="text-[10px] font-bold uppercase tracking-widest text-teal-700 bg-teal-50 px-3 py-1 rounded-full border border-teal-100">
-                {effectiveTab === 'Breakfast' ? 'Breakfast' : effectiveTab === 'Lunch' ? 'Lunch' : 'Menu'} Items
+                {effectiveTab} Entrees
               </span>
               <div className="h-px flex-1 bg-gray-100" />
             </div>
@@ -531,13 +537,13 @@ function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addTo
         </div>
       )}
 
-      {/* Sides / Extras */}
+      {/* Sides */}
       {sides.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-3">
             <div className="h-px flex-1 bg-gray-100" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
-              Sides & Extras
+              {effectiveTab} Sides & Extras
             </span>
             <div className="h-px flex-1 bg-gray-100" />
           </div>
@@ -551,7 +557,7 @@ function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addTo
 
       {tabItems.length === 0 && (
         <div className="py-12 text-center text-gray-400 font-bold uppercase tracking-widest text-sm">
-          No {effectiveTab} items available
+          No {effectiveTab} items for this day
         </div>
       )}
     </div>

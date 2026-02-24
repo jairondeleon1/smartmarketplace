@@ -14,7 +14,7 @@ const POINTS = [
     color: 'text-amber-500',
     bg: 'bg-amber-50',
     title: 'Accuracy & Allergy Warning',
-    body: 'AI can occasionally "hallucinate" or provide outdated data. Menu formulations can change without notice, so our AI may not always reflect real-world kitchen practices. Always verify critical allergen information directly with staff.'
+    body: 'AI can occasionally "hallucinate" or provide outdated data. Menu formulations can change without notice, so our AI may not always reflect real-world kitchen practices. Always verify critical allergen information directly with an Ingredient Ambassador.'
   },
   {
     icon: ShieldCheck,

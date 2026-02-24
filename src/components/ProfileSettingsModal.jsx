@@ -235,13 +235,41 @@ export default function ProfileSettingsModal({ isOpen, onClose, user }) {
             </div>
           </div>
 
+          {/* Download My Data */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Download className="w-5 h-5 text-slate-600" />
+              <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">Download My Data</h4>
+            </div>
+            <p className="text-xs text-gray-600 mb-4">Export all profile data associated with your anonymous session (going back to January 1, 2022) as a JSON file.</p>
+            <button
+              onClick={handleDownloadData}
+              className="px-4 py-2 rounded-xl text-xs font-bold uppercase border-2 bg-white text-slate-700 border-slate-300 hover:bg-slate-100 transition flex items-center gap-2"
+            >
+              <Download className="w-3 h-3" /> Export My Data
+            </button>
+          </div>
+
+          {/* Legal Links */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <ExternalLink className="w-5 h-5 text-slate-600" />
+              <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">Legal & Privacy</h4>
+            </div>
+            <p className="text-xs text-gray-600 mb-4">Access our legal documents directly — no login required.</p>
+            <div className="flex flex-wrap gap-2">
+              <a href="#" onClick={e => { e.preventDefault(); onClose(); setTimeout(() => document.querySelector('[data-footer-link="privacy"]')?.click(), 100); }} className="px-4 py-2 rounded-xl text-xs font-bold uppercase border-2 bg-white text-teal-700 border-teal-200 hover:bg-teal-50 transition">Privacy Policy</a>
+              <a href="#" onClick={e => { e.preventDefault(); onClose(); setTimeout(() => document.querySelector('[data-footer-link="terms"]')?.click(), 100); }} className="px-4 py-2 rounded-xl text-xs font-bold uppercase border-2 bg-white text-teal-700 border-teal-200 hover:bg-teal-50 transition">Terms of Service</a>
+            </div>
+          </div>
+
           {/* Delete Account */}
           <div className="bg-red-50 border border-red-100 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-3">
             <Trash2 className="w-5 h-5 text-red-600" />
-            <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">Delete Account</h4>
+            <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">Delete Profile</h4>
           </div>
-          <p className="text-xs text-gray-600 mb-4">Permanently delete your account and all associated data. This action cannot be undone.</p>
+          <p className="text-xs text-gray-600 mb-4">Permanently scrub your preferences from our active session cache. Exercises your "Right to be Forgotten."</p>
           {!showDeleteConfirm ? (
             <button
               onClick={() => setShowDeleteConfirm(true)}

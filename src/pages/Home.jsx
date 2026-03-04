@@ -1279,6 +1279,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       )}
 
       <BulkEditModal isOpen={showBulkEdit} onClose={() => setShowBulkEdit(false)} selectedItems={bulkEditItems} onSave={applyBulkEdit} />
+      <EditMenuItemModal isOpen={!!editingItem} item={editingItem} onClose={() => setEditingItem(null)} onSave={handleEditItem} />
     </div>
   );
 }

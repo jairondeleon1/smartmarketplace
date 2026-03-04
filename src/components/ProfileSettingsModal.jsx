@@ -3,8 +3,8 @@ import { X, Check, User, AlertTriangle, Heart, Target, Trash2, ShieldAlert, Shie
 
 const ALLERGENS = ['Milk', 'Wheat', 'Egg', 'Soy', 'Fish', 'Shellfish', 'Tree Nuts', 'Peanuts', 'Sesame', 'Gluten'];
 const SEVERE_ALLERGENS = ['Shellfish', 'Tree Nuts', 'Peanuts', 'Fish', 'Sesame'];
-const DIET_PREFERENCES = ['Vegan', 'Vegetarian'];
-const HEALTH_GOALS = ['High Protein', 'Low Carb', 'Low Sodium', 'High Fiber'];
+const DIET_PREFERENCES = ['Vegan', 'Vegetarian', 'Fit'];
+const HEALTH_GOALS = ['High Protein', 'Low Carb', 'High Fiber'];
 
 export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileUpdate }) {
   const [restrictions, setRestrictions] = useState([]);

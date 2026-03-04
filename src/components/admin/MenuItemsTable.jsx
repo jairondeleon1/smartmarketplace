@@ -63,22 +63,13 @@ export default function MenuItemsTable({ items, onDelete, onEdit, onExport }) {
             <tbody>
               {filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="p-8 text-center text-gray-400">
+                  <td colSpan="6" className="p-8 text-center text-gray-400">
                     No items found
                   </td>
                 </tr>
               ) : (
                 filteredItems.map(item => (
                   <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
-                    <td className="p-3">
-                      <button onClick={() => toggleSelect(item.id)}>
-                        {selectedIds.includes(item.id) ? (
-                          <CheckSquare className="w-4 h-4 text-teal-600" />
-                        ) : (
-                          <Square className="w-4 h-4 text-gray-400" />
-                        )}
-                      </button>
-                    </td>
                     <td className="p-3">
                       <div className="font-bold text-sm">{item.name}</div>
                       {item.description && (
@@ -101,14 +92,24 @@ export default function MenuItemsTable({ items, onDelete, onEdit, onExport }) {
                       </div>
                     </td>
                     <td className="p-3 text-right">
-                      <Button
-                        onClick={() => onDelete(item.id)}
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex gap-1 justify-end">
+                        <Button
+                          onClick={() => onEdit(item)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-teal-600 hover:text-teal-800 hover:bg-teal-50"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          onClick={() => onDelete(item.id)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))

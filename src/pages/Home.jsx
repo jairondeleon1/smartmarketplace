@@ -1268,7 +1268,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
 
       {activeTab === 'manage' && (
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-          <MenuItemsTable items={menuItems} onDelete={handleDeleteItem} onBulkEdit={handleBulkEdit} onExport={exportToCSV} />
+          <MenuItemsTable items={menuItems} onDelete={handleDeleteItem} onEdit={setEditingItem} onExport={exportToCSV} />
         </div>
       )}
 

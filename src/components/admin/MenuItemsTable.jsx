@@ -46,42 +46,12 @@ export default function MenuItemsTable({ items, onDelete, onEdit, onExport }) {
         </Button>
       </div>
 
-      {/* Bulk Actions */}
-      {selectedIds.length > 0 && (
-        <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 flex items-center justify-between">
-          <span className="text-sm font-bold text-teal-800">
-            {selectedIds.length} item(s) selected
-          </span>
-          <div className="flex gap-2">
-            <Button onClick={handleBulkEdit} size="sm" className="bg-teal-600 hover:bg-teal-700">
-              <Edit className="w-4 h-4 mr-2" /> Bulk Edit
-            </Button>
-            <Button 
-              onClick={() => setSelectedIds([])} 
-              variant="outline" 
-              size="sm"
-            >
-              Clear
-            </Button>
-          </div>
-        </div>
-      )}
-
       {/* Table */}
       <div className="border border-gray-200 rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="p-3 text-left">
-                  <button onClick={toggleSelectAll}>
-                    {selectedIds.length === filteredItems.length && filteredItems.length > 0 ? (
-                      <CheckSquare className="w-4 h-4 text-teal-600" />
-                    ) : (
-                      <Square className="w-4 h-4 text-gray-400" />
-                    )}
-                  </button>
-                </th>
                 <th className="p-3 text-left text-xs font-bold uppercase text-gray-600">Name</th>
                 <th className="p-3 text-left text-xs font-bold uppercase text-gray-600">Day</th>
                 <th className="p-3 text-left text-xs font-bold uppercase text-gray-600">Station</th>

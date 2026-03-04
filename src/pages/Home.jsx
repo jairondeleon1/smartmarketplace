@@ -967,6 +967,12 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
 
   const handleBulkEdit = (selectedItems) => { setBulkEditItems(selectedItems); setShowBulkEdit(true); };
 
+  const handleEditItem = async (updatedItem) => {
+    await base44.entities.MenuItem.update(updatedItem.id, updatedItem);
+    queryClient.invalidateQueries({ queryKey: ['menuItems'] });
+    setEditingItem(null);
+  };
+
   const applyBulkEdit = async (editData) => {
     const updatedItems = menuItems.map(item => {
       if (!bulkEditItems.find(i => i.id === item.id)) return item;

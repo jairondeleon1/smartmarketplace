@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { Search, Filter, Download, Edit, Trash2, CheckSquare, Square } from 'lucide-react';
+import { Search, Download, Edit, Trash2 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-export default function MenuItemsTable({ items, onDelete, onBulkEdit, onExport }) {
+export default function MenuItemsTable({ items, onDelete, onEdit, onExport }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedIds, setSelectedIds] = useState([]);
   const [filterDay, setFilterDay] = useState('all');
 
   const filteredItems = items.filter(item => {
@@ -15,25 +14,6 @@ export default function MenuItemsTable({ items, onDelete, onBulkEdit, onExport }
     const matchesDay = filterDay === 'all' || item.day === filterDay;
     return matchesSearch && matchesDay;
   });
-
-  const toggleSelect = (id) => {
-    setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedIds.length === filteredItems.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(filteredItems.map(i => i.id));
-    }
-  };
-
-  const handleBulkEdit = () => {
-    const selectedItems = items.filter(i => selectedIds.includes(i.id));
-    onBulkEdit(selectedItems);
-  };
 
   return (
     <div className="space-y-4">

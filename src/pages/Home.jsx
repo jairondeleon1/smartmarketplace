@@ -933,6 +933,7 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
 
 function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomVegUrl, customVeganUrl, setCustomVeganUrl, newItem, setNewItem, handleAddItem, handleDeleteItem, queryClient }) {
   const [activeTab, setActiveTab] = useState('upload');
+  const [editingItem, setEditingItem] = useState(null);
   const doRefresh = useCallback(async () => { if (queryClient) await queryClient.invalidateQueries({ queryKey: ['menuItems'] }); }, [queryClient]);
   const { scrollRef, pullDistance, isPulling, isRefreshing, onTouchStart, onTouchMove, onTouchEnd } = usePullToRefresh(doRefresh);
   const [isSyncing, setIsSyncing] = useState(null);

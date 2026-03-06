@@ -1422,8 +1422,12 @@ export default function Home() {
     setUserQuery('');
     setIsTyping(true);
     try {
+      // Slim down menu context - only send fields needed for chat
+      const slimMenu = menuItems.map(({ name, day, station, meal_period, calories, protein, carbs, fat, sodium, fiber, sugar, allergens, tags, description }) => ({
+        name, day, station, meal_period, calories, protein, carbs, fat, sodium, fiber, sugar, allergens, tags, description
+      }));
       const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a helpful nutrition assistant for a corporate Marketplace. Context Menu: ${JSON.stringify(menuItems)}. User question: ${textToSend}. Provide helpful, concise answers about the menu items, nutrition, allergens, etc.`
+        prompt: `You are a helpful nutrition assistant for a corporate Marketplace. Menu: ${JSON.stringify(slimMenu)}. Question: ${textToSend}. Be concise.`
       });
       if (response) setChatHistory(prev => [...prev, { role: 'ai', content: response }]);
     } catch (e) { 

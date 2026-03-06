@@ -85,17 +85,55 @@ export default function EditMenuItemModal({ isOpen, item, onClose, onSave }) {
             </div>
           </div>
 
-          {/* Nutrition */}
+          {/* Macros */}
           <div>
-            <label className="text-xs font-bold uppercase text-gray-500 mb-2 block">Nutrition</label>
-            <div className="grid grid-cols-3 gap-3">
-              {['calories', 'protein', 'carbs', 'fat', 'sodium', 'fiber', 'sugar', 'cholesterol'].map(field => (
+            <label className="text-xs font-bold uppercase text-gray-500 mb-2 block">Macros</label>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { field: 'calories', label: 'Calories (kcal)' },
+                { field: 'protein', label: 'Protein (g)' },
+                { field: 'carbs', label: 'Carbs (g)' },
+                { field: 'fat', label: 'Total Fat (g)' },
+                { field: 'saturated_fat', label: 'Saturated Fat (g)' },
+                { field: 'unsaturated_fat', label: 'Unsaturated Fat (g)' },
+              ].map(({ field, label }) => (
                 <div key={field}>
-                  <label className="text-[10px] font-bold uppercase text-gray-400 mb-1 block">{field}</label>
+                  <label className="text-[10px] font-bold uppercase text-gray-400 mb-1 block">{label}</label>
                   <Input
                     type="number"
-                    value={form[field] || 0}
-                    onChange={e => handleChange(field, Number(e.target.value))}
+                    value={form[field] ?? ''}
+                    placeholder="0"
+                    onChange={e => handleChange(field, e.target.value === '' ? 0 : Number(e.target.value))}
+                    className="text-sm"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Micros */}
+          <div>
+            <label className="text-xs font-bold uppercase text-gray-500 mb-2 block">Micros</label>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { field: 'sodium', label: 'Sodium (mg)' },
+                { field: 'fiber', label: 'Fiber (g)' },
+                { field: 'sugar', label: 'Sugar (g)' },
+                { field: 'cholesterol', label: 'Cholesterol (mg)' },
+                { field: 'vitamin_a', label: 'Vitamin A (mcg)' },
+                { field: 'vitamin_c', label: 'Vitamin C (mg)' },
+                { field: 'vitamin_d', label: 'Vitamin D (mcg)' },
+                { field: 'calcium', label: 'Calcium (mg)' },
+                { field: 'iron', label: 'Iron (mg)' },
+                { field: 'potassium', label: 'Potassium (mg)' },
+              ].map(({ field, label }) => (
+                <div key={field}>
+                  <label className="text-[10px] font-bold uppercase text-gray-400 mb-1 block">{label}</label>
+                  <Input
+                    type="number"
+                    value={form[field] ?? ''}
+                    placeholder="0"
+                    onChange={e => handleChange(field, e.target.value === '' ? 0 : Number(e.target.value))}
                     className="text-sm"
                   />
                 </div>

@@ -37,7 +37,7 @@ export default function AITransparencyModal({ isOpen, onAccept }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-300">
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-300">
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-700 via-purple-600 to-pink-500 p-6 text-white">
           <div className="flex items-center gap-3">

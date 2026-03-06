@@ -52,7 +52,7 @@ export default function AITransparencyModal({ isOpen, onAccept }) {
         </div>
 
         {/* Points */}
-        <div className="p-6 space-y-3">
+        <div className="p-6 space-y-3 overflow-y-auto flex-1">
           {POINTS.map(({ icon: Icon, color, bg, title, body }) => (
             <div key={title} className={`flex gap-3 p-3 rounded-xl ${bg}`}>
               <div className={`mt-0.5 shrink-0 ${color}`}>

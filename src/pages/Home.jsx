@@ -948,6 +948,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   const [processingStep, setProcessingStep] = useState('');
   const [processingProgress, setProcessingProgress] = useState(0);
   const [uploadedFiles, setUploadedFiles] = useState({ weekMenu: null, fda: null, allergen: null, ingredients: null });
+  const [uploadedStationFiles, setUploadedStationFiles] = useState({ grill: null, deli: null, salad_bar: null });
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [bulkEditItems, setBulkEditItems] = useState([]);
 
@@ -1189,11 +1190,41 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     } finally { setProcessingStep(''); setProcessingProgress(0); setIsSyncing(null); }
   };
 
+  const handleGrillUpload = async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    setIsSyncing("grill");
+    try { const fileUrl = await uploadFile(file); setUploadedStationFiles(prev => ({ ...prev, grill: fileUrl })); }
+    catch (error) { alert('Grill upload failed: ' + (error?.message || 'Network error')); }
+    finally { setIsSyncing(null); }
+  };
+
+  const handleDeliUpload = async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    setIsSyncing("deli");
+    try { const fileUrl = await uploadFile(file); setUploadedStationFiles(prev => ({ ...prev, deli: fileUrl })); }
+    catch (error) { alert('Deli upload failed: ' + (error?.message || 'Network error')); }
+    finally { setIsSyncing(null); }
+  };
+
+  const handleSaladBarUpload = async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    setIsSyncing("salad_bar");
+    try { const fileUrl = await uploadFile(file); setUploadedStationFiles(prev => ({ ...prev, salad_bar: fileUrl })); }
+    catch (error) { alert('Salad Bar upload failed: ' + (error?.message || 'Network error')); }
+    finally { setIsSyncing(null); }
+  };
+
   const syncOptions = [
     { label: "1. Week Menu PDF", type: "week-menu", icon: Calendar, accept: ".pdf", handler: handleWeekMenuUpload, desc: "Menu items with recipe #s" }, 
     { label: "2. FDA Nutrition File", type: "fda", icon: Sparkles, accept: ".pdf,.xlsx,.xls", handler: handleFDAUpload, desc: "Match by recipe #" }, 
     { label: "3. Allergen PDF", type: "allergen", icon: AlertTriangle, accept: ".pdf", handler: handleAllergenUpload, desc: "Match by recipe #" },
     { label: "4. Ingredients CSV", type: "ingredients", icon: FileText, accept: ".csv", handler: handleIngredientsUpload, desc: "Match by recipe #" }
+  ];
+
+  const stationOptions = [
+    { label: "Grill", type: "grill", icon: Flame, accept: ".pdf", handler: handleGrillUpload, desc: "Core Grill items" }, 
+    { label: "Deli", type: "deli", icon: UtensilsCrossed, accept: ".pdf", handler: handleDeliUpload, desc: "Core Deli items" }, 
+    { label: "Salad Bar", type: "salad_bar", icon: Salad, accept: ".pdf", handler: handleSaladBarUpload, desc: "Core Salad Bar items" }
   ];
 
   return (

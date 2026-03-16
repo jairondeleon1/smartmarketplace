@@ -608,13 +608,6 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
           </div>
         </div>
 
-        <CoreStationTabs 
-        items={menuItems} 
-        addToPlate={addToPlate} 
-        customVegUrl={customVegUrl} 
-        customVeganUrl={customVeganUrl} 
-        />
-
         <div ref={dayScrollRef} className="flex w-full overflow-x-auto py-4 px-2 snap-x gap-2 scroll-smooth font-sans font-bold [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
            {DAYS.map(d => (
              <button key={d} data-day={d} onClick={() => setSelectedDay(d)} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all snap-start shadow-sm border font-sans font-bold ${selectedDay === d ? 'bg-slate-800 text-white border-slate-900 shadow-lg scale-105' : 'bg-white border-gray-100 text-gray-400'}`}>{d}</button>

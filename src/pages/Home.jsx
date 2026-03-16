@@ -1255,7 +1255,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                 <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2"><Upload className="w-4 h-4 text-teal-600"/> Weekly Menu Sync</h3>
                 <span className="bg-teal-50 text-teal-700 px-3 py-1 rounded-full text-xs font-bold">{menuItems.length} Items Loaded</span>
               </div>
-            <div className="space-y-3">
+              <div className="space-y-3">
               {syncOptions.map(opt => (
                 <div key={opt.type}>
                   <input type="file" accept={opt.accept} id={`file-upload-${opt.type}`} className="hidden" onChange={opt.handler} />

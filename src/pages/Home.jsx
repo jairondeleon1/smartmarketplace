@@ -51,6 +51,7 @@ import AITransparencyModal from "../components/AITransparencyModal";
 import usePullToRefresh from "../components/usePullToRefresh";
 import Footer from "../components/Footer";
 import AdminGate from "../components/AdminGate";
+import CoreStationTabs from "../components/CoreStationTabs";
 import jsPDF from 'jspdf';
 
 // Framer Motion slide variants for iOS-style push/pop
@@ -617,6 +618,13 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
           {Object.values(activeFilters).some(Boolean) && <button onClick={clearFilters} className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition"><XCircle className="w-5 h-5" /></button>}
         </div>
       </div>
+
+      <CoreStationTabs 
+        items={menuItems} 
+        addToPlate={addToPlate} 
+        customVegUrl={customVegUrl} 
+        customVeganUrl={customVeganUrl} 
+      />
 
       <MealTabsSection
         filteredItems={filteredItems}

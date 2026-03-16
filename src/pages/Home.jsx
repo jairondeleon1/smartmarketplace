@@ -622,6 +622,13 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
          </div>
         </div>
 
+        <CoreStationTabs 
+          items={menuItems} 
+          addToPlate={addToPlate} 
+          customVegUrl={customVegUrl} 
+          customVeganUrl={customVeganUrl} 
+        />
+
         <MealTabsSection
         filteredItems={filteredItems}
         activeMealTab={activeMealTab}

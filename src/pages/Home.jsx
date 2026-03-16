@@ -34,7 +34,10 @@ import {
   WheatOff,
   NutOff,
   Info,
-  User
+  User,
+  Flame,
+  UtensilsCrossed,
+  Salad
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -1244,12 +1247,14 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       </div>
 
       {activeTab === 'upload' && (
-        <div className="grid lg:grid-cols-2 gap-8">
-          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2"><Upload className="w-4 h-4 text-teal-600"/> Matrix Sync</h3>
-              <span className="bg-teal-50 text-teal-700 px-3 py-1 rounded-full text-xs font-bold">{menuItems.length} Items Loaded</span>
-            </div>
+        <div className="space-y-8">
+          {/* Weekly Menu & Core Data Upload */}
+          <div className="grid lg:grid-cols-2 gap-8">
+            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2"><Upload className="w-4 h-4 text-teal-600"/> Weekly Menu Sync</h3>
+                <span className="bg-teal-50 text-teal-700 px-3 py-1 rounded-full text-xs font-bold">{menuItems.length} Items Loaded</span>
+              </div>
             <div className="space-y-3">
               {syncOptions.map(opt => (
                 <div key={opt.type}>
@@ -1300,6 +1305,32 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                 </div>
                 <button type="submit" className="w-full bg-slate-900 text-white p-4 rounded-xl font-bold uppercase text-xs hover:bg-black transition-all shadow-xl active:scale-95 tracking-widest">Publish Dish</button>
               </form>
+            </div>
+          </div>
+
+          {/* Core Station Upload */}
+          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2"><Upload className="w-4 h-4 text-orange-600"/> Core Menu Stations</h3>
+              <span className="text-[10px] text-gray-500 font-bold">Upload once - items stay as core options</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {stationOptions.map(opt => (
+                <div key={opt.type}>
+                  <input type="file" accept={opt.accept} id={`file-upload-${opt.type}`} className="hidden" onChange={opt.handler} />
+                  <label htmlFor={`file-upload-${opt.type}`} className="w-full p-5 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center gap-2 text-gray-600 hover:bg-gray-50 transition active:scale-[0.98] cursor-pointer">
+                    {isSyncing === opt.type ? <Loader2 className="animate-spin w-6 h-6" /> : (
+                      <><div className="bg-gray-100 p-3 rounded-xl border border-gray-200"><opt.icon className="w-5 h-5 text-gray-600"/></div>
+                      <div className="text-center"><div className="text-xs font-bold uppercase tracking-widest text-slate-800">{opt.label}</div><div className="text-[10px] text-gray-500 mt-1">{opt.desc}</div></div></>
+                    )}
+                  </label>
+                  {uploadedStationFiles[opt.type] && (
+                    <div className="flex items-center gap-2 mt-2 text-xs text-green-700 bg-green-50 px-3 py-2 rounded-lg border border-green-100">
+                      <CheckCircle className="w-4 h-4" /> Uploaded
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>

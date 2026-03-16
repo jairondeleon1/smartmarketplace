@@ -1354,6 +1354,72 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   );
 }
 
+// MenuItemCard component - nested in Home
+function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
+  const [showDetails, setShowDetails] = useState(false);
+  const isRecommended = item.matchesGoal;
+  
+  return (
+    <div className={`bg-white rounded-2xl shadow-sm border overflow-hidden flex flex-col h-full animate-in fade-in zoom-in-95 duration-300 font-sans hover:shadow-md font-medium ${
+      isRecommended ? 'border-green-400 ring-2 ring-green-100' : 'border-gray-100'
+    }`}>
+      {isRecommended && (
+        <div className="bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-1 text-white text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 justify-center">
+          <Heart className="w-3 h-3" /> Matches Your Goals
+        </div>
+      )}
+      <div className="p-5 flex-1 font-sans font-bold font-medium">
+        <div className="flex justify-between items-start mb-2 font-sans font-bold">
+          <span className="text-[10px] font-bold uppercase text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full font-sans tracking-tight font-bold">{item.station}</span>
+          <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest font-sans font-bold"><Calendar className="w-3 h-3"/> {item.day}</div>
+        </div>
+        <h4 className="font-bold text-gray-800 text-lg leading-tight flex items-center gap-2 mb-2 font-sans font-bold">
+          {item.name}
+          {item.tags?.includes('Vegan') ? <VeganProgramIcon url={customVeganUrl} className="w-6 h-6" /> : 
+           item.tags?.includes('Vegetarian') ? <VegProgramIcon url={customVegUrl} className="w-6 h-6" /> : null}
+          {item.tags?.includes('Fit') && <FitIcon className="w-6 h-6" />}
+        </h4>
+        {item.description && item.description.toLowerCase() !== item.name.toLowerCase() ? (
+          <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-2 font-sans font-medium">{item.description}</p>
+        ) : (
+          <p className="text-gray-400 text-sm leading-relaxed mb-4 italic font-sans font-medium">No description available</p>
+        )}
+        <div className="flex flex-wrap gap-1.5 mb-4 font-sans font-bold">{item.tags?.filter(tag => ['High Protein', 'High Fiber', 'Vegan', 'Vegetarian', 'Fit', 'Spicy', 'Dairy Free', 'Low Carb', 'Heart Healthy'].includes(tag)).map(tag => <Badge key={tag}>{tag}</Badge>)}</div>
+        <div className="grid grid-cols-3 gap-2 text-center py-3 bg-gray-50 rounded-xl mb-4 border border-gray-100/50 font-bold">
+          <div><span className="block text-sm font-bold text-gray-700 font-sans">{item.calories}</span><span className="text-[9px] text-gray-400 uppercase font-bold font-sans tracking-widest">Cals</span></div>
+          <div><span className="block text-sm font-bold text-gray-700 font-sans">{item.protein}g</span><span className="text-[9px] text-gray-400 uppercase font-bold font-sans tracking-widest">Prot</span></div>
+          <div><span className="block text-sm font-bold text-gray-700 font-sans">{item.carbs}g</span><span className="text-[9px] text-gray-400 uppercase font-bold font-sans tracking-widest">Carb</span></div>
+        </div>
+      </div>
+      <div className="px-5 pb-5 flex gap-2 font-sans font-bold">
+        <button onClick={() => setShowDetails(!showDetails)} className="flex-1 py-2 text-xs font-bold text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition font-sans font-bold">{showDetails ? 'Hide Info' : 'Nutrition Details'}</button>
+        <button onClick={() => addToPlate(item)} className="w-10 flex items-center justify-center bg-gray-900 text-white rounded-lg transition active:scale-90 hover:bg-black font-sans font-bold"><Plus className="w-5 h-5" /></button>
+      </div>
+      {showDetails && (
+        <div className="px-5 pb-5 animate-in slide-in-from-top-2 font-sans">
+          {item.ingredients && (
+            <div className="bg-teal-50 border border-teal-100 rounded-xl p-4 mb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Info className="w-4 h-4 text-teal-600" />
+                <span className="text-xs font-bold text-teal-800 uppercase tracking-wider">Ingredients</span>
+              </div>
+              <p className="text-sm text-teal-900 leading-relaxed">{item.ingredients}</p>
+            </div>
+          )}
+          <NutritionDetailView item={item} />
+          {item.allergens && item.allergens.filter(a => !['Garlic', 'Gluten', 'Onion'].includes(a)).length > 0 && (
+            <div className="mt-3 bg-red-50 border border-red-100 rounded-lg p-3">
+              <div className="text-red-600 font-bold uppercase text-[10px] tracking-widest">
+                Contains: {item.allergens.filter(a => !['Garlic', 'Gluten', 'Onion'].includes(a)).join(', ')}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // --- MAIN APP ---
 
 export default function Home() {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UtensilsCrossed, Flame, Salad } from 'lucide-react';
-import MenuItemCard from './MenuItemCard';
+import MenuItemCard from '../pages/Home';
 
 const CORE_STATIONS = [
   { id: 'grill', label: 'Grill', icon: Flame, color: 'text-orange-600', bg: 'bg-orange-50', borderColor: 'border-orange-200' },

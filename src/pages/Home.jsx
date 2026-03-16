@@ -596,9 +596,6 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
           <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698cee888040f55d6a3c5040/5f703ba08_SmartMenuIQ38x10.png" alt="SmartMenu IQ" className="max-w-md w-full px-4" />
         </div>
         <div className="flex flex-col gap-4 items-center max-w-xl mx-auto px-2 font-sans font-bold">
-          <button onClick={() => setIsWeeklyPlannerOpen(true)} className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 border border-slate-800 uppercase tracking-widest text-xs active:scale-95 transition-all">
-            <Wand className="w-5 h-5 text-teal-400" /> Plan My Whole Week Meal
-          </button>
           <div onClick={() => changeView('chat')} className="w-full bg-gradient-to-r from-indigo-700 via-purple-600 to-pink-500 rounded-2xl p-5 text-white shadow-2xl cursor-pointer transform transition-all hover:scale-[1.01] flex items-center justify-between text-left border border-white/10 group overflow-hidden font-bold">
             <div className="flex items-center gap-4 relative z-10">
               <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md border border-white/10"><Sparkles className="w-5 h-5 text-white animate-pulse" /></div>
@@ -621,13 +618,6 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
            {Object.values(activeFilters).some(Boolean) && <button onClick={clearFilters} className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition"><XCircle className="w-5 h-5" /></button>}
          </div>
         </div>
-
-        <CoreStationTabs 
-          items={menuItems} 
-          addToPlate={addToPlate} 
-          customVegUrl={customVegUrl} 
-          customVeganUrl={customVeganUrl} 
-        />
 
         <MealTabsSection
         filteredItems={filteredItems}

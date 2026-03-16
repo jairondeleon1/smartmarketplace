@@ -1,12 +1,41 @@
 import React, { useState } from 'react';
 import { UtensilsCrossed, Flame, Salad } from 'lucide-react';
-import MenuItemCard from '../pages/Home';
 
 const CORE_STATIONS = [
   { id: 'grill', label: 'Grill', icon: Flame, color: 'text-orange-600', bg: 'bg-orange-50', borderColor: 'border-orange-200' },
   { id: 'deli', label: 'Deli', icon: UtensilsCrossed, color: 'text-blue-600', bg: 'bg-blue-50', borderColor: 'border-blue-200' },
   { id: 'salad-bar', label: 'Salad Bar', icon: Salad, color: 'text-green-600', bg: 'bg-green-50', borderColor: 'border-green-200' },
 ];
+
+// MenuItemCard component
+function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
+  const [showDetails, setShowDetails] = useState(false);
+  const isRecommended = item.matchesGoal;
+  
+  return (
+    <div className={`bg-white rounded-2xl shadow-sm border overflow-hidden flex flex-col h-full animate-in fade-in zoom-in-95 duration-300 font-sans hover:shadow-md font-medium ${
+      isRecommended ? 'border-green-400 ring-2 ring-green-100' : 'border-gray-100'
+    }`}>
+      <div className="p-5 flex-1 font-sans font-bold font-medium space-y-3">
+        <div className="flex justify-between items-start">
+          <span className="text-[10px] font-bold uppercase text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full">{item.station}</span>
+          <span className="text-[10px] font-bold text-gray-400">{item.day}</span>
+        </div>
+        <h4 className="font-bold text-gray-800 text-lg leading-tight">{item.name}</h4>
+        {item.description && <p className="text-gray-500 text-sm line-clamp-2">{item.description}</p>}
+        <div className="grid grid-cols-3 gap-2 text-center py-3 bg-gray-50 rounded-xl border border-gray-100/50">
+          <div><span className="block text-sm font-bold text-gray-700">{item.calories}</span><span className="text-[9px] text-gray-400 uppercase">Cals</span></div>
+          <div><span className="block text-sm font-bold text-gray-700">{item.protein}g</span><span className="text-[9px] text-gray-400 uppercase">Prot</span></div>
+          <div><span className="block text-sm font-bold text-gray-700">{item.carbs}g</span><span className="text-[9px] text-gray-400 uppercase">Carb</span></div>
+        </div>
+      </div>
+      <div className="px-5 pb-5 flex gap-2">
+        <button onClick={() => setShowDetails(!showDetails)} className="flex-1 py-2 text-xs font-bold text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100">Info</button>
+        <button onClick={() => addToPlate(item)} className="w-10 flex items-center justify-center bg-gray-900 text-white rounded-lg hover:bg-black">+</button>
+      </div>
+    </div>
+  );
+}
 
 export default function CoreStationTabs({ items, addToPlate, customVegUrl, customVeganUrl }) {
   const [activeStation, setActiveStation] = useState('grill');

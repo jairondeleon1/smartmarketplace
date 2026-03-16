@@ -1268,6 +1268,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                 </div>
               ))}
               </div>
+              </div>
               <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-800">
               <div className="font-bold mb-2 flex items-center gap-2"><Info className="w-4 h-4" />Files Uploaded</div>
               <div className="space-y-1 text-blue-700 mb-3">

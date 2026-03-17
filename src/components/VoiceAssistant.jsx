@@ -67,17 +67,21 @@ export default function VoiceAssistant({ menuItems = [] }) {
       stopSpeaking();
 
       try {
-        const slimMenu = menuItems.slice(0, 60).map(({ name, day, station, calories, protein, carbs, fat, sodium, allergens, tags }) => ({
-          name, day, station, calories, protein, carbs, fat, sodium, allergens, tags
+        // Minimal menu context — only what's needed for fast LLM response
+        const slimMenu = menuItems.slice(0, 40).map(({ name, day, station, calories, protein, allergens, tags }) => ({
+          name, day, station, calories, protein, allergens, tags
         }));
+
+        // Kick off LLM and TTS in the fastest path possible
         const response = await base44.integrations.Core.InvokeLLM({
-          prompt: `You are Michelle, a warm and friendly voice nutrition assistant for a corporate Marketplace cafe. 
-Keep your answer conversational, under 50 words, no bullet points, no markdown, no asterisks — speak naturally as if talking.
-Menu context: ${JSON.stringify(slimMenu)}.
-User said: "${transcript}"`
+          model: 'gpt_5_mini',
+          prompt: `You are Michelle, a friendly voice assistant for a corporate cafe. Answer in 1-2 short sentences max, no markdown, no lists, speak naturally. Menu: ${JSON.stringify(slimMenu)}. User: "${transcript}"`
         });
-        const aiText = typeof response === 'string' ? response : "I'm not sure about that one. Try asking about today's specials or any nutrition info!";
+
+        const aiText = typeof response === 'string' ? response : "I'm not sure about that one. Try asking about today's specials!";
         setPhase('speaking');
+
+        // Start TTS immediately
         speak(aiText, {
           muted: mutedRef.current,
           onEnd: () => {

@@ -34,10 +34,7 @@ import {
   WheatOff,
   NutOff,
   Info,
-  User,
-  Flame,
-  UtensilsCrossed,
-  Salad
+  User
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -54,7 +51,6 @@ import AITransparencyModal from "../components/AITransparencyModal";
 import usePullToRefresh from "../components/usePullToRefresh";
 import Footer from "../components/Footer";
 import AdminGate from "../components/AdminGate";
-import CoreStationTabs from "../components/CoreStationTabs";
 import jsPDF from 'jspdf';
 
 // Framer Motion slide variants for iOS-style push/pop
@@ -608,28 +604,21 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
           </div>
         </div>
 
-        <CoreStationTabs 
-          items={menuItems} 
-          addToPlate={addToPlate} 
-          customVegUrl={customVegUrl} 
-          customVeganUrl={customVeganUrl} 
-        />
-
         <div ref={dayScrollRef} className="flex w-full overflow-x-auto py-4 px-2 snap-x gap-2 scroll-smooth font-sans font-bold [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-           {DAYS.map(d => (
-             <button key={d} data-day={d} onClick={() => setSelectedDay(d)} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all snap-start shadow-sm border font-sans font-bold ${selectedDay === d ? 'bg-slate-800 text-white border-slate-900 shadow-lg scale-105' : 'bg-white border-gray-100 text-gray-400'}`}>{d}</button>
-           ))}
-         </div>
-
-         <div className="flex flex-wrap justify-center gap-2 font-sans font-bold">
-           <button onClick={() => toggleFilter('vegetarian')} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 ${activeFilters.vegetarian ? 'bg-green-50 border-green-500 text-green-900' : 'bg-white border-gray-100 text-gray-400'}`}><VegProgramIcon url={customVegUrl} className="w-4 h-4" /> Veg</button>
-           <button onClick={() => toggleFilter('vegan')} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 ${activeFilters.vegan ? 'bg-green-50 border-green-500 text-green-900' : 'bg-white border-gray-100 text-gray-400'}`}><VeganProgramIcon url={customVeganUrl} className="w-4 h-4" /> Vegan</button>
-           <button onClick={() => toggleFilter('fit')} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 ${activeFilters.fit ? 'bg-blue-50 border-blue-500 text-blue-900' : 'bg-white border-gray-100 text-gray-400'}`}><FitIcon className="w-4 h-4" /> Fit</button>
-           {Object.values(activeFilters).some(Boolean) && <button onClick={clearFilters} className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition"><XCircle className="w-5 h-5" /></button>}
-         </div>
+          {DAYS.map(d => (
+            <button key={d} data-day={d} onClick={() => setSelectedDay(d)} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all snap-start shadow-sm border font-sans font-bold ${selectedDay === d ? 'bg-slate-800 text-white border-slate-900 shadow-lg scale-105' : 'bg-white border-gray-100 text-gray-400'}`}>{d}</button>
+          ))}
         </div>
 
-        <MealTabsSection
+        <div className="flex flex-wrap justify-center gap-2 font-sans font-bold">
+          <button onClick={() => toggleFilter('vegetarian')} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 ${activeFilters.vegetarian ? 'bg-green-50 border-green-500 text-green-900' : 'bg-white border-gray-100 text-gray-400'}`}><VegProgramIcon url={customVegUrl} className="w-4 h-4" /> Veg</button>
+          <button onClick={() => toggleFilter('vegan')} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 ${activeFilters.vegan ? 'bg-green-50 border-green-500 text-green-900' : 'bg-white border-gray-100 text-gray-400'}`}><VeganProgramIcon url={customVeganUrl} className="w-4 h-4" /> Vegan</button>
+          <button onClick={() => toggleFilter('fit')} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 ${activeFilters.fit ? 'bg-blue-50 border-blue-500 text-blue-900' : 'bg-white border-gray-100 text-gray-400'}`}><FitIcon className="w-4 h-4" /> Fit</button>
+          {Object.values(activeFilters).some(Boolean) && <button onClick={clearFilters} className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition"><XCircle className="w-5 h-5" /></button>}
+        </div>
+      </div>
+
+      <MealTabsSection
         filteredItems={filteredItems}
         activeMealTab={activeMealTab}
         setActiveMealTab={setActiveMealTab}
@@ -951,7 +940,6 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   const [processingStep, setProcessingStep] = useState('');
   const [processingProgress, setProcessingProgress] = useState(0);
   const [uploadedFiles, setUploadedFiles] = useState({ weekMenu: null, fda: null, allergen: null, ingredients: null });
-  const [uploadedStationFiles, setUploadedStationFiles] = useState({ grill: null, deli: null, salad_bar: null });
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [bulkEditItems, setBulkEditItems] = useState([]);
 
@@ -1193,41 +1181,11 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     } finally { setProcessingStep(''); setProcessingProgress(0); setIsSyncing(null); }
   };
 
-  const handleGrillUpload = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
-    setIsSyncing("grill");
-    try { const fileUrl = await uploadFile(file); setUploadedStationFiles(prev => ({ ...prev, grill: fileUrl })); }
-    catch (error) { alert('Grill upload failed: ' + (error?.message || 'Network error')); }
-    finally { setIsSyncing(null); }
-  };
-
-  const handleDeliUpload = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
-    setIsSyncing("deli");
-    try { const fileUrl = await uploadFile(file); setUploadedStationFiles(prev => ({ ...prev, deli: fileUrl })); }
-    catch (error) { alert('Deli upload failed: ' + (error?.message || 'Network error')); }
-    finally { setIsSyncing(null); }
-  };
-
-  const handleSaladBarUpload = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
-    setIsSyncing("salad_bar");
-    try { const fileUrl = await uploadFile(file); setUploadedStationFiles(prev => ({ ...prev, salad_bar: fileUrl })); }
-    catch (error) { alert('Salad Bar upload failed: ' + (error?.message || 'Network error')); }
-    finally { setIsSyncing(null); }
-  };
-
   const syncOptions = [
     { label: "1. Week Menu PDF", type: "week-menu", icon: Calendar, accept: ".pdf", handler: handleWeekMenuUpload, desc: "Menu items with recipe #s" }, 
     { label: "2. FDA Nutrition File", type: "fda", icon: Sparkles, accept: ".pdf,.xlsx,.xls", handler: handleFDAUpload, desc: "Match by recipe #" }, 
     { label: "3. Allergen PDF", type: "allergen", icon: AlertTriangle, accept: ".pdf", handler: handleAllergenUpload, desc: "Match by recipe #" },
     { label: "4. Ingredients CSV", type: "ingredients", icon: FileText, accept: ".csv", handler: handleIngredientsUpload, desc: "Match by recipe #" }
-  ];
-
-  const stationOptions = [
-    { label: "Grill", type: "grill", icon: Flame, accept: ".pdf", handler: handleGrillUpload, desc: "Core Grill items" }, 
-    { label: "Deli", type: "deli", icon: UtensilsCrossed, accept: ".pdf", handler: handleDeliUpload, desc: "Core Deli items" }, 
-    { label: "Salad Bar", type: "salad_bar", icon: Salad, accept: ".pdf", handler: handleSaladBarUpload, desc: "Core Salad Bar items" }
   ];
 
   return (
@@ -1247,15 +1205,13 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       </div>
 
       {activeTab === 'upload' && (
-        <div className="space-y-8">
-          {/* Weekly Menu & Core Data Upload */}
-          <div className="grid lg:grid-cols-2 gap-8">
-            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2"><Upload className="w-4 h-4 text-teal-600"/> Weekly Menu Sync</h3>
-                <span className="bg-teal-50 text-teal-700 px-3 py-1 rounded-full text-xs font-bold">{menuItems.length} Items Loaded</span>
-              </div>
-              <div className="space-y-3">
+        <div className="grid lg:grid-cols-2 gap-8">
+          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2"><Upload className="w-4 h-4 text-teal-600"/> Matrix Sync</h3>
+              <span className="bg-teal-50 text-teal-700 px-3 py-1 rounded-full text-xs font-bold">{menuItems.length} Items Loaded</span>
+            </div>
+            <div className="space-y-3">
               {syncOptions.map(opt => (
                 <div key={opt.type}>
                   <input type="file" accept={opt.accept} id={`file-upload-${opt.type}`} className="hidden" onChange={opt.handler} />
@@ -1267,9 +1223,8 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                   </label>
                 </div>
               ))}
-              </div>
-              </div>
-              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-800">
+            </div>
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-800">
               <div className="font-bold mb-2 flex items-center gap-2"><Info className="w-4 h-4" />Files Uploaded</div>
               <div className="space-y-1 text-blue-700 mb-3">
                 {[['weekMenu', 'Week Menu'], ['fda', 'FDA Nutrition'], ['allergen', 'Allergen Data'], ['ingredients', 'Ingredients']].map(([key, label]) => (
@@ -1306,32 +1261,6 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                 </div>
                 <button type="submit" className="w-full bg-slate-900 text-white p-4 rounded-xl font-bold uppercase text-xs hover:bg-black transition-all shadow-xl active:scale-95 tracking-widest">Publish Dish</button>
               </form>
-            </div>
-          </div>
-
-          {/* Core Station Upload */}
-          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2"><Upload className="w-4 h-4 text-orange-600"/> Core Menu Stations</h3>
-              <span className="text-[10px] text-gray-500 font-bold">Upload once - items stay as core options</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {stationOptions.map(opt => (
-                <div key={opt.type}>
-                  <input type="file" accept={opt.accept} id={`file-upload-${opt.type}`} className="hidden" onChange={opt.handler} />
-                  <label htmlFor={`file-upload-${opt.type}`} className="w-full p-5 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center gap-2 text-gray-600 hover:bg-gray-50 transition active:scale-[0.98] cursor-pointer">
-                    {isSyncing === opt.type ? <Loader2 className="animate-spin w-6 h-6" /> : (
-                      <><div className="bg-gray-100 p-3 rounded-xl border border-gray-200"><opt.icon className="w-5 h-5 text-gray-600"/></div>
-                      <div className="text-center"><div className="text-xs font-bold uppercase tracking-widest text-slate-800">{opt.label}</div><div className="text-[10px] text-gray-500 mt-1">{opt.desc}</div></div></>
-                    )}
-                  </label>
-                  {uploadedStationFiles[opt.type] && (
-                    <div className="flex items-center gap-2 mt-2 text-xs text-green-700 bg-green-50 px-3 py-2 rounded-lg border border-green-100">
-                      <CheckCircle className="w-4 h-4" /> Uploaded
-                    </div>
-                  )}
-                </div>
-              ))}
             </div>
           </div>
         </div>

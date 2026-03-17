@@ -56,6 +56,16 @@ import CoreMenusSync from "../components/admin/CoreMenusSync";
 import { AccessibilityProvider, useA11y } from "@/lib/AccessibilityContext";
 import jsPDF from 'jspdf';
 
+function LargeTextWrapper({ children }) {
+  const { largeText } = useA11y();
+  return (
+    <div style={{ fontSize: largeText ? '120%' : '100%' }}
+      className="min-h-screen bg-stone-50 dark:bg-slate-950 text-gray-900 dark:text-gray-100 font-sans tracking-tight overflow-x-hidden selection:bg-teal-100 selection:text-teal-900 font-bold">
+      {children}
+    </div>
+  );
+}
+
 // Framer Motion slide variants for iOS-style push/pop
 const slideVariants = {
   enterFromRight: { x: '100%', opacity: 0 },

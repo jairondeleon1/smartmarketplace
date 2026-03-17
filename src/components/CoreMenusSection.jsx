@@ -107,9 +107,26 @@ function CoreMenuModal({ menu, onClose, onAddToPlate }) {
   );
 }
 
+export { CORE_MENUS };
+
 export default function CoreMenusSection({ onAddToPlate }) {
   const [openMenu, setOpenMenu] = useState(null);
-  const activeMenu = CORE_MENUS.find(m => m.id === openMenu);
+  const [dynamicItems, setDynamicItems] = useState({});
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('coreMenuItems') || '{}');
+      setDynamicItems(stored);
+    } catch {}
+  }, []);
+
+  // Merge default items with any published items
+  const menusWithItems = CORE_MENUS.map(menu => {
+    const published = dynamicItems[menu.id];
+    return published?.length > 0 ? { ...menu, items: published } : menu;
+  });
+
+  const activeMenu = menusWithItems.find(m => m.id === openMenu);
 
   return (
     <>

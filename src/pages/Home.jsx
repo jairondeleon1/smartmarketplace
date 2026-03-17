@@ -503,8 +503,8 @@ function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addTo
   if (tabsWithItems.length === 0) {
     return (
       <div className="py-20 text-center space-y-3">
-        <div className="text-gray-400 font-bold uppercase tracking-widest text-sm">No menu items match your filters</div>
-        <button onClick={() => { setSelectedDay('All Days'); clearFilters(); }} className="px-4 py-2 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700">Show All Items</button>
+      <div className="text-gray-400 font-bold uppercase tracking-widest text-sm">{t.noFilterMatch}</div>
+        <button onClick={() => { setSelectedDay('All Days'); clearFilters(); }} className="px-4 py-2 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700">{t.showAllItems}</button>
       </div>
     );
   }
@@ -672,7 +672,7 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen, onPro
           <div className="hidden md:flex gap-6 items-center text-sm font-bold uppercase tracking-widest" role="menubar">
             <button onClick={() => changeView('customer')} aria-current={view === 'customer' ? 'page' : undefined} className={`focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1 ${view === 'customer' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}`}>{t.menu}</button>
             <button onClick={() => changeView('chat')} aria-current={view === 'chat' ? 'page' : undefined} className={`focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1 ${view === 'chat' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}`}>{t.aiAssistant}</button>
-            <a href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-slate-300 opacity-70 hover:text-white hover:opacity-100 transition focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">30 Day Challenge</a>
+            <a href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-slate-300 opacity-70 hover:text-white hover:opacity-100 transition focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">{t.dayChallengeLink}</a>
             <button onClick={onProfileClick} className="p-2 hover:bg-white/10 rounded-full transition focus-visible:ring-2 focus-visible:ring-teal-400" aria-label="My Profile">
               <User className="w-5 h-5" aria-hidden="true" />
             </button>
@@ -689,7 +689,7 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen, onPro
           style={{ top: 'calc(4rem + env(safe-area-inset-top))' }}>
           <button role="menuitem" onClick={() => { changeView('customer'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">{t.menu}</button>
           <button role="menuitem" onClick={() => { changeView('chat'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">{t.aiAssistant}</button>
-          <a role="menuitem" href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">30 Day Challenge</a>
+          <a role="menuitem" href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">{t.dayChallengeLink}</a>
         </div>
       )}
     </nav>
@@ -933,7 +933,7 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
                 <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                 <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
-              <span className="text-xs font-bold text-gray-600">Smart Menu IQ...</span>
+              <span className="text-xs font-bold text-gray-600">{t.chatTyping}</span>
             </div>
           </div>
         )}
@@ -941,7 +941,7 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
       </div>
       <div className="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-700 p-4 flex gap-3 shrink-0 md:pb-4"
         style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom) + 4rem)' }}>
-        <input type="text" value={userQuery} onChange={e => setUserQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendChat()} className="flex-1 p-4 rounded-xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-teal-500 font-bold text-sm tracking-tight" placeholder="Ask about nutrition, allergens, menu items..."/>
+        <input type="text" value={userQuery} onChange={e => setUserQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendChat()} className="flex-1 p-4 rounded-xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-teal-500 font-bold text-sm tracking-tight" placeholder={t.chatPlaceholder}/>
         <button onClick={() => handleSendChat()} className="bg-teal-800 text-white p-4 rounded-xl shadow-lg active:scale-90 transition-all hover:bg-teal-900"><Send className="w-5 h-5" /></button>
       </div>
     </div>

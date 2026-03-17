@@ -696,10 +696,11 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen, onPro
 }
 
 function MobileBottomNav({ view, changeView, onProfileClick }) {
+  const { t } = useA11y();
   const tabs = [
-    { id: 'customer', label: 'Menu', icon: Utensils },
-    { id: 'chat', label: 'AI Assistant', icon: MessageSquare },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'customer', label: t.menu, icon: Utensils },
+    { id: 'chat', label: t.aiAssistant, icon: MessageSquare },
+    { id: 'settings', label: t.settings, icon: Settings },
   ];
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-700 z-50 select-none"

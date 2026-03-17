@@ -105,7 +105,7 @@ export default function VoiceAssistant({ menuItems = [] }) {
   }, [conversation, phase]);
 
   const startListening = useCallback(() => {
-    window.speechSynthesis.cancel();
+    stopSpeaking();
     const rec = createRecognition();
     if (!rec) { alert('Speech recognition requires Chrome or Safari.'); return; }
     recRef.current = rec;

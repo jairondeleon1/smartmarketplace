@@ -273,18 +273,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
                   {lang === 'en' ? 'English → Español' : 'Español → English'}
                 </span>
               </button>
-              <button
-                onClick={toggleLargeText}
-                className={`flex items-center justify-between px-4 py-3 rounded-xl border-2 transition ${largeText ? 'bg-indigo-600 border-indigo-700 text-white' : 'bg-white border-indigo-200 hover:bg-indigo-50'}`}
-              >
-                <div className="flex items-center gap-2">
-                  <Type className={`w-4 h-4 ${largeText ? 'text-white' : 'text-indigo-600'}`} />
-                  <span className={`text-xs font-bold uppercase tracking-widest ${largeText ? 'text-white' : 'text-slate-700'}`}>Large Text</span>
-                </div>
-                <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase ${largeText ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'}`}>
-                  {largeText ? 'On' : 'Off'}
-                </span>
-              </button>
+
             </div>
           </div>
 

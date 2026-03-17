@@ -1350,14 +1350,27 @@ export default function Home() {
 
   const queryClient = useQueryClient();
 
+  const isOnline = useOnlineStatus();
+  const cacheAge = getCacheAge();
+
   const { data: menuItems = [] } = useQuery({
     queryKey: ['menuItems'],
     queryFn: async () => {
+      if (!navigator.onLine) {
+        const cached = loadMenuFromCache();
+        if (cached) return cached;
+        return DEFAULT_MENU;
+      }
       const items = await base44.entities.MenuItem.list();
-      if (items.length === 0) { await base44.entities.MenuItem.bulkCreate(DEFAULT_MENU); return DEFAULT_MENU; }
+      if (items.length === 0) {
+        await base44.entities.MenuItem.bulkCreate(DEFAULT_MENU);
+        saveMenuToCache(DEFAULT_MENU);
+        return DEFAULT_MENU;
+      }
+      saveMenuToCache(items);
       return items;
     },
-    initialData: DEFAULT_MENU,
+    initialData: () => loadMenuFromCache() || DEFAULT_MENU,
   });
   
   const setMenuItems = async (newItems) => {

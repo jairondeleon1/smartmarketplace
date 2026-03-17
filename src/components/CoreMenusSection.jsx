@@ -119,17 +119,15 @@ export default function CoreMenusSection({ onAddToPlate }) {
           <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Core Menus</span>
           <div className="h-px flex-1 bg-gray-100" />
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="flex flex-wrap justify-center gap-2">
           {CORE_MENUS.map(menu => (
             <button
               key={menu.id}
               onClick={() => setOpenMenu(menu.id)}
-              className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 ${menu.bg} ${menu.border} transition-all active:scale-95 hover:shadow-md group`}
+              className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 ${menu.bg} ${menu.border} ${menu.color} active:scale-95`}
             >
-              <div className={`p-1.5 rounded-lg bg-white shadow-sm border ${menu.border} group-hover:scale-110 transition-transform`}>
-                <menu.icon className={`w-3 h-3 ${menu.color}`} />
-              </div>
-              <span className={`text-[9px] font-bold uppercase tracking-widest ${menu.color}`}>{menu.label}</span>
+              <menu.icon className="w-4 h-4" />
+              {menu.label}
             </button>
           ))}
         </div>

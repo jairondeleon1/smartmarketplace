@@ -49,8 +49,12 @@ const GREETING = "Hi, I'm Michelle! What can I help you with today?";
 
 export default function VoiceAssistant({ menuItems = [] }) {
   const [phase, setPhase] = useState('idle'); // idle | greeting | listening | processing | speaking
+  const [history, setHistory] = useState([]); // { role: 'user'|'ai', content: string }[]
   const recRef = useRef(null);
   const mutedRef = useRef(false);
+  const historyRef = useRef([]);
+
+  useEffect(() => { historyRef.current = history; }, [history]);
 
   const startListening = useCallback(() => {
     stopSpeaking();

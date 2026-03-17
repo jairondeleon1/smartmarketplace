@@ -2,47 +2,36 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Mic, MicOff, X, Volume2, VolumeX, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-// --- Browser TTS (Web Speech API) ---
-function getBestVoice() {
-  const voices = window.speechSynthesis.getVoices();
-  // Priority: natural/neural-sounding named voices first
-  const priority = [
-    'Samantha', 'Karen', 'Moira', 'Tessa', 'Ava', 'Allison', 'Victoria',
-    'Google US English', 'Google UK English Female',
-    'Microsoft Aria', 'Microsoft Jenny', 'Microsoft Zira',
-    'Fiona', 'Veena', 'Susan'
-  ];
-  for (const name of priority) {
-    const v = voices.find(v => v.name.includes(name));
-    if (v) return v;
-  }
-  // Fallback: any English voice that isn't "Alex" (robotic on some platforms)
-  return voices.find(v => v.lang.startsWith('en') && !v.name.includes('Alex')) || voices[0];
-}
+// --- Inworld TTS via backend ---
+let currentAudio = null;
 
-function speak(text, { onEnd, muted } = {}) {
-  window.speechSynthesis.cancel();
+async function speak(text, { onEnd, muted } = {}) {
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   if (muted) { onEnd?.(); return; }
-  const clean = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/#{1,6}\s/g, '').replace(/[*_~`]/g, '').trim().slice(0, 500);
-  const utt = new SpeechSynthesisUtterance(clean);
-  utt.rate = 0.97;   // slightly slower = more natural
-  utt.pitch = 1.0;   // neutral pitch sounds less robotic
-  utt.volume = 1;
 
-  // Voices may not be loaded yet — wait if needed
-  const trySpeak = () => {
-    const voice = getBestVoice();
-    if (voice) utt.voice = voice;
+  try {
+    const response = await base44.functions.invoke('inworldTTS', { text });
+    const audioContent = response?.data?.audioContent;
+    if (!audioContent) throw new Error('No audio returned');
+
+    const audio = new Audio(`data:audio/mp3;base64,${audioContent}`);
+    currentAudio = audio;
+    audio.onended = () => { currentAudio = null; onEnd?.(); };
+    audio.onerror = () => { currentAudio = null; onEnd?.(); };
+    await audio.play();
+  } catch {
+    // Fallback to browser TTS if Inworld fails
+    const utt = new SpeechSynthesisUtterance(text.replace(/[*_~`#]/g, '').trim().slice(0, 500));
+    utt.rate = 0.97;
     utt.onend = () => onEnd?.();
     utt.onerror = () => onEnd?.();
     window.speechSynthesis.speak(utt);
-  };
-
-  if (window.speechSynthesis.getVoices().length > 0) {
-    trySpeak();
-  } else {
-    window.speechSynthesis.onvoiceschanged = () => { trySpeak(); };
   }
+}
+
+function stopSpeaking() {
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  window.speechSynthesis.cancel();
 }
 
 // --- Speech Recognition ---

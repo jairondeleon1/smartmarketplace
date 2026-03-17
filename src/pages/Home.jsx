@@ -1604,5 +1604,6 @@ export default function Home() {
       <Footer onAdminClick={() => changeView('admin')} />
       </LargeTextWrapper>
     </AccessibilityProvider>
+
   );
 }

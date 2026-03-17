@@ -1224,6 +1224,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
           <div className="h-px flex-1 bg-gray-200" />
         </div>
         <div className="grid lg:grid-cols-2 gap-8">
+
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
             <div className="flex justify-between items-center">
               <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2"><Upload className="w-4 h-4 text-teal-600"/> Matrix Sync</h3>

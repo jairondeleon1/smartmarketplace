@@ -1517,7 +1517,7 @@ export default function Home() {
 
   return (
     <AccessibilityProvider>
-    <div className="min-h-screen bg-stone-50 dark:bg-slate-950 text-gray-900 dark:text-gray-100 font-sans tracking-tight overflow-x-hidden selection:bg-teal-100 selection:text-teal-900 font-bold">
+      <div className="min-h-screen bg-stone-50 dark:bg-slate-950 text-gray-900 dark:text-gray-100 font-sans tracking-tight overflow-x-hidden selection:bg-teal-100 selection:text-teal-900 font-bold">
       <AllergenNoticeModal />
       <div className="hidden md:block">
         <NavBar view={view} changeView={changeView} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} onProfileClick={() => setIsProfileModalOpen(true)} />

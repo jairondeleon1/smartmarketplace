@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Flame, Sandwich, Salad, X, ChevronRight } from 'lucide-react';
+import { useA11y } from '@/lib/AccessibilityContext';
 
 const CORE_MENUS = [
   {
@@ -56,6 +57,7 @@ const CORE_MENUS = [
 ];
 
 function CoreMenuModal({ menu, onClose, onAddToPlate }) {
+  const { t } = useA11y();
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[75] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-300">
@@ -99,7 +101,7 @@ function CoreMenuModal({ menu, onClose, onAddToPlate }) {
             </div>
           ))}
           <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest pt-2 pb-4">
-            Items above are standard offerings. Ask staff for daily specials.
+            {t.askStaff}
           </p>
         </div>
       </div>
@@ -110,6 +112,7 @@ function CoreMenuModal({ menu, onClose, onAddToPlate }) {
 export { CORE_MENUS };
 
 export default function CoreMenusSection({ onAddToPlate }) {
+  const { t } = useA11y();
   const [openMenu, setOpenMenu] = useState(null);
   const [dynamicItems, setDynamicItems] = useState({});
 
@@ -133,7 +136,7 @@ export default function CoreMenusSection({ onAddToPlate }) {
       <div className="w-full px-2 font-sans">
         <div className="flex items-center gap-3 mb-3">
           <div className="h-px flex-1 bg-gray-100" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Core Menus</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{t.coreMenusLabel}</span>
           <div className="h-px flex-1 bg-gray-100" />
         </div>
         <div className="flex flex-wrap justify-center gap-2">

@@ -1525,7 +1525,7 @@ export default function Home() {
   return (
     <AccessibilityProvider>
       <LargeTextWrapper>
-      <AllergenNoticeModal />
+        <AllergenNoticeModal />
       <div className="hidden md:block">
         <NavBar view={view} changeView={changeView} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} onProfileClick={() => setIsProfileModalOpen(true)} />
       </div>

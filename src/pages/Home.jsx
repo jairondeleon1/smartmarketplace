@@ -688,7 +688,6 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen, onPro
           <button role="menuitem" onClick={() => { changeView('customer'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">{t.menu}</button>
           <button role="menuitem" onClick={() => { changeView('chat'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">{t.aiAssistant}</button>
           <a role="menuitem" href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">30 Day Challenge</a>
-          <button role="menuitem" onClick={() => { changeView('admin'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">{t.admin}</button>
         </div>
       )}
     </nav>

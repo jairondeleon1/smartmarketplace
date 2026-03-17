@@ -367,6 +367,7 @@ function TrayDetailsModal({ isOpen, onClose, plate, setPlate }) {
 }
 
 function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
+  const { t } = useA11y();
   const [showDetails, setShowDetails] = useState(false);
   const isRecommended = item.matchesGoal;
   
@@ -376,7 +377,7 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
     }`}>
       {isRecommended && (
         <div className="bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-1 text-white text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 justify-center">
-          <Heart className="w-3 h-3" /> Matches Your Goals
+          <Heart className="w-3 h-3" /> {t.matchesGoals}
         </div>
       )}
       <div className="p-5 flex-1 font-sans font-bold font-medium">
@@ -403,7 +404,7 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
         </div>
       </div>
       <div className="px-5 pb-5 flex gap-2 font-sans font-bold">
-        <button onClick={() => setShowDetails(!showDetails)} className="flex-1 py-2 text-xs font-bold text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition font-sans font-bold">{showDetails ? 'Hide Info' : 'Nutrition Details'}</button>
+        <button onClick={() => setShowDetails(!showDetails)} className="flex-1 py-2 text-xs font-bold text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition font-sans font-bold">{showDetails ? t.hideInfo : t.nutritionDetails}</button>
         <button onClick={() => addToPlate(item)} className="w-10 flex items-center justify-center bg-gray-900 text-white rounded-lg transition active:scale-90 hover:bg-black font-sans font-bold"><Plus className="w-5 h-5" /></button>
       </div>
       {showDetails && (
@@ -412,7 +413,7 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
             <div className="bg-teal-50 border border-teal-100 rounded-xl p-4 mb-3">
               <div className="flex items-center gap-2 mb-2">
                 <Info className="w-4 h-4 text-teal-600" />
-                <span className="text-xs font-bold text-teal-800 uppercase tracking-wider">Ingredients</span>
+                <span className="text-xs font-bold text-teal-800 uppercase tracking-wider">{t.ingredients}</span>
               </div>
               <p className="text-sm text-teal-900 leading-relaxed">{item.ingredients}</p>
             </div>
@@ -421,7 +422,7 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
           {item.allergens && item.allergens.filter(a => !['Garlic', 'Gluten', 'Onion'].includes(a)).length > 0 && (
             <div className="mt-3 bg-red-50 border border-red-100 rounded-lg p-3">
               <div className="text-red-600 font-bold uppercase text-[10px] tracking-widest">
-                Contains: {item.allergens.filter(a => !['Garlic', 'Gluten', 'Onion'].includes(a)).join(', ')}
+                {t.contains}: {item.allergens.filter(a => !['Garlic', 'Gluten', 'Onion'].includes(a)).join(', ')}
               </div>
             </div>
           )}

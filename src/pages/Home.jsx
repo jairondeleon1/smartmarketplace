@@ -1275,6 +1275,19 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
             </div>
           </div>
         </div>
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-gray-200" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Core Menu Stations</span>
+          <div className="h-px flex-1 bg-gray-200" />
+        </div>
+        <CoreMenusSync onCoreItemsPublished={(items, stationId) => {
+          try {
+            const existing = JSON.parse(localStorage.getItem('coreMenuItems') || '{}');
+            existing[stationId] = items;
+            localStorage.setItem('coreMenuItems', JSON.stringify(existing));
+            alert(`✅ Published ${items.length} ${stationId} items! Refresh the menu to see them.`);
+          } catch (err) { alert('Failed to save: ' + err.message); }
+        }} />
         </div>
       )}
 

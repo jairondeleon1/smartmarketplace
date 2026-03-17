@@ -574,7 +574,6 @@ function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addTo
 
 function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, selectedDay, setSelectedDay, activeFilters, toggleFilter, clearFilters, filteredItems, dayScrollRef, addToPlate, myPlate, setMyPlate, isTrayModalOpen, setIsTrayModalOpen, isWeeklyPlannerOpen, setIsWeeklyPlannerOpen, changeView, user }) {
   const [activeMealTab, setActiveMealTab] = useState('Lunch');
-  const { t } = useA11y();
 
   const doRefresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ['menuItems'] });
@@ -599,12 +598,12 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
         </div>
         <div className="flex flex-col gap-4 items-center max-w-xl mx-auto px-2 font-sans font-bold">
           <button onClick={() => setIsWeeklyPlannerOpen(true)} className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 border border-slate-800 uppercase tracking-widest text-xs active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2">
-            <Wand className="w-5 h-5 text-teal-400" aria-hidden="true" /> {t.planMyWeek}
+            <Wand className="w-5 h-5 text-teal-400" aria-hidden="true" /> Plan My Whole Week Meal
           </button>
-          <div onClick={() => changeView('chat')} onKeyDown={e => e.key === 'Enter' && changeView('chat')} role="button" tabIndex={0} aria-label={t.askAI} className="w-full bg-gradient-to-r from-indigo-700 via-purple-600 to-pink-500 rounded-2xl p-5 text-white shadow-2xl cursor-pointer transform transition-all hover:scale-[1.01] flex items-center justify-between text-left border border-white/10 group overflow-hidden font-bold focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2">
+          <div onClick={() => changeView('chat')} onKeyDown={e => e.key === 'Enter' && changeView('chat')} role="button" tabIndex={0} aria-label="Ask AI Assistant" className="w-full bg-gradient-to-r from-indigo-700 via-purple-600 to-pink-500 rounded-2xl p-5 text-white shadow-2xl cursor-pointer transform transition-all hover:scale-[1.01] flex items-center justify-between text-left border border-white/10 group overflow-hidden font-bold focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2">
             <div className="flex items-center gap-4 relative z-10">
               <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md border border-white/10"><Sparkles className="w-5 h-5 text-white animate-pulse" aria-hidden="true" /></div>
-              <div><h3 className="font-bold text-sm uppercase tracking-widest text-white">{t.askAI}</h3><p className="text-white/80 text-[11px] font-medium italic opacity-80">{t.nutritionGuide}</p></div>
+              <div><h3 className="font-bold text-sm uppercase tracking-widest text-white">Ask AI Assistant</h3><p className="text-white/80 text-[11px] font-medium italic opacity-80">Nutrition Guide &amp; Choices</p></div>
             </div>
             <div className="bg-white/20 p-2 rounded-full border border-white/10 text-white transition-transform group-hover:translate-x-1 shadow-inner" aria-hidden="true"><ArrowRight className="w-5 h-5" /></div>
           </div>
@@ -619,9 +618,9 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
         </div>
 
         <div className="flex flex-wrap justify-center gap-2 font-sans font-bold" role="group" aria-label="Dietary filters">
-          <button onClick={() => toggleFilter('vegetarian')} aria-pressed={activeFilters.vegetarian} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-1 ${activeFilters.vegetarian ? 'bg-green-50 border-green-500 text-green-900' : 'bg-white border-gray-100 text-gray-400'}`}><VegProgramIcon url={customVegUrl} className="w-4 h-4" /> {t.veg}</button>
-          <button onClick={() => toggleFilter('vegan')} aria-pressed={activeFilters.vegan} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-1 ${activeFilters.vegan ? 'bg-green-50 border-green-500 text-green-900' : 'bg-white border-gray-100 text-gray-400'}`}><VeganProgramIcon url={customVeganUrl} className="w-4 h-4" /> {t.vegan}</button>
-          <button onClick={() => toggleFilter('fit')} aria-pressed={activeFilters.fit} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 ${activeFilters.fit ? 'bg-blue-50 border-blue-500 text-blue-900' : 'bg-white border-gray-100 text-gray-400'}`}><FitIcon className="w-4 h-4" /> {t.fit}</button>
+          <button onClick={() => toggleFilter('vegetarian')} aria-pressed={activeFilters.vegetarian} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-1 ${activeFilters.vegetarian ? 'bg-green-50 border-green-500 text-green-900' : 'bg-white border-gray-100 text-gray-400'}`}><VegProgramIcon url={customVegUrl} className="w-4 h-4" /> Veg</button>
+          <button onClick={() => toggleFilter('vegan')} aria-pressed={activeFilters.vegan} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-1 ${activeFilters.vegan ? 'bg-green-50 border-green-500 text-green-900' : 'bg-white border-gray-100 text-gray-400'}`}><VeganProgramIcon url={customVeganUrl} className="w-4 h-4" /> Vegan</button>
+          <button onClick={() => toggleFilter('fit')} aria-pressed={activeFilters.fit} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 ${activeFilters.fit ? 'bg-blue-50 border-blue-500 text-blue-900' : 'bg-white border-gray-100 text-gray-400'}`}><FitIcon className="w-4 h-4" /> Fit</button>
           {Object.values(activeFilters).some(Boolean) && <button onClick={clearFilters} aria-label="Clear all filters" className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition focus-visible:ring-2 focus-visible:ring-red-400"><XCircle className="w-5 h-5" aria-hidden="true" /></button>}
         </div>
       </div>
@@ -641,7 +640,7 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
       {/* Persistent AI Insights Disclaimer */}
       <div className="mx-2 py-3 px-4 bg-amber-50 border border-amber-200 rounded-xl text-center" role="note">
         <p className="text-[10px] text-amber-800 font-bold leading-relaxed">
-          {t.disclaimer}
+          ⚠️ Estimates only. AI insights are not medical advice. Verify allergens with staff before eating.
         </p>
       </div>
 
@@ -655,7 +654,6 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
 // --- CORE VIEWS ---
 
 function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen, onProfileClick }) {
-  const { t } = useA11y();
   return (
     <nav className="bg-slate-800 dark:bg-slate-900 text-white shadow-lg sticky top-0 z-50 w-full shrink-0 font-sans font-bold select-none"
       aria-label="Main navigation"
@@ -667,9 +665,9 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen, onPro
             <h1 className="text-xl font-bold uppercase tracking-widest text-white">SmartMenu IQ</h1>
           </div>
           <div className="hidden md:flex gap-6 items-center text-sm font-bold uppercase tracking-widest" role="menubar">
-            <button onClick={() => changeView('customer')} aria-current={view === 'customer' ? 'page' : undefined} className={`focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1 ${view === 'customer' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}`}>{t.menu}</button>
-            <button onClick={() => changeView('chat')} aria-current={view === 'chat' ? 'page' : undefined} className={`focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1 ${view === 'chat' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}`}>{t.aiAssistant}</button>
-            <a href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-slate-300 opacity-70 hover:text-white hover:opacity-100 transition focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">{t.dayChallengeLink}</a>
+            <button onClick={() => changeView('customer')} aria-current={view === 'customer' ? 'page' : undefined} className={`focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1 ${view === 'customer' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}`}>Menu</button>
+            <button onClick={() => changeView('chat')} aria-current={view === 'chat' ? 'page' : undefined} className={`focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1 ${view === 'chat' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}`}>AI Assistant</button>
+            <a href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-slate-300 opacity-70 hover:text-white hover:opacity-100 transition focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">30 Day Challenge</a>
             <button onClick={onProfileClick} className="p-2 hover:bg-white/10 rounded-full transition focus-visible:ring-2 focus-visible:ring-teal-400" aria-label="My Profile">
               <User className="w-5 h-5" aria-hidden="true" />
             </button>
@@ -684,9 +682,9 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen, onPro
         <div className="fixed top-0 left-0 right-0 bg-slate-800 dark:bg-slate-900 border-t border-slate-700 shadow-xl md:hidden z-[110] flex flex-col p-4 gap-4 font-bold uppercase text-sm tracking-widest font-sans text-white"
           role="menu"
           style={{ top: 'calc(4rem + env(safe-area-inset-top))' }}>
-          <button role="menuitem" onClick={() => { changeView('customer'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">{t.menu}</button>
-          <button role="menuitem" onClick={() => { changeView('chat'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">{t.aiAssistant}</button>
-          <a role="menuitem" href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">{t.dayChallengeLink}</a>
+          <button role="menuitem" onClick={() => { changeView('customer'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">Menu</button>
+          <button role="menuitem" onClick={() => { changeView('chat'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">AI Assistant</button>
+          <a role="menuitem" href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">30 Day Challenge</a>
         </div>
       )}
     </nav>
@@ -694,11 +692,10 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen, onPro
 }
 
 function MobileBottomNav({ view, changeView, onProfileClick }) {
-  const { t } = useA11y();
   const tabs = [
-    { id: 'customer', label: t.menu, icon: Utensils },
-    { id: 'chat', label: t.aiAssistant, icon: MessageSquare },
-    { id: 'settings', label: t.settings, icon: Settings },
+    { id: 'customer', label: 'Menu', icon: Utensils },
+    { id: 'chat', label: 'AI Assistant', icon: MessageSquare },
+    { id: 'settings', label: 'Settings', icon: Settings },
   ];
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-700 z-50 select-none"
@@ -729,7 +726,6 @@ function MobileBottomNav({ view, changeView, onProfileClick }) {
 }
 
 function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendChat }) {
-  const { t } = useA11y();
   const chatEndRef = useRef(null);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatHistory, isTyping]);
 
@@ -931,7 +927,7 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
                 <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                 <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
-              <span className="text-xs font-bold text-gray-600">{t.chatTyping}</span>
+              <span className="text-xs font-bold text-gray-600">Smart Menu IQ...</span>
             </div>
           </div>
         )}
@@ -939,7 +935,7 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
       </div>
       <div className="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-700 p-4 flex gap-3 shrink-0 md:pb-4"
         style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom) + 4rem)' }}>
-        <input type="text" value={userQuery} onChange={e => setUserQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendChat()} className="flex-1 p-4 rounded-xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-teal-500 font-bold text-sm tracking-tight" placeholder={t.chatPlaceholder}/>
+        <input type="text" value={userQuery} onChange={e => setUserQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendChat()} className="flex-1 p-4 rounded-xl bg-gray-50 border-none outline-none focus:ring-2 focus:ring-teal-500 font-bold text-sm tracking-tight" placeholder="Ask about nutrition, allergens, menu items..."/>
         <button onClick={() => handleSendChat()} className="bg-teal-800 text-white p-4 rounded-xl shadow-lg active:scale-90 transition-all hover:bg-teal-900"><Send className="w-5 h-5" /></button>
       </div>
     </div>

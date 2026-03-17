@@ -184,6 +184,7 @@ function FitIcon({ url, className = "w-6 h-6" }) {
 // --- MODALS ---
 
 function TrayDetailsModal({ isOpen, onClose, plate, setPlate }) {
+  const { t } = useA11y();
   const [isExporting, setIsExporting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -319,16 +320,16 @@ function TrayDetailsModal({ isOpen, onClose, plate, setPlate }) {
         <div className="p-6 bg-slate-900 text-white flex justify-between items-center shrink-0 font-sans font-bold">
           <div className="flex items-center gap-3">
             <ShoppingBag className="w-6 h-6 text-teal-400" />
-            <h3 className="font-bold text-xl uppercase tracking-tight font-sans text-white">My Nutrition Tray</h3>
+            <h3 className="font-bold text-xl uppercase tracking-tight font-sans text-white">{t.myNutritionTray}</h3>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition"><X className="w-6 h-6 text-white" /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4 font-sans font-bold">
           {showSuccess && <div className="bg-teal-50 text-teal-800 p-4 rounded-xl text-xs font-bold border border-teal-100 flex items-center gap-2 animate-in fade-in">Report Exported Successfully!</div>}
-          {plate.length === 0 ? <div className="text-center py-12 text-gray-400 font-bold uppercase text-sm tracking-widest">Your tray is empty</div> : 
+          {plate.length === 0 ? <div className="text-center py-12 text-gray-400 font-bold uppercase text-sm tracking-widest">{t.trayEmpty}</div> : 
             <>
-              <h4 className="text-xs font-bold uppercase tracking-widest text-teal-700 mb-3">Meals for the Week</h4>
+              <h4 className="text-xs font-bold uppercase tracking-widest text-teal-700 mb-3">{t.mealsForWeek}</h4>
               <div className="space-y-2">
                 {plate.map((item, idx) => (
                   <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group font-medium">
@@ -356,7 +357,7 @@ function TrayDetailsModal({ isOpen, onClose, plate, setPlate }) {
               <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm"><span className="block text-sm font-bold text-slate-800">{totals.sodium}mg</span><span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Sod</span></div>
             </div>
             <button onClick={handleDownloadReport} disabled={isExporting} className="w-full py-4 bg-teal-600 text-white rounded-2xl font-bold uppercase text-sm shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 tracking-widest">
-              {isExporting ? <Loader2 className="animate-spin w-4 h-4" /> : <><Download className="w-4 h-4 text-teal-100" /> Download Report</>}
+              {isExporting ? <Loader2 className="animate-spin w-4 h-4" /> : <><Download className="w-4 h-4 text-teal-100" /> {t.downloadReport}</>}
             </button>
           </div>
         )}

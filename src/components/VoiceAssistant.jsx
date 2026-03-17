@@ -2,64 +2,51 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Mic, MicOff, X, Volume2, VolumeX, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-// --- TTS via backend function ---
-async function speakViaBackend(text) {
-  if (!text) return null;
-  const res = await base44.functions.invoke('inworldTTS', { text });
-  const audioContent = res?.data?.audioContent;
-  if (!audioContent) return null;
-  const binary = atob(audioContent);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  const blob = new Blob([bytes], { type: 'audio/mpeg' });
-  return URL.createObjectURL(blob);
+// --- Browser TTS (Web Speech API) ---
+function speak(text, { onEnd, muted } = {}) {
+  window.speechSynthesis.cancel();
+  if (muted) { onEnd?.(); return; }
+  const clean = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/#{1,6}\s/g, '').trim().slice(0, 600);
+  const utt = new SpeechSynthesisUtterance(clean);
+  utt.rate = 1.05;
+  utt.pitch = 1.1;
+  utt.volume = 1;
+  // Try to pick a female English voice
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(v => /samantha|karen|victoria|female|zira|susan|allison|ava|moira|tessa/i.test(v.name))
+    || voices.find(v => v.lang.startsWith('en'));
+  if (preferred) utt.voice = preferred;
+  utt.onend = () => onEnd?.();
+  utt.onerror = () => onEnd?.();
+  window.speechSynthesis.speak(utt);
 }
 
-// --- Speech Recognition hook ---
-function useSpeechRecognition({ onResult, onEnd }) {
-  const recognitionRef = useRef(null);
-  const [isListening, setIsListening] = useState(false);
-
-  const start = useCallback(() => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      alert('Speech recognition is not supported in this browser. Please use Chrome.');
-      return;
-    }
-    const recognition = new SR();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-    recognition.onresult = (e) => onResult(e.results[0][0].transcript);
-    recognition.onend = () => { setIsListening(false); onEnd(); };
-    recognition.onerror = () => { setIsListening(false); onEnd(); };
-    recognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
-  }, [onResult, onEnd]);
-
-  const stop = useCallback(() => {
-    recognitionRef.current?.stop();
-    setIsListening(false);
-  }, []);
-
-  return { isListening, start, stop };
+// --- Speech Recognition ---
+function createRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+  const r = new SR();
+  r.lang = 'en-US';
+  r.interimResults = false;
+  r.maxAlternatives = 1;
+  r.continuous = false;
+  return r;
 }
 
-// --- Conversation Bubble ---
-function ConversationBubble({ msg }) {
+// --- Bubble ---
+function Bubble({ msg }) {
   const isUser = msg.role === 'user';
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3`}>
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3 animate-in fade-in slide-in-from-bottom-2 duration-300`}>
       {!isUser && (
-        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mr-2 mt-1 shrink-0">
-          <Volume2 className="w-3.5 h-3.5 text-white" />
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center mr-2 mt-1 shrink-0 shadow-md">
+          <Volume2 className="w-4 h-4 text-white" />
         </div>
       )}
-      <div className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed font-medium shadow-sm ${
+      <div className={`max-w-[82%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${
         isUser
-          ? 'bg-indigo-600 text-white rounded-tr-sm'
-          : 'bg-white text-gray-800 border border-gray-100 rounded-tl-sm'
+          ? 'bg-teal-600 text-white rounded-tr-sm font-medium'
+          : 'bg-white text-gray-800 border border-gray-100 rounded-tl-sm font-medium'
       }`}>
         {msg.content}
       </div>
@@ -67,170 +54,205 @@ function ConversationBubble({ msg }) {
   );
 }
 
-// --- Main VoiceAssistant Component ---
+// --- Listening animation ---
+function ListeningWave() {
+  return (
+    <div className="flex items-end gap-1 h-8">
+      {[0, 1, 2, 3, 4].map(i => (
+        <div
+          key={i}
+          className="w-1.5 rounded-full bg-red-400"
+          style={{
+            height: `${Math.random() * 20 + 8}px`,
+            animation: `wave 0.8s ease-in-out ${i * 0.12}s infinite alternate`
+          }}
+        />
+      ))}
+      <style>{`@keyframes wave { from { transform: scaleY(0.4); } to { transform: scaleY(1.4); } }`}</style>
+    </div>
+  );
+}
+
 export default function VoiceAssistant({ menuItems = [] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [phase, setPhase] = useState('idle'); // idle | listening | processing | speaking
   const [conversation, setConversation] = useState([
-    { role: 'ai', content: "Hi! I'm Michelle, your Marketplace voice assistant. Tap the mic and ask me anything about the menu, nutrition, or allergens!" }
+    { role: 'ai', content: "Hi! I'm Michelle, your Marketplace assistant. Tap the mic to start — ask me anything about the menu, nutrition, or allergens!" }
   ]);
-  const audioRef = useRef(null);
-  const audioUrlRef = useRef(null);
   const scrollRef = useRef(null);
+  const recRef = useRef(null);
+  const mutedRef = useRef(isMuted);
+
+  // Keep mutedRef in sync
+  useEffect(() => { mutedRef.current = isMuted; }, [isMuted]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [conversation, isProcessing]);
+  }, [conversation, phase]);
 
-  const stopSpeaking = useCallback(() => {
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
-    if (audioUrlRef.current) { URL.revokeObjectURL(audioUrlRef.current); audioUrlRef.current = null; }
-    setIsSpeaking(false);
+  const startListening = useCallback(() => {
+    window.speechSynthesis.cancel();
+    const rec = createRecognition();
+    if (!rec) { alert('Speech recognition requires Chrome or Safari.'); return; }
+    recRef.current = rec;
+    setPhase('listening');
+
+    rec.onresult = async (e) => {
+      const transcript = e.results[0][0].transcript.trim();
+      if (!transcript) { setPhase('idle'); return; }
+
+      setConversation(prev => [...prev, { role: 'user', content: transcript }]);
+      setPhase('processing');
+      window.speechSynthesis.cancel();
+
+      try {
+        const slimMenu = menuItems.slice(0, 60).map(({ name, day, station, calories, protein, carbs, fat, sodium, allergens, tags }) => ({
+          name, day, station, calories, protein, carbs, fat, sodium, allergens, tags
+        }));
+        const response = await base44.integrations.Core.InvokeLLM({
+          prompt: `You are Michelle, a warm and friendly voice nutrition assistant for a corporate Marketplace cafe. 
+Keep your answer conversational, under 50 words, no bullet points, no markdown, no asterisks — speak naturally as if talking.
+Menu context: ${JSON.stringify(slimMenu)}.
+User said: "${transcript}"`
+        });
+        const aiText = typeof response === 'string' ? response : "I'm not sure about that one. Try asking about today's specials or any nutrition info!";
+        setConversation(prev => [...prev, { role: 'ai', content: aiText }]);
+        setPhase('speaking');
+        speak(aiText, {
+          muted: mutedRef.current,
+          onEnd: () => {
+            setPhase('idle');
+            // Auto-restart listening for hands-free conversation
+            setTimeout(() => {
+              if (recRef.current !== null) startListening();
+            }, 400);
+          }
+        });
+      } catch {
+        const err = "Sorry, I'm having trouble right now. Please try again!";
+        setConversation(prev => [...prev, { role: 'ai', content: err }]);
+        setPhase('idle');
+      }
+    };
+
+    rec.onend = () => {
+      if (phase === 'listening') setPhase('idle');
+    };
+    rec.onerror = () => setPhase('idle');
+    rec.start();
+  }, [menuItems, phase]);
+
+  const stopAll = useCallback(() => {
+    window.speechSynthesis.cancel();
+    recRef.current?.stop();
+    recRef.current = null;
+    setPhase('idle');
   }, []);
 
-  const playTTS = useCallback(async (text) => {
-    if (isMuted) return;
-    stopSpeaking();
-    setIsSpeaking(true);
-    try {
-      const url = await speakViaBackend(text);
-      if (!url) { setIsSpeaking(false); return; }
-      audioUrlRef.current = url;
-      const audio = new Audio(url);
-      audioRef.current = audio;
-      audio.onended = () => setIsSpeaking(false);
-      audio.onerror = () => setIsSpeaking(false);
-      audio.play().catch(() => setIsSpeaking(false));
-    } catch {
-      setIsSpeaking(false);
-    }
-  }, [isMuted, stopSpeaking]);
-
-  const handleVoiceResult = useCallback(async (transcript) => {
-    if (!transcript.trim()) return;
-    setConversation(prev => [...prev, { role: 'user', content: transcript }]);
-    setIsProcessing(true);
-    stopSpeaking();
-    try {
-      const slimMenu = menuItems.slice(0, 60).map(({ name, day, station, calories, protein, carbs, fat, sodium, allergens, tags }) => ({
-        name, day, station, calories, protein, carbs, fat, sodium, allergens, tags
-      }));
-      const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are Michelle, a friendly voice nutrition assistant for a corporate Marketplace cafe. Keep your answer under 60 words, speak naturally (no bullet points, no markdown, no asterisks). Menu context: ${JSON.stringify(slimMenu)}. User question: "${transcript}"`
-      });
-      const aiText = typeof response === 'string' ? response : "I'm not sure about that. Try asking about today's menu or nutrition info!";
-      setConversation(prev => [...prev, { role: 'ai', content: aiText }]);
-      await playTTS(aiText);
-    } catch {
-      const errMsg = "I'm having trouble connecting right now. Please try again!";
-      setConversation(prev => [...prev, { role: 'ai', content: errMsg }]);
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [menuItems, playTTS, stopSpeaking]);
-
-  const { isListening, start: startListening, stop: stopListening } = useSpeechRecognition({
-    onResult: handleVoiceResult,
-    onEnd: () => {}
-  });
-
   const handleMicClick = () => {
-    if (isListening) { stopListening(); return; }
-    if (isSpeaking) stopSpeaking();
+    if (phase === 'listening') { stopAll(); return; }
+    if (phase === 'speaking') { stopAll(); return; }
     startListening();
   };
 
   const handleClose = () => {
-    stopListening();
-    stopSpeaking();
+    stopAll();
     setIsOpen(false);
   };
+
+  const handleOpen = () => {
+    setIsOpen(true);
+    // Auto-start listening when opened
+    setTimeout(() => startListening(), 600);
+  };
+
+  const micLabel = phase === 'listening' ? 'Tap to stop' : phase === 'speaking' ? 'Tap to interrupt' : phase === 'processing' ? 'Processing...' : 'Tap to speak';
 
   return (
     <>
       {/* Floating Mic Button */}
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpen}
         aria-label="Open Voice Assistant"
-        className="fixed z-[60] bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-full shadow-2xl p-4 transition-all hover:scale-110 active:scale-95 border-4 border-white/20"
+        className="fixed z-[60] bg-gradient-to-br from-violet-600 to-purple-700 text-white rounded-full shadow-2xl p-4 transition-all hover:scale-110 active:scale-95"
         style={{ bottom: 'calc(5.5rem + env(safe-area-inset-bottom))', right: '1.25rem' }}
       >
         <Mic className="w-6 h-6" />
-        <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse" />
+        <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse" />
       </button>
 
-      {/* Voice Assistant Panel */}
+      {/* Panel */}
       {isOpen && (
         <div className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={handleClose} />
           <div
-            className="relative w-full sm:max-w-md bg-gradient-to-b from-slate-900 to-slate-800 rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-white/10 animate-in slide-in-from-bottom sm:zoom-in-95 duration-300"
-            style={{ maxHeight: '80vh', minHeight: '420px' }}
+            className="relative w-full sm:max-w-sm bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-white/10 animate-in slide-in-from-bottom sm:zoom-in-95 duration-300"
+            style={{ maxHeight: '75vh', minHeight: '400px' }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-white/10 shrink-0">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 shrink-0">
               <div className="flex items-center gap-3">
-                <div className={`relative w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg ${isSpeaking ? 'ring-2 ring-purple-400 ring-offset-2 ring-offset-slate-900' : ''}`}>
-                  <Volume2 className="w-5 h-5 text-white" />
-                  {isSpeaking && <span className="absolute inset-0 rounded-full bg-purple-400 animate-ping opacity-30" />}
+                <div className={`relative w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center shadow-lg ${phase === 'speaking' ? 'ring-2 ring-purple-400 ring-offset-1 ring-offset-slate-900' : ''}`}>
+                  <Volume2 className="w-4 h-4 text-white" />
+                  {phase === 'speaking' && <span className="absolute inset-0 rounded-full bg-purple-400 animate-ping opacity-25" />}
                 </div>
                 <div>
-                  <p className="font-bold text-white text-sm uppercase tracking-widest">Michelle</p>
+                  <p className="font-bold text-white text-xs uppercase tracking-widest">Michelle</p>
                   <p className="text-[10px] text-slate-400 font-medium">
-                    {isListening ? '🔴 Listening...' : isSpeaking ? '🔊 Speaking...' : isProcessing ? '⏳ Thinking...' : '✨ Voice Assistant'}
+                    {phase === 'listening' ? '🔴 Listening...' : phase === 'speaking' ? '🔊 Speaking...' : phase === 'processing' ? '⏳ Thinking...' : '✨ Voice Assistant'}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <button
-                  onClick={() => { setIsMuted(m => !m); if (!isMuted) stopSpeaking(); }}
+                  onClick={() => { setIsMuted(m => !m); if (!isMuted) window.speechSynthesis.cancel(); }}
                   className="p-2 hover:bg-white/10 rounded-full transition text-slate-400 hover:text-white"
-                  aria-label={isMuted ? 'Unmute' : 'Mute'}
                 >
-                  {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                 </button>
-                <button onClick={handleClose} className="p-2 hover:bg-white/10 rounded-full transition text-slate-400 hover:text-white" aria-label="Close">
-                  <X className="w-5 h-5" />
+                <button onClick={handleClose} className="p-2 hover:bg-white/10 rounded-full transition text-slate-400 hover:text-white">
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
             {/* Conversation */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4">
-              {conversation.map((msg, i) => <ConversationBubble key={i} msg={msg} />)}
-              {isProcessing && (
+            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 bg-slate-800/50">
+              {conversation.map((msg, i) => <Bubble key={i} msg={msg} />)}
+              {phase === 'processing' && (
                 <div className="flex justify-start mb-3">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mr-2 mt-1 shrink-0">
-                    <Volume2 className="w-3.5 h-3.5 text-white" />
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center mr-2 mt-1 shrink-0">
+                    <Loader2 className="w-4 h-4 text-white animate-spin" />
                   </div>
                   <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 text-indigo-500 animate-spin" />
-                    <span className="text-xs text-gray-500 font-medium">Thinking...</span>
+                    <div className="flex gap-1">
+                      {[0,1,2].map(i => <div key={i} className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{animationDelay: `${i*150}ms`}} />)}
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Mic Button */}
-            <div className="p-5 border-t border-white/10 shrink-0 flex flex-col items-center gap-3"
+            {/* Mic area */}
+            <div className="px-5 py-5 border-t border-white/10 shrink-0 flex flex-col items-center gap-3 bg-slate-900"
               style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}>
+              {phase === 'listening' && <ListeningWave />}
               <button
                 onClick={handleMicClick}
-                disabled={isProcessing}
-                className={`relative w-20 h-20 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
-                  isListening
-                    ? 'bg-red-500 scale-110 ring-4 ring-red-400/40 ring-offset-2 ring-offset-slate-800'
-                    : 'bg-gradient-to-br from-indigo-500 to-purple-600 hover:scale-105'
+                disabled={phase === 'processing'}
+                className={`relative w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
+                  phase === 'listening'
+                    ? 'bg-red-500 ring-4 ring-red-400/40 ring-offset-2 ring-offset-slate-900'
+                    : phase === 'speaking'
+                    ? 'bg-violet-600 ring-4 ring-violet-400/40 ring-offset-2 ring-offset-slate-900'
+                    : 'bg-gradient-to-br from-violet-500 to-purple-700 hover:scale-105'
                 }`}
               >
-                {isListening ? <MicOff className="w-8 h-8 text-white" /> : <Mic className="w-8 h-8 text-white" />}
-                {isListening && <span className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-25" />}
+                {phase === 'listening' ? <MicOff className="w-7 h-7 text-white" /> : <Mic className="w-7 h-7 text-white" />}
+                {phase === 'listening' && <span className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-20" />}
               </button>
-              <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">
-                {isListening ? 'Tap to stop' : isProcessing ? 'Processing...' : 'Tap mic to speak'}
-              </p>
+              <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">{micLabel}</p>
             </div>
           </div>
         </div>

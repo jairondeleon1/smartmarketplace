@@ -254,6 +254,40 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
             </div>
           </div>
 
+          {/* Accessibility */}
+          <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Type className="w-5 h-5 text-indigo-600" />
+              <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">Accessibility</h4>
+            </div>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={toggleLang}
+                className="flex items-center justify-between px-4 py-3 rounded-xl border-2 bg-white border-indigo-200 hover:bg-indigo-50 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-indigo-600" />
+                  <span className="text-xs font-bold text-slate-700 uppercase tracking-widest">Language</span>
+                </div>
+                <span className="text-xs font-bold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full uppercase">
+                  {lang === 'en' ? 'English → Español' : 'Español → English'}
+                </span>
+              </button>
+              <button
+                onClick={toggleLargeText}
+                className={`flex items-center justify-between px-4 py-3 rounded-xl border-2 transition ${largeText ? 'bg-indigo-600 border-indigo-700 text-white' : 'bg-white border-indigo-200 hover:bg-indigo-50'}`}
+              >
+                <div className="flex items-center gap-2">
+                  <Type className={`w-4 h-4 ${largeText ? 'text-white' : 'text-indigo-600'}`} />
+                  <span className={`text-xs font-bold uppercase tracking-widest ${largeText ? 'text-white' : 'text-slate-700'}`}>Large Text</span>
+                </div>
+                <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase ${largeText ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'}`}>
+                  {largeText ? 'On' : 'Off'}
+                </span>
+              </button>
+            </div>
+          </div>
+
           {/* Delete Account */}
           <div className="bg-red-50 border border-red-100 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-3">

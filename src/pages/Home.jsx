@@ -53,6 +53,8 @@ import Footer from "../components/Footer";
 import AdminGate from "../components/AdminGate";
 import CoreMenusSection from "../components/CoreMenusSection";
 import CoreMenusSync from "../components/admin/CoreMenusSync";
+import AccessibilityToolbar from "../components/AccessibilityToolbar";
+import { AccessibilityProvider, useA11y } from "@/lib/AccessibilityContext";
 import jsPDF from 'jspdf';
 
 // Framer Motion slide variants for iOS-style push/pop

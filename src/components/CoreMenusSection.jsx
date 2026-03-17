@@ -12,11 +12,11 @@ const CORE_MENUS = [
     activeBg: 'bg-orange-600',
     description: 'Freshly grilled proteins & favorites',
     items: [
-      { name: 'Grilled Chicken Breast', description: 'Seasoned grilled chicken breast served with your choice of sides.', calories: 220, protein: 42, carbs: 0, fat: 5 },
-      { name: 'Grilled Salmon', description: 'Atlantic salmon fillet with lemon herb seasoning.', calories: 280, protein: 38, carbs: 0, fat: 14 },
-      { name: 'Grilled Veggie Plate', description: 'Seasonal vegetables grilled with olive oil and herbs.', calories: 150, protein: 4, carbs: 18, fat: 8 },
-      { name: 'Grilled Burger Patty', description: '1/4 lb beef patty grilled to order.', calories: 310, protein: 28, carbs: 0, fat: 22 },
-      { name: 'Turkey Burger', description: 'Lean ground turkey patty, grilled and seasoned.', calories: 240, protein: 30, carbs: 2, fat: 12 },
+      { name: 'Grilled Chicken Breast', description: 'Seasoned grilled chicken breast served with your choice of sides.', calories: 220, protein: 42, carbs: 0, fat: 5, ingredients: 'Chicken Breast, Olive Oil, Salt, Pepper, Garlic, Herbs' },
+      { name: 'Grilled Salmon', description: 'Atlantic salmon fillet with lemon herb seasoning.', calories: 280, protein: 38, carbs: 0, fat: 14, ingredients: 'Atlantic Salmon, Lemon, Rosemary, Thyme, Olive Oil, Salt' },
+      { name: 'Grilled Veggie Plate', description: 'Seasonal vegetables grilled with olive oil and herbs.', calories: 150, protein: 4, carbs: 18, fat: 8, ingredients: 'Seasonal Vegetables, Olive Oil, Garlic, Italian Herbs, Salt, Pepper' },
+      { name: 'Grilled Burger Patty', description: '1/4 lb beef patty grilled to order.', calories: 310, protein: 28, carbs: 0, fat: 22, ingredients: 'Ground Beef, Salt, Pepper, Onion Powder' },
+      { name: 'Turkey Burger', description: 'Lean ground turkey patty, grilled and seasoned.', calories: 240, protein: 30, carbs: 2, fat: 12, ingredients: 'Ground Turkey, Breadcrumbs, Egg, Salt, Pepper, Onion Powder' },
     ]
   },
   {

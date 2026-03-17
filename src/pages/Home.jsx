@@ -1596,7 +1596,7 @@ export default function Home() {
       <AITransparencyModal isOpen={showAINotice} onAccept={handleAINoticeAccept} />
       <AccessibilityToolbar />
       <Footer />
-    </div>
+      </div>
     </AccessibilityProvider>
   );
 }

@@ -655,37 +655,40 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
 // --- CORE VIEWS ---
 
 function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen, onProfileClick }) {
+  const { t } = useA11y();
   return (
     <nav className="bg-slate-800 dark:bg-slate-900 text-white shadow-lg sticky top-0 z-50 w-full shrink-0 font-sans font-bold select-none"
+      aria-label="Main navigation"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="h-16 flex items-center w-full px-4">
         <div className="w-full max-w-5xl mx-auto flex justify-between items-center px-2">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => changeView('customer')}>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => changeView('customer')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && changeView('customer')} aria-label="Go to home">
             <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698cee888040f55d6a3c5040/066c08658_SmartMenuIQ100x100.png" alt="SmartMenu IQ Logo" className="w-8 h-8 rounded-full" />
             <h1 className="text-xl font-bold uppercase tracking-widest text-white">SmartMenu IQ</h1>
           </div>
-          <div className="hidden md:flex gap-6 items-center text-sm font-bold uppercase tracking-widest">
-            <button onClick={() => changeView('customer')} className={view === 'customer' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>Menu</button>
-            <button onClick={() => changeView('chat')} className={view === 'chat' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>AI Assistant</button>
-            <a href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-slate-300 opacity-70 hover:text-white hover:opacity-100 transition">30 Day Challenge</a>
-            <button onClick={() => changeView('admin')} className={view === 'admin' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}>Admin</button>
-            <button onClick={onProfileClick} className="p-2 hover:bg-white/10 rounded-full transition" title="My Profile">
-              <User className="w-5 h-5" />
+          <div className="hidden md:flex gap-6 items-center text-sm font-bold uppercase tracking-widest" role="menubar">
+            <button onClick={() => changeView('customer')} aria-current={view === 'customer' ? 'page' : undefined} className={`focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1 ${view === 'customer' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}`}>{t.menu}</button>
+            <button onClick={() => changeView('chat')} aria-current={view === 'chat' ? 'page' : undefined} className={`focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1 ${view === 'chat' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}`}>{t.aiAssistant}</button>
+            <a href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-slate-300 opacity-70 hover:text-white hover:opacity-100 transition focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">30 Day Challenge</a>
+            <button onClick={() => changeView('admin')} aria-current={view === 'admin' ? 'page' : undefined} className={`focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1 ${view === 'admin' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}`}>{t.admin}</button>
+            <button onClick={onProfileClick} className="p-2 hover:bg-white/10 rounded-full transition focus-visible:ring-2 focus-visible:ring-teal-400" aria-label="My Profile">
+              <User className="w-5 h-5" aria-hidden="true" />
             </button>
           </div>
           <div className="md:hidden flex items-center gap-2">
-            <button onClick={onProfileClick} className="p-2" title="My Profile"><User className="w-5 h-5 text-white" /></button>
-            <button className="p-2" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>{isMobileMenuOpen ? <X className="text-white" /> : <MenuIcon className="text-white" />}</button>
+            <button onClick={onProfileClick} className="p-2 focus-visible:ring-2 focus-visible:ring-teal-400 rounded" aria-label="My Profile"><User className="w-5 h-5 text-white" aria-hidden="true" /></button>
+            <button className="p-2 focus-visible:ring-2 focus-visible:ring-teal-400 rounded" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} aria-expanded={isMobileMenuOpen} aria-label="Toggle navigation menu">{isMobileMenuOpen ? <X className="text-white" aria-hidden="true" /> : <MenuIcon className="text-white" aria-hidden="true" />}</button>
           </div>
         </div>
       </div>
       {isMobileMenuOpen && (
         <div className="fixed top-0 left-0 right-0 bg-slate-800 dark:bg-slate-900 border-t border-slate-700 shadow-xl md:hidden z-[110] flex flex-col p-4 gap-4 font-bold uppercase text-sm tracking-widest font-sans text-white"
+          role="menu"
           style={{ top: 'calc(4rem + env(safe-area-inset-top))' }}>
-          <button onClick={() => { changeView('customer'); setIsMobileMenuOpen(false); }} className="text-left font-bold">Daily Menu</button>
-          <button onClick={() => { changeView('chat'); setIsMobileMenuOpen(false); }} className="text-left font-bold">AI Assistant</button>
-          <a href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-left font-bold">30 Day Challenge</a>
-          <button onClick={() => { changeView('admin'); setIsMobileMenuOpen(false); }} className="text-left font-bold">Admin</button>
+          <button role="menuitem" onClick={() => { changeView('customer'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">{t.menu}</button>
+          <button role="menuitem" onClick={() => { changeView('chat'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">{t.aiAssistant}</button>
+          <a role="menuitem" href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">30 Day Challenge</a>
+          <button role="menuitem" onClick={() => { changeView('admin'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">{t.admin}</button>
         </div>
       )}
     </nav>

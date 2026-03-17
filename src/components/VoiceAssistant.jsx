@@ -157,7 +157,7 @@ User said: "${transcript}"`
   }, [menuItems, phase]);
 
   const stopAll = useCallback(() => {
-    window.speechSynthesis.cancel();
+    stopSpeaking();
     recRef.current?.stop();
     recRef.current = null;
     setPhase('idle');

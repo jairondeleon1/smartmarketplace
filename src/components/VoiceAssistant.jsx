@@ -92,7 +92,7 @@ function DefaultAvatar({ phase }) {
 export default function VoiceAssistant({ menuItems = [] }) {
   const [phase, setPhase] = useState('idle');
   const [history, setHistory] = useState([]);
-  const [avatarUrl, setAvatarUrl] = useState(() => localStorage.getItem(STORAGE_KEY) || null);
+  const [avatarUrl, setAvatarUrl] = useState(() => localStorage.getItem(STORAGE_KEY) || DEFAULT_AVATAR);
   const [isUploading, setIsUploading] = useState(false);
   const [showUploadHint, setShowUploadHint] = useState(false);
   const recRef = useRef(null);

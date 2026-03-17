@@ -599,15 +599,15 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
           <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698cee888040f55d6a3c5040/5f703ba08_SmartMenuIQ38x10.png" alt="SmartMenu IQ" className="max-w-md w-full px-4" />
         </div>
         <div className="flex flex-col gap-4 items-center max-w-xl mx-auto px-2 font-sans font-bold">
-          <button onClick={() => setIsWeeklyPlannerOpen(true)} className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 border border-slate-800 uppercase tracking-widest text-xs active:scale-95 transition-all">
-            <Wand className="w-5 h-5 text-teal-400" /> Plan My Whole Week Meal
+          <button onClick={() => setIsWeeklyPlannerOpen(true)} className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 border border-slate-800 uppercase tracking-widest text-xs active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2">
+            <Wand className="w-5 h-5 text-teal-400" aria-hidden="true" /> {t.planMyWeek}
           </button>
-          <div onClick={() => changeView('chat')} className="w-full bg-gradient-to-r from-indigo-700 via-purple-600 to-pink-500 rounded-2xl p-5 text-white shadow-2xl cursor-pointer transform transition-all hover:scale-[1.01] flex items-center justify-between text-left border border-white/10 group overflow-hidden font-bold">
+          <div onClick={() => changeView('chat')} onKeyDown={e => e.key === 'Enter' && changeView('chat')} role="button" tabIndex={0} aria-label={t.askAI} className="w-full bg-gradient-to-r from-indigo-700 via-purple-600 to-pink-500 rounded-2xl p-5 text-white shadow-2xl cursor-pointer transform transition-all hover:scale-[1.01] flex items-center justify-between text-left border border-white/10 group overflow-hidden font-bold focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2">
             <div className="flex items-center gap-4 relative z-10">
-              <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md border border-white/10"><Sparkles className="w-5 h-5 text-white animate-pulse" /></div>
-              <div><h3 className="font-bold text-sm uppercase tracking-widest text-white">Ask AI Assistant</h3><p className="text-white/80 text-[11px] font-medium italic opacity-80">Nutrition Guide & Choices</p></div>
+              <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md border border-white/10"><Sparkles className="w-5 h-5 text-white animate-pulse" aria-hidden="true" /></div>
+              <div><h3 className="font-bold text-sm uppercase tracking-widest text-white">{t.askAI}</h3><p className="text-white/80 text-[11px] font-medium italic opacity-80">{t.nutritionGuide}</p></div>
             </div>
-            <div className="bg-white/20 p-2 rounded-full border border-white/10 text-white transition-transform group-hover:translate-x-1 shadow-inner"><ArrowRight className="w-5 h-5" /></div>
+            <div className="bg-white/20 p-2 rounded-full border border-white/10 text-white transition-transform group-hover:translate-x-1 shadow-inner" aria-hidden="true"><ArrowRight className="w-5 h-5" /></div>
           </div>
         </div>
 

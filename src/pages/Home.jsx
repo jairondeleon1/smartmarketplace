@@ -704,19 +704,23 @@ function MobileBottomNav({ view, changeView, onProfileClick }) {
   ];
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-700 z-50 select-none"
+      aria-label="Mobile navigation"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-      <div className="flex items-stretch">
+      <div className="flex items-stretch" role="tablist">
         {tabs.map(({ id, label, icon: Icon }) => {
           const isActive = id === 'settings' ? false : view === id;
           return (
             <button
               key={id}
+              role="tab"
+              aria-selected={isActive}
+              aria-label={label}
               onClick={() => id === 'settings' ? onProfileClick() : changeView(id)}
-              className={`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-colors ${
+              className={`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-colors focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-inset ${
                 isActive ? 'text-teal-600 dark:text-teal-400' : 'text-gray-400 dark:text-slate-500'
               }`}
             >
-              <Icon className="w-5 h-5" />
+              <Icon className="w-5 h-5" aria-hidden="true" />
               <span className="text-[9px] font-bold uppercase tracking-widest">{label}</span>
             </button>
           );

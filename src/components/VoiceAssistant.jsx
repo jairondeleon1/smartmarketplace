@@ -185,7 +185,7 @@ ${pastTurns ? `Conversation so far:\n${pastTurns}\n` : ''}User: "${transcript}"`
     : phase === 'speaking' ? '🔊 Speaking...'
     : phase === 'greeting' ? '👋 Hi!'
     : phase === 'processing' ? '💭 Thinking...'
-    : '💬 Tap Michelle';
+    : '💬 Talk to Michelle';
 
   return (
     <div

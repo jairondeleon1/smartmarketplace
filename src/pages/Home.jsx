@@ -56,15 +56,6 @@ import CoreMenusSync from "../components/admin/CoreMenusSync";
 import { AccessibilityProvider, useA11y } from "@/lib/AccessibilityContext";
 import jsPDF from 'jspdf';
 
-function LargeTextWrapper({ children }) {
-  const { largeText } = useA11y();
-  return (
-    <div style={{ fontSize: largeText ? '120%' : '100%' }}
-      className="min-h-screen bg-stone-50 dark:bg-slate-950 text-gray-900 dark:text-gray-100 font-sans tracking-tight overflow-x-hidden selection:bg-teal-100 selection:text-teal-900 font-bold">
-      {children}
-    </div>
-  );
-}
 
 // Framer Motion slide variants for iOS-style push/pop
 const slideVariants = {
@@ -1524,7 +1515,7 @@ export default function Home() {
 
   return (
     <AccessibilityProvider>
-      <LargeTextWrapper>
+      <div className="min-h-screen bg-stone-50 dark:bg-slate-950 text-gray-900 dark:text-gray-100 font-sans tracking-tight overflow-x-hidden selection:bg-teal-100 selection:text-teal-900 font-bold">
         <AllergenNoticeModal />
         <div className="hidden md:block">
           <NavBar view={view} changeView={changeView} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} onProfileClick={() => setIsProfileModalOpen(true)} />
@@ -1558,7 +1549,7 @@ export default function Home() {
         <ProfileSettingsModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} user={effectiveUser} onProfileUpdate={(profile) => { setLocalProfile(profile); localStorage.setItem('userProfile', JSON.stringify(profile)); }} />
         <AITransparencyModal isOpen={showAINotice} onAccept={handleAINoticeAccept} />
         <Footer onAdminClick={() => changeView('admin')} />
-      </LargeTextWrapper>
+      </div>
     </AccessibilityProvider>
   );
 }

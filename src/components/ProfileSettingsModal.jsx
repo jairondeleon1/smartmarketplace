@@ -8,7 +8,7 @@ const DIET_PREFERENCES = ['Vegan', 'Vegetarian', 'Fit'];
 const HEALTH_GOALS = ['High Protein', 'Low Carb', 'High Fiber'];
 
 export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileUpdate }) {
-  const { lang, largeText, toggleLang, toggleLargeText } = useA11y();
+  const { lang, toggleLang } = useA11y();
   const [restrictions, setRestrictions] = useState([]);
   const [preferences, setPreferences] = useState([]);
   const [goals, setGoals] = useState([]);

@@ -199,76 +199,86 @@ ${pastTurns ? `Conversation so far:\n${pastTurns}\n` : ''}User: "${transcript}"`
     }
   };
 
-  // Ring color by phase
-  const ringColor = phase === 'listening'
-    ? 'ring-red-400'
-    : phase === 'speaking' || phase === 'greeting'
-    ? 'ring-violet-400'
-    : phase === 'processing'
-    ? 'ring-amber-400'
-    : 'ring-teal-400';
-
   const isActive = phase !== 'idle';
+
+  // Phase-based animation styles
+  const avatarAnimation =
+    phase === 'listening'
+      ? 'animate-bounce'
+      : phase === 'speaking' || phase === 'greeting'
+      ? 'scale-110'
+      : phase === 'processing'
+      ? 'animate-pulse'
+      : 'hover:scale-110';
+
+  const glowStyle =
+    phase === 'listening'
+      ? '0 0 0 4px rgba(239,68,68,0.5), 0 0 20px rgba(239,68,68,0.4)'
+      : phase === 'speaking' || phase === 'greeting'
+      ? '0 0 0 4px rgba(139,92,246,0.6), 0 0 30px rgba(139,92,246,0.6), 0 0 60px rgba(139,92,246,0.3)'
+      : phase === 'processing'
+      ? '0 0 0 4px rgba(245,158,11,0.5), 0 0 20px rgba(245,158,11,0.3)'
+      : '0 0 0 3px rgba(52,211,153,0.4), 0 0 12px rgba(52,211,153,0.2)';
+
+  const statusLabel =
+    phase === 'listening' ? '🎤 Listening...'
+    : phase === 'speaking' ? '🔊 Speaking...'
+    : phase === 'greeting' ? '👋 Hi!'
+    : phase === 'processing' ? '💭 Thinking...'
+    : '💬 Tap Michelle';
 
   return (
     <div
-      className="fixed z-[60]"
-      style={{ bottom: 'calc(5.5rem + env(safe-area-inset-bottom))', right: '1.25rem' }}
+      className="fixed z-[60] flex flex-col items-center gap-1.5"
+      style={{ bottom: 'calc(5.5rem + env(safe-area-inset-bottom))', right: '1rem' }}
     >
-      {/* Upload hint tooltip */}
-      {showUploadHint && (
-        <div className="absolute bottom-full right-0 mb-2 bg-slate-800 text-white text-xs rounded-xl px-3 py-2 whitespace-nowrap shadow-lg">
-          Upload a photo to cartoonify!
-          <button onClick={() => setShowUploadHint(false)} className="ml-2 text-slate-400 hover:text-white">✕</button>
-        </div>
-      )}
+      {/* Status label */}
+      <div className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full transition-all duration-300 ${
+        phase === 'listening' ? 'bg-red-100 text-red-600' :
+        phase === 'speaking' || phase === 'greeting' ? 'bg-violet-100 text-violet-700' :
+        phase === 'processing' ? 'bg-amber-100 text-amber-700' :
+        'bg-white/80 text-slate-500 shadow-sm'
+      }`}>
+        {statusLabel}
+      </div>
 
       {/* Avatar button */}
       <button
         onClick={handleClick}
         aria-label="Voice Assistant - Michelle"
-        className={`relative w-16 h-16 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 overflow-hidden ring-4 ${ringColor} ${isActive ? 'ring-opacity-80' : 'ring-opacity-40'}`}
+        className={`relative w-16 h-16 rounded-full shadow-2xl transition-all duration-300 active:scale-95 overflow-hidden ${avatarAnimation}`}
+        style={{ boxShadow: glowStyle }}
       >
         {isUploading ? (
           <div className="w-full h-full bg-violet-700 flex items-center justify-center">
             <Loader2 className="w-6 h-6 text-white animate-spin" />
           </div>
-        ) : avatarUrl ? (
-          <img src={avatarUrl} alt="Michelle" className="w-full h-full object-cover" />
         ) : (
-          <div className={`w-full h-full transition-all ${
-            phase === 'speaking' ? 'bg-violet-700' :
-            phase === 'listening' ? 'bg-red-600' :
-            phase === 'processing' ? 'bg-amber-600' :
-            'bg-gradient-to-br from-violet-500 to-purple-700'
-          }`}>
-            <DefaultAvatar phase={phase} />
-          </div>
+          <img src={avatarUrl} alt="Michelle" className="w-full h-full object-cover object-top" />
         )}
 
-        {/* Pulse ring when active */}
-        {isActive && (
-          <span className={`absolute inset-0 rounded-full animate-ping opacity-20 ${
-            phase === 'listening' ? 'bg-red-400' :
-            phase === 'speaking' ? 'bg-violet-400' :
-            'bg-amber-400'
-          }`} />
+        {/* Ripple rings when listening */}
+        {phase === 'listening' && (
+          <>
+            <span className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-25" />
+            <span className="absolute -inset-2 rounded-full border-2 border-red-400 animate-ping opacity-20" style={{ animationDelay: '0.2s' }} />
+          </>
         )}
 
-        {/* Online dot */}
-        {!isActive && (
-          <span className="absolute top-0.5 right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse" />
+        {/* Glow pulse when speaking */}
+        {(phase === 'speaking' || phase === 'greeting') && (
+          <span className="absolute inset-0 rounded-full bg-violet-400 animate-ping opacity-15" />
         )}
       </button>
 
       {/* Upload photo button */}
       <button
-        onClick={() => { setShowUploadHint(false); fileInputRef.current?.click(); }}
-        className="absolute -bottom-1 -left-1 w-6 h-6 bg-white border border-slate-200 rounded-full shadow flex items-center justify-center hover:bg-slate-50 transition"
+        onClick={() => fileInputRef.current?.click()}
+        className="w-5 h-5 bg-white border border-slate-200 rounded-full shadow flex items-center justify-center hover:bg-slate-50 transition"
         aria-label="Upload avatar photo"
-        title="Upload your photo to create a cartoon Michelle"
+        title="Replace with your own cartoon photo"
       >
-        <Upload className="w-3 h-3 text-slate-500" />
+        <Upload className="w-2.5 h-2.5 text-slate-400" />
       </button>
 
       <input

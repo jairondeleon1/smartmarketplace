@@ -68,7 +68,6 @@ const slideVariants = {
 const VIEW_ORDER = ['customer', 'chat', 'admin'];
 
 function PullToRefreshIndicator({ pullDistance, isPulling, isRefreshing, threshold = 72 }) {
-  const { t } = useA11y();
   if (!isPulling && !isRefreshing) return null;
   return (
     <div className="flex items-center justify-center transition-all duration-200 overflow-hidden"

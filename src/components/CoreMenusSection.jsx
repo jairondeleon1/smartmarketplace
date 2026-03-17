@@ -137,7 +137,7 @@ export default function CoreMenusSection({ onAddToPlate }) {
           <div className="h-px flex-1 bg-gray-100" />
         </div>
         <div className="flex flex-wrap justify-center gap-2">
-          {CORE_MENUS.map(menu => (
+          {menusWithItems.map(menu => (
             <button
               key={menu.id}
               onClick={() => setOpenMenu(menu.id)}

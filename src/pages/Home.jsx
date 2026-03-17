@@ -732,6 +732,7 @@ function MobileBottomNav({ view, changeView, onProfileClick }) {
 }
 
 function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendChat }) {
+  const { t } = useA11y();
   const chatEndRef = useRef(null);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatHistory, isTyping]);
 

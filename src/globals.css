@@ -14,17 +14,12 @@ html, body {
 }
 
 /* Large text accessibility mode */
-.text-lg-mode {
-  font-size: 112.5% !important;
+.text-lg-mode * {
+  font-size: inherit !important;
 }
-.text-lg-mode .text-xs { font-size: 0.85rem !important; }
-.text-lg-mode .text-\[10px\] { font-size: 0.75rem !important; }
-.text-lg-mode .text-\[9px\] { font-size: 0.7rem !important; }
-.text-lg-mode .text-sm { font-size: 1rem !important; }
-.text-lg-mode .text-base { font-size: 1.1rem !important; }
-.text-lg-mode .text-lg { font-size: 1.2rem !important; }
-.text-lg-mode .text-xl { font-size: 1.35rem !important; }
-.text-lg-mode .text-2xl { font-size: 1.6rem !important; }
+.text-lg-mode {
+  font-size: 120% !important;
+}
 
 /* Focus ring improvements for WCAG keyboard nav */
 :focus-visible {

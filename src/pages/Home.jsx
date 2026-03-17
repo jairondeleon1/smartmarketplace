@@ -1283,7 +1283,6 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
             </div>
           </div>
         </div>
-        </div>
       )}
 
       {activeTab === 'manage' && (

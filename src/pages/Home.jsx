@@ -619,11 +619,11 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
           ))}
         </div>
 
-        <div className="flex flex-wrap justify-center gap-2 font-sans font-bold">
-          <button onClick={() => toggleFilter('vegetarian')} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 ${activeFilters.vegetarian ? 'bg-green-50 border-green-500 text-green-900' : 'bg-white border-gray-100 text-gray-400'}`}><VegProgramIcon url={customVegUrl} className="w-4 h-4" /> Veg</button>
-          <button onClick={() => toggleFilter('vegan')} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 ${activeFilters.vegan ? 'bg-green-50 border-green-500 text-green-900' : 'bg-white border-gray-100 text-gray-400'}`}><VeganProgramIcon url={customVeganUrl} className="w-4 h-4" /> Vegan</button>
-          <button onClick={() => toggleFilter('fit')} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 ${activeFilters.fit ? 'bg-blue-50 border-blue-500 text-blue-900' : 'bg-white border-gray-100 text-gray-400'}`}><FitIcon className="w-4 h-4" /> Fit</button>
-          {Object.values(activeFilters).some(Boolean) && <button onClick={clearFilters} className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition"><XCircle className="w-5 h-5" /></button>}
+        <div className="flex flex-wrap justify-center gap-2 font-sans font-bold" role="group" aria-label="Dietary filters">
+          <button onClick={() => toggleFilter('vegetarian')} aria-pressed={activeFilters.vegetarian} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-1 ${activeFilters.vegetarian ? 'bg-green-50 border-green-500 text-green-900' : 'bg-white border-gray-100 text-gray-400'}`}><VegProgramIcon url={customVegUrl} className="w-4 h-4" /> {t.veg}</button>
+          <button onClick={() => toggleFilter('vegan')} aria-pressed={activeFilters.vegan} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-1 ${activeFilters.vegan ? 'bg-green-50 border-green-500 text-green-900' : 'bg-white border-gray-100 text-gray-400'}`}><VeganProgramIcon url={customVeganUrl} className="w-4 h-4" /> {t.vegan}</button>
+          <button onClick={() => toggleFilter('fit')} aria-pressed={activeFilters.fit} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 ${activeFilters.fit ? 'bg-blue-50 border-blue-500 text-blue-900' : 'bg-white border-gray-100 text-gray-400'}`}><FitIcon className="w-4 h-4" /> {t.fit}</button>
+          {Object.values(activeFilters).some(Boolean) && <button onClick={clearFilters} aria-label="Clear all filters" className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition focus-visible:ring-2 focus-visible:ring-red-400"><XCircle className="w-5 h-5" aria-hidden="true" /></button>}
         </div>
       </div>
 

@@ -1592,9 +1592,8 @@ export default function Home() {
       <NutritionCharts isOpen={isChartsOpen} onClose={() => setIsChartsOpen(false)} menuItems={menuItems} />
       <ProfileSettingsModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} user={effectiveUser} onProfileUpdate={(profile) => { setLocalProfile(profile); localStorage.setItem('userProfile', JSON.stringify(profile)); }} />
       <AITransparencyModal isOpen={showAINotice} onAccept={handleAINoticeAccept} />
-      <AccessibilityToolbar />
       <Footer onAdminClick={() => changeView('admin')} />
-      </div>
+      </LargeTextWrapper>
     </AccessibilityProvider>
   );
 }

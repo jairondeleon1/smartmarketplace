@@ -277,7 +277,7 @@ function LegalModal({ doc, onClose }) {
   );
 }
 
-export default function Footer() {
+export default function Footer({ onAdminClick }) {
   const [activeDoc, setActiveDoc] = useState(null);
   const [gpcActive] = useState(() => navigator.globalPrivacyControl === true);
 
@@ -316,6 +316,14 @@ export default function Footer() {
                 {label}
               </button>
             ))}
+            {onAdminClick && (
+              <button
+                onClick={onAdminClick}
+                className="text-slate-500 hover:text-teal-400 text-xs font-bold uppercase tracking-widest transition-colors"
+              >
+                Admin
+              </button>
+            )}
           </div>
           <div className="border-t border-slate-700 pt-4 text-center space-y-1">
             <p className="text-slate-500 text-[10px] uppercase tracking-widest font-bold">

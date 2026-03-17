@@ -575,6 +575,7 @@ function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addTo
 
 function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, selectedDay, setSelectedDay, activeFilters, toggleFilter, clearFilters, filteredItems, dayScrollRef, addToPlate, myPlate, setMyPlate, isTrayModalOpen, setIsTrayModalOpen, isWeeklyPlannerOpen, setIsWeeklyPlannerOpen, changeView, user }) {
   const [activeMealTab, setActiveMealTab] = useState('Lunch');
+  const { t } = useA11y();
 
   const doRefresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ['menuItems'] });

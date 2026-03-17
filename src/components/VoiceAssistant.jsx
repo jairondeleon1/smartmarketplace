@@ -2,44 +2,35 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Mic, MicOff, X, Volume2, VolumeX, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-const INWORLD_VOICE = 'default-i-eyv3zmlf9hyqv3c7jmsg__michelle';
-const INWORLD_TTS_URL = 'https://studio.api.inworld.ai/v1/ai/tts';
-
-// --- Inworld TTS ---
-async function speakWithInworld(text, inworldKey) {
-  if (!inworldKey || !text) return null;
-  const cleanText = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/#{1,6}\s/g, '').trim().slice(0, 800);
-  const res = await fetch(INWORLD_TTS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${inworldKey}` },
-    body: JSON.stringify({ text: cleanText, voiceName: INWORLD_VOICE, audioConfig: { audioEncoding: 'MP3' } })
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
-  if (!data.audioContent) return null;
-  const binary = atob(data.audioContent);
+// --- TTS via backend function ---
+async function speakViaBackend(text) {
+  if (!text) return null;
+  const res = await base44.functions.invoke('inworldTTS', { text });
+  const audioContent = res?.data?.audioContent;
+  if (!audioContent) return null;
+  const binary = atob(audioContent);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   const blob = new Blob([bytes], { type: 'audio/mpeg' });
   return URL.createObjectURL(blob);
 }
 
-// --- Speech Recognition ---
+// --- Speech Recognition hook ---
 function useSpeechRecognition({ onResult, onEnd }) {
   const recognitionRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
 
   const start = useCallback(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { alert('Speech recognition is not supported in this browser. Try Chrome.'); return; }
+    if (!SR) {
+      alert('Speech recognition is not supported in this browser. Please use Chrome.');
+      return;
+    }
     const recognition = new SR();
     recognition.lang = 'en-US';
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
-    recognition.onresult = (e) => {
-      const transcript = e.results[0][0].transcript;
-      onResult(transcript);
-    };
+    recognition.onresult = (e) => onResult(e.results[0][0].transcript);
     recognition.onend = () => { setIsListening(false); onEnd(); };
     recognition.onerror = () => { setIsListening(false); onEnd(); };
     recognitionRef.current = recognition;
@@ -76,8 +67,8 @@ function ConversationBubble({ msg }) {
   );
 }
 
-// --- Main Component ---
-export default function VoiceAssistant({ menuItems = [], inworldKey = '' }) {
+// --- Main VoiceAssistant Component ---
+export default function VoiceAssistant({ menuItems = [] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -100,18 +91,22 @@ export default function VoiceAssistant({ menuItems = [], inworldKey = '' }) {
   }, []);
 
   const playTTS = useCallback(async (text) => {
-    if (isMuted || !inworldKey) return;
+    if (isMuted) return;
     stopSpeaking();
     setIsSpeaking(true);
-    const url = await speakWithInworld(text, inworldKey);
-    if (!url) { setIsSpeaking(false); return; }
-    audioUrlRef.current = url;
-    const audio = new Audio(url);
-    audioRef.current = audio;
-    audio.onended = () => { setIsSpeaking(false); };
-    audio.onerror = () => { setIsSpeaking(false); };
-    audio.play().catch(() => setIsSpeaking(false));
-  }, [isMuted, inworldKey, stopSpeaking]);
+    try {
+      const url = await speakViaBackend(text);
+      if (!url) { setIsSpeaking(false); return; }
+      audioUrlRef.current = url;
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => setIsSpeaking(false);
+      audio.onerror = () => setIsSpeaking(false);
+      audio.play().catch(() => setIsSpeaking(false));
+    } catch {
+      setIsSpeaking(false);
+    }
+  }, [isMuted, stopSpeaking]);
 
   const handleVoiceResult = useCallback(async (transcript) => {
     if (!transcript.trim()) return;
@@ -123,9 +118,9 @@ export default function VoiceAssistant({ menuItems = [], inworldKey = '' }) {
         name, day, station, calories, protein, carbs, fat, sodium, allergens, tags
       }));
       const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are Michelle, a friendly voice nutrition assistant for a corporate Marketplace cafe. Keep your answer under 60 words and speak naturally (no bullet points, no markdown). Menu context: ${JSON.stringify(slimMenu)}. User question: "${transcript}"`
+        prompt: `You are Michelle, a friendly voice nutrition assistant for a corporate Marketplace cafe. Keep your answer under 60 words, speak naturally (no bullet points, no markdown, no asterisks). Menu context: ${JSON.stringify(slimMenu)}. User question: "${transcript}"`
       });
-      const aiText = typeof response === 'string' ? response : response?.content || "I'm not sure about that. Try asking about today's menu or nutrition info!";
+      const aiText = typeof response === 'string' ? response : "I'm not sure about that. Try asking about today's menu or nutrition info!";
       setConversation(prev => [...prev, { role: 'ai', content: aiText }]);
       await playTTS(aiText);
     } catch {
@@ -159,28 +154,27 @@ export default function VoiceAssistant({ menuItems = [], inworldKey = '' }) {
       <button
         onClick={() => setIsOpen(true)}
         aria-label="Open Voice Assistant"
-        className="fixed z-[60] bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-full shadow-2xl p-4 transition-all hover:scale-110 active:scale-95 border-4 border-white/30"
+        className="fixed z-[60] bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-full shadow-2xl p-4 transition-all hover:scale-110 active:scale-95 border-4 border-white/20"
         style={{ bottom: 'calc(5.5rem + env(safe-area-inset-bottom))', right: '1.25rem' }}
       >
         <Mic className="w-6 h-6" />
-        <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white" />
+        <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse" />
       </button>
 
       {/* Voice Assistant Panel */}
       {isOpen && (
-        <div className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center sm:p-4 pointer-events-none">
+        <div className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center sm:p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={handleClose} />
           <div
-            className="pointer-events-auto w-full sm:max-w-md bg-gradient-to-b from-slate-900 to-slate-800 rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-white/10 animate-in slide-in-from-bottom sm:zoom-in-95 duration-300"
+            className="relative w-full sm:max-w-md bg-gradient-to-b from-slate-900 to-slate-800 rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-white/10 animate-in slide-in-from-bottom sm:zoom-in-95 duration-300"
             style={{ maxHeight: '80vh', minHeight: '420px' }}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-white/10 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg ${isSpeaking ? 'ring-2 ring-purple-400 ring-offset-2 ring-offset-slate-900 animate-pulse' : ''}`}>
-                    <Volume2 className="w-5 h-5 text-white" />
-                  </div>
-                  {isSpeaking && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-slate-900 animate-ping" />}
+                <div className={`relative w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg ${isSpeaking ? 'ring-2 ring-purple-400 ring-offset-2 ring-offset-slate-900' : ''}`}>
+                  <Volume2 className="w-5 h-5 text-white" />
+                  {isSpeaking && <span className="absolute inset-0 rounded-full bg-purple-400 animate-ping opacity-30" />}
                 </div>
                 <div>
                   <p className="font-bold text-white text-sm uppercase tracking-widest">Michelle</p>
@@ -190,10 +184,14 @@ export default function VoiceAssistant({ menuItems = [], inworldKey = '' }) {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => { setIsMuted(m => !m); if (!isMuted) stopSpeaking(); }} className="p-2 hover:bg-white/10 rounded-full transition text-slate-400 hover:text-white">
+                <button
+                  onClick={() => { setIsMuted(m => !m); if (!isMuted) stopSpeaking(); }}
+                  className="p-2 hover:bg-white/10 rounded-full transition text-slate-400 hover:text-white"
+                  aria-label={isMuted ? 'Unmute' : 'Mute'}
+                >
                   {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                 </button>
-                <button onClick={handleClose} className="p-2 hover:bg-white/10 rounded-full transition text-slate-400 hover:text-white">
+                <button onClick={handleClose} className="p-2 hover:bg-white/10 rounded-full transition text-slate-400 hover:text-white" aria-label="Close">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -215,21 +213,20 @@ export default function VoiceAssistant({ menuItems = [], inworldKey = '' }) {
               )}
             </div>
 
-            {/* Mic Button Area */}
-            <div className="p-5 border-t border-white/10 shrink-0 flex flex-col items-center gap-3">
+            {/* Mic Button */}
+            <div className="p-5 border-t border-white/10 shrink-0 flex flex-col items-center gap-3"
+              style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}>
               <button
                 onClick={handleMicClick}
                 disabled={isProcessing}
                 className={`relative w-20 h-20 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
                   isListening
-                    ? 'bg-red-500 scale-110 ring-4 ring-red-400/50 ring-offset-2 ring-offset-slate-800'
+                    ? 'bg-red-500 scale-110 ring-4 ring-red-400/40 ring-offset-2 ring-offset-slate-800'
                     : 'bg-gradient-to-br from-indigo-500 to-purple-600 hover:scale-105'
                 }`}
               >
                 {isListening ? <MicOff className="w-8 h-8 text-white" /> : <Mic className="w-8 h-8 text-white" />}
-                {isListening && (
-                  <span className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-30" />
-                )}
+                {isListening && <span className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-25" />}
               </button>
               <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">
                 {isListening ? 'Tap to stop' : isProcessing ? 'Processing...' : 'Tap mic to speak'}

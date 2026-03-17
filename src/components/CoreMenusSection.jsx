@@ -29,11 +29,11 @@ const CORE_MENUS = [
     activeBg: 'bg-amber-700',
     description: 'Made-to-order sandwiches & wraps',
     items: [
-      { name: 'Turkey Club Sandwich', description: 'Sliced turkey, bacon, lettuce, tomato on toasted bread.', calories: 480, protein: 32, carbs: 42, fat: 18 },
-      { name: 'Roast Beef Sub', description: 'Thinly sliced roast beef with horseradish on a hoagie roll.', calories: 520, protein: 36, carbs: 48, fat: 20 },
-      { name: 'Veggie Wrap', description: 'Hummus, roasted veggies, feta in a whole wheat tortilla.', calories: 360, protein: 12, carbs: 52, fat: 14 },
-      { name: 'Tuna Salad Sandwich', description: 'Classic tuna salad on sourdough with lettuce and tomato.', calories: 420, protein: 28, carbs: 38, fat: 16 },
-      { name: 'Caprese Panini', description: 'Fresh mozzarella, tomato, basil, balsamic on ciabatta.', calories: 390, protein: 18, carbs: 44, fat: 16 },
+      { name: 'Turkey Club Sandwich', description: 'Sliced turkey, bacon, lettuce, tomato on toasted bread.', calories: 480, protein: 32, carbs: 42, fat: 18, ingredients: 'Sliced Turkey, Bacon, Lettuce, Tomato, Whole Wheat Bread, Mayonnaise' },
+      { name: 'Roast Beef Sub', description: 'Thinly sliced roast beef with horseradish on a hoagie roll.', calories: 520, protein: 36, carbs: 48, fat: 20, ingredients: 'Roast Beef, Horseradish Sauce, Hoagie Roll, Onion, Arugula, Olive Oil' },
+      { name: 'Veggie Wrap', description: 'Hummus, roasted veggies, feta in a whole wheat tortilla.', calories: 360, protein: 12, carbs: 52, fat: 14, ingredients: 'Whole Wheat Tortilla, Hummus, Roasted Zucchini, Bell Peppers, Carrots, Feta Cheese' },
+      { name: 'Tuna Salad Sandwich', description: 'Classic tuna salad on sourdough with lettuce and tomato.', calories: 420, protein: 28, carbs: 38, fat: 16, ingredients: 'Canned Tuna, Mayonnaise, Celery, Red Onion, Sourdough Bread, Lettuce, Tomato' },
+      { name: 'Caprese Panini', description: 'Fresh mozzarella, tomato, basil, balsamic on ciabatta.', calories: 390, protein: 18, carbs: 44, fat: 16, ingredients: 'Fresh Mozzarella, Roma Tomato, Fresh Basil, Ciabatta, Balsamic Glaze, Olive Oil' },
     ]
   },
   {

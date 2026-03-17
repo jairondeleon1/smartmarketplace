@@ -19,6 +19,9 @@ Deno.serve(async (req) => {
       .trim()
       .slice(0, 500);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
     const res = await fetch('https://api.inworld.ai/tts/v1/voice', {
       method: 'POST',
       headers: {
@@ -29,8 +32,11 @@ Deno.serve(async (req) => {
         text: cleanText,
         voiceId: 'default-i-eyv3zmlf9hyqv3c7jmsg__michelle',
         modelId: 'inworld-tts-1.5-max'
-      })
+      }),
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!res.ok) {
       const err = await res.text();

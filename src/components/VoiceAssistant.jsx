@@ -88,9 +88,11 @@ ${pastTurns ? `Conversation so far:\n${pastTurns}\n` : ''}User: "${transcript}"`
         });
 
         const aiText = typeof response === 'string' ? response : "I'm not sure about that one. Try asking about today's specials!";
-        setPhase('speaking');
 
-        // Start TTS immediately
+        // Save both turns to history
+        setHistory(prev => [...prev, { role: 'user', content: transcript }, { role: 'ai', content: aiText }]);
+
+        setPhase('speaking');
         speak(aiText, {
           muted: mutedRef.current,
           onEnd: () => {

@@ -45,7 +45,7 @@ function createRecognition() {
   return r;
 }
 
-const GREETING = "Hi! I'm Michelle, your Marketplace assistant. What can I help you with today — menu items, nutrition, or allergens?";
+const GREETING = "Hi, I'm Michelle! What can I help you with today?";
 
 export default function VoiceAssistant({ menuItems = [] }) {
   const [phase, setPhase] = useState('idle'); // idle | greeting | listening | processing | speaking

@@ -98,7 +98,6 @@ export const EN = {
 
 export function AccessibilityProvider({ children }) {
   const [lang, setLang] = useState(() => localStorage.getItem('a11y_lang') || 'en');
-  const [largeText, setLargeText] = useState(() => localStorage.getItem('a11y_large') === 'true');
 
   const t = lang === 'es' ? ES : EN;
 
@@ -107,20 +106,10 @@ export function AccessibilityProvider({ children }) {
     localStorage.setItem('a11y_lang', lang);
   }, [lang]);
 
-  useEffect(() => {
-    if (largeText) {
-      document.documentElement.classList.add('text-lg-mode');
-    } else {
-      document.documentElement.classList.remove('text-lg-mode');
-    }
-    localStorage.setItem('a11y_large', largeText);
-  }, [largeText]);
-
   const toggleLang = () => setLang(l => l === 'en' ? 'es' : 'en');
-  const toggleLargeText = () => setLargeText(v => !v);
 
   return (
-    <AccessibilityContext.Provider value={{ lang, t, largeText, toggleLang, toggleLargeText }}>
+    <AccessibilityContext.Provider value={{ lang, t, toggleLang }}>
       {children}
     </AccessibilityContext.Provider>
   );

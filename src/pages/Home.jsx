@@ -68,16 +68,18 @@ const slideVariants = {
 const VIEW_ORDER = ['customer', 'chat', 'admin'];
 
 function PullToRefreshIndicator({ pullDistance, isPulling, isRefreshing, threshold = 72 }) {
+  const { t } = useA11y();
   if (!isPulling && !isRefreshing) return null;
   return (
     <div className="flex items-center justify-center transition-all duration-200 overflow-hidden"
-      style={{ height: isRefreshing ? 48 : pullDistance }}>
+      style={{ height: isRefreshing ? 48 : pullDistance }}
+      role="status" aria-live="polite">
       <div className="flex flex-col items-center gap-1">
         {isRefreshing
-          ? <Loader2 className="w-6 h-6 text-teal-500 animate-spin" />
-          : <RefreshCw className={`w-6 h-6 text-teal-500 transition-transform ${pullDistance >= threshold ? 'rotate-180' : ''}`} />}
+          ? <Loader2 className="w-6 h-6 text-teal-500 animate-spin" aria-hidden="true" />
+          : <RefreshCw className={`w-6 h-6 text-teal-500 transition-transform ${pullDistance >= threshold ? 'rotate-180' : ''}`} aria-hidden="true" />}
         <span className="text-[10px] text-teal-600 font-bold uppercase tracking-widest">
-          {isRefreshing ? 'Refreshing...' : pullDistance >= threshold ? 'Release to refresh' : 'Pull to refresh'}
+          {isRefreshing ? t.refreshing : pullDistance >= threshold ? t.releaseRefresh : t.pullRefresh}
         </span>
       </div>
     </div>

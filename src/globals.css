@@ -13,13 +13,7 @@ html, body {
   --safe-bottom: env(safe-area-inset-bottom);
 }
 
-/* Large text accessibility mode */
-.text-lg-mode * {
-  font-size: inherit !important;
-}
-.text-lg-mode {
-  font-size: 120% !important;
-}
+/* Large text accessibility mode - applied via inline style on root div */
 
 /* Focus ring improvements for WCAG keyboard nav */
 :focus-visible {

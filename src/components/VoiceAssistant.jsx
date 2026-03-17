@@ -47,6 +47,7 @@ function createRecognition() {
 
 const GREETING = "Hi, I'm Michelle! What can I help you with today?";
 const STORAGE_KEY = 'michelle_avatar_url';
+const DEFAULT_AVATAR = 'https://media.base44.com/images/public/698cee888040f55d6a3c5040/043a5423a_generated_image.png';
 
 // Default cartoon Michelle SVG avatar
 function DefaultAvatar({ phase }) {

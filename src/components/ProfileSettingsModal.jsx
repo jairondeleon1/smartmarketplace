@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, User, AlertTriangle, Heart, Target, Trash2, ShieldAlert, ShieldCheck, Download, Shield, ExternalLink, Globe, Type } from 'lucide-react';
-import { useA11y } from '@/lib/AccessibilityContext';
 
 const ALLERGENS = ['Milk', 'Wheat', 'Egg', 'Soy', 'Fish', 'Shellfish', 'Tree Nuts', 'Peanuts', 'Sesame', 'Gluten'];
 const SEVERE_ALLERGENS = ['Shellfish', 'Tree Nuts', 'Peanuts', 'Fish', 'Sesame'];
@@ -8,7 +7,6 @@ const DIET_PREFERENCES = ['Vegan', 'Vegetarian', 'Fit'];
 const HEALTH_GOALS = ['High Protein', 'Low Carb', 'High Fiber'];
 
 export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileUpdate }) {
-  const { lang, toggleLang, t } = useA11y();
   const [restrictions, setRestrictions] = useState([]);
   const [preferences, setPreferences] = useState([]);
   const [goals, setGoals] = useState([]);
@@ -40,7 +38,6 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
         health_goals: goals
       };
       if (disclaimerAccepted) localStorage.setItem('profileDisclaimerAccepted', 'true');
-      // Store profile locally since auth may not be available
       localStorage.setItem('userProfile', JSON.stringify(profileData));
       if (onProfileUpdate) onProfileUpdate(profileData);
       onClose();
@@ -90,7 +87,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
         <div className="p-6 bg-slate-900 text-white flex justify-between items-center shrink-0">
           <div className="flex items-center gap-3">
             <User className="w-6 h-6 text-teal-400" />
-            <h3 className="font-bold text-xl uppercase tracking-tight">{t.myProfile}</h3>
+            <h3 className="font-bold text-xl uppercase tracking-tight">My Profile</h3>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition">
             <X className="w-6 h-6" />
@@ -104,8 +101,8 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
             <div className="bg-green-50 border border-green-300 rounded-2xl p-4 flex items-center gap-3">
               <ShieldCheck className="w-5 h-5 text-green-600 shrink-0" />
               <div>
-                <p className="text-xs font-bold text-green-800 uppercase tracking-wide">{t.gpcBannerTitle}</p>
-                <p className="text-xs text-green-700 mt-0.5">{t.gpcBannerBody}</p>
+                <p className="text-xs font-bold text-green-800 uppercase tracking-wide">Opt-Out Preference Signal Honored</p>
+                <p className="text-xs text-green-700 mt-0.5">Your browser sent a Global Privacy Control (GPC) signal. Data processing has been limited accordingly.</p>
               </div>
             </div>
           )}
@@ -114,10 +111,10 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-slate-500" />
-              <span className="text-xs font-bold text-slate-700 uppercase tracking-widest">{t.privacyStatus}</span>
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-widest">Privacy Status</span>
             </div>
             <span className={`text-xs font-bold px-3 py-1 rounded-full ${gpcActive ? 'bg-green-100 text-green-800' : 'bg-slate-200 text-slate-600'}`}>
-              {gpcActive ? t.optedOutGPC : t.standardMode}
+              {gpcActive ? '🔒 Opted Out (GPC Active)' : 'Standard Mode'}
             </span>
           </div>
 
@@ -131,10 +128,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
               className="mt-0.5 w-4 h-4 accent-teal-600 shrink-0 cursor-pointer"
             />
             <label htmlFor="disclaimer-accept" className="text-xs text-amber-900 leading-relaxed cursor-pointer">
-              {lang === 'es'
-                ? <>Entiendo que SmartMenuIQ proporciona <span className="font-bold">solo estimaciones</span> y soy responsable de verificar ingredientes y alérgenos directamente con el personal antes de consumir cualquier artículo.</>
-                : <>I understand that SmartMenuIQ provides <span className="font-bold">estimates only</span> and I am responsible for verifying ingredients and allergens directly with the restaurant or food service staff before consuming any item.</>
-              }
+              I understand that SmartMenuIQ provides <span className="font-bold">estimates only</span> and I am responsible for verifying ingredients and allergens directly with the restaurant or food service staff before consuming any item.
             </label>
           </div>
 
@@ -142,9 +136,9 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
           <div className="bg-red-50 border border-red-100 rounded-2xl p-6">
             <div className="flex items-center gap-2 mb-4">
               <AlertTriangle className="w-5 h-5 text-red-600" />
-              <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">{t.dietaryRestrictions}</h4>
+              <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">Dietary Restrictions</h4>
             </div>
-            <p className="text-xs text-gray-600 mb-4">{t.dietaryRestrictionsDesc}</p>
+            <p className="text-xs text-gray-600 mb-4">Select allergens or ingredients you need to avoid</p>
             <div className="flex flex-wrap gap-2">
               {ALLERGENS.map(allergen => (
                 <button
@@ -162,17 +156,13 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
               ))}
             </div>
 
-            {/* Severe Allergen Warning */}
             {restrictions.some(r => SEVERE_ALLERGENS.includes(r)) && (
               <div className="mt-4 bg-red-100 border border-red-300 rounded-xl p-4 flex gap-3 items-start">
                 <ShieldAlert className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs font-bold text-red-800 uppercase tracking-wide mb-1">{t.severeAllergyTitle}</p>
+                  <p className="text-xs font-bold text-red-800 uppercase tracking-wide mb-1">Severe Allergy Flagged</p>
                   <p className="text-xs text-red-700 leading-relaxed">
-                    {lang === 'es'
-                      ? <>Ha marcado una alergia grave a <span className="font-bold">{restrictions.filter(r => SEVERE_ALLERGENS.includes(r)).join(', ')}</span>. Si bien destacamos artículos libres, por favor <span className="font-bold">alerte a un Embajador de Ingredientes</span> en nuestro Mercado.</>
-                      : <>You've flagged a severe allergy to <span className="font-bold">{restrictions.filter(r => SEVERE_ALLERGENS.includes(r)).join(', ')}</span>. While we highlight matching-free items, please <span className="font-bold">alert an Ingredient Ambassador</span> at our Marketplace — our data cannot track real-time kitchen cross-contamination or shared fryers.</>
-                    }
+                    You've flagged a severe allergy to <span className="font-bold">{restrictions.filter(r => SEVERE_ALLERGENS.includes(r)).join(', ')}</span>. While we highlight matching-free items, please <span className="font-bold">alert an Ingredient Ambassador</span> at our Marketplace — our data cannot track real-time kitchen cross-contamination or shared fryers.
                   </p>
                 </div>
               </div>
@@ -183,11 +173,11 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
           <div className="bg-green-50 border border-green-100 rounded-2xl p-6">
             <div className="flex items-center gap-2 mb-4">
               <Heart className="w-5 h-5 text-green-600" />
-              <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">{t.dietaryPreferences}</h4>
+              <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">Dietary Preferences</h4>
             </div>
-            <p className="text-xs text-gray-600 mb-3">{t.dietaryPreferencesDesc}</p>
+            <p className="text-xs text-gray-600 mb-3">Choose your dietary lifestyle</p>
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4 text-xs text-blue-800 leading-relaxed">
-              {t.aiMatchNote}
+              SmartMenuIQ uses AI to match your profile with menu data. You can opt-out of AI-driven insights at any time in Settings.
             </div>
             <div className="flex flex-wrap gap-2">
               {DIET_PREFERENCES.map(pref => (
@@ -211,9 +201,9 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
           <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6">
             <div className="flex items-center gap-2 mb-4">
               <Target className="w-5 h-5 text-blue-600" />
-              <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">{t.healthGoals}</h4>
+              <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">Health Goals</h4>
             </div>
-            <p className="text-xs text-gray-600 mb-4">{t.healthGoalsDesc}</p>
+            <p className="text-xs text-gray-600 mb-4">Select your nutrition goals</p>
             <div className="flex flex-wrap gap-2">
               {HEALTH_GOALS.map(goal => (
                 <button
@@ -236,14 +226,14 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
             <div className="flex items-center gap-2 mb-3">
               <Download className="w-5 h-5 text-slate-600" />
-              <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">{t.downloadMyData}</h4>
+              <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">Download My Data</h4>
             </div>
-            <p className="text-xs text-gray-600 mb-4">{t.downloadMyDataDesc}</p>
+            <p className="text-xs text-gray-600 mb-4">Export all profile data associated with your anonymous session (going back to January 1, 2022) as a JSON file.</p>
             <button
               onClick={handleDownloadData}
               className="px-4 py-2 rounded-xl text-xs font-bold uppercase border-2 bg-white text-slate-700 border-slate-300 hover:bg-slate-100 transition flex items-center gap-2"
             >
-              <Download className="w-3 h-3" /> {t.exportMyData}
+              <Download className="w-3 h-3" /> Export My Data
             </button>
           </div>
 
@@ -251,81 +241,58 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
             <div className="flex items-center gap-2 mb-3">
               <ExternalLink className="w-5 h-5 text-slate-600" />
-              <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">{t.legalPrivacy}</h4>
+              <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">Legal & Privacy</h4>
             </div>
-            <p className="text-xs text-gray-600 mb-4">{t.legalPrivacyDesc}</p>
+            <p className="text-xs text-gray-600 mb-4">Access our legal documents directly — no login required.</p>
             <div className="flex flex-wrap gap-2">
-              <a href="#" onClick={e => { e.preventDefault(); onClose(); setTimeout(() => document.querySelector('[data-footer-link="privacy"]')?.click(), 100); }} className="px-4 py-2 rounded-xl text-xs font-bold uppercase border-2 bg-white text-teal-700 border-teal-200 hover:bg-teal-50 transition">{t.privacyPolicy}</a>
-              <a href="#" onClick={e => { e.preventDefault(); onClose(); setTimeout(() => document.querySelector('[data-footer-link="terms"]')?.click(), 100); }} className="px-4 py-2 rounded-xl text-xs font-bold uppercase border-2 bg-white text-teal-700 border-teal-200 hover:bg-teal-50 transition">{t.termsOfService}</a>
-            </div>
-          </div>
-
-          {/* Accessibility */}
-          <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Type className="w-5 h-5 text-indigo-600" />
-              <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">{t.accessibility}</h4>
-            </div>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={toggleLang}
-                className="flex items-center justify-between px-4 py-3 rounded-xl border-2 bg-white border-indigo-200 hover:bg-indigo-50 transition"
-              >
-                <div className="flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-indigo-600" />
-                  <span className="text-xs font-bold text-slate-700 uppercase tracking-widest">{lang === 'es' ? 'Idioma' : 'Language'}</span>
-                </div>
-                <span className="text-xs font-bold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full uppercase">
-                  {lang === 'en' ? 'English → Español' : 'Español → English'}
-                </span>
-              </button>
-
+              <a href="#" onClick={e => { e.preventDefault(); onClose(); setTimeout(() => document.querySelector('[data-footer-link="privacy"]')?.click(), 100); }} className="px-4 py-2 rounded-xl text-xs font-bold uppercase border-2 bg-white text-teal-700 border-teal-200 hover:bg-teal-50 transition">Privacy Policy</a>
+              <a href="#" onClick={e => { e.preventDefault(); onClose(); setTimeout(() => document.querySelector('[data-footer-link="terms"]')?.click(), 100); }} className="px-4 py-2 rounded-xl text-xs font-bold uppercase border-2 bg-white text-teal-700 border-teal-200 hover:bg-teal-50 transition">Terms of Service</a>
             </div>
           </div>
 
           {/* Delete Account */}
           <div className="bg-red-50 border border-red-100 rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Trash2 className="w-5 h-5 text-red-600" />
-            <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">{t.deleteProfile}</h4>
+            <div className="flex items-center gap-2 mb-3">
+              <Trash2 className="w-5 h-5 text-red-600" />
+              <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">Delete Profile</h4>
             </div>
-            <p className="text-xs text-gray-600 mb-4">{t.deleteProfileDesc}</p>
+            <p className="text-xs text-gray-600 mb-4">Permanently scrub your preferences from our active session cache. Exercises your "Right to be Forgotten."</p>
             {!showDeleteConfirm ? (
-            <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="px-4 py-2 rounded-xl text-xs font-bold uppercase border-2 bg-white text-red-600 border-red-300 hover:bg-red-50 transition"
-            >
-            {t.deleteMyAccount}
-            </button>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="px-4 py-2 rounded-xl text-xs font-bold uppercase border-2 bg-white text-red-600 border-red-300 hover:bg-red-50 transition"
+              >
+                Delete My Account
+              </button>
             ) : (
-            <div className="space-y-3">
-            <p className="text-xs font-bold text-red-700 bg-red-100 rounded-lg p-3">{t.confirmDeleteMsg}</p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 py-2 bg-white text-gray-700 rounded-xl font-bold uppercase text-xs border border-gray-200 hover:bg-gray-100 transition"
-              >
-                {t.cancel}
-              </button>
-              <button
-                onClick={handleDeleteAccount}
-                disabled={isDeletingAccount}
-                className="flex-1 py-2 bg-red-600 text-white rounded-xl font-bold uppercase text-xs hover:bg-red-700 transition disabled:opacity-50"
-              >
-                {isDeletingAccount ? t.deleting : t.confirmDelete}
-              </button>
-            </div>
-            </div>
+              <div className="space-y-3">
+                <p className="text-xs font-bold text-red-700 bg-red-100 rounded-lg p-3">Are you absolutely sure? This cannot be undone.</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="flex-1 py-2 bg-white text-gray-700 rounded-xl font-bold uppercase text-xs border border-gray-200 hover:bg-gray-100 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={isDeletingAccount}
+                    className="flex-1 py-2 bg-red-600 text-white rounded-xl font-bold uppercase text-xs hover:bg-red-700 transition disabled:opacity-50"
+                  >
+                    {isDeletingAccount ? 'Deleting...' : 'Confirm Delete'}
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>
 
         <div className="p-6 bg-gray-50 border-t border-gray-200 shrink-0 flex gap-3">
           <button onClick={onClose} className="flex-1 py-3 bg-white text-gray-700 rounded-xl font-bold uppercase text-xs border border-gray-200 hover:bg-gray-100 transition">
-            {t.cancel}
+            Cancel
           </button>
           <button onClick={handleSave} disabled={isSaving} className="flex-1 py-3 bg-teal-600 text-white rounded-xl font-bold uppercase text-xs hover:bg-teal-700 transition disabled:opacity-50">
-            {isSaving ? t.saving : t.saveProfile}
+            {isSaving ? 'Saving...' : 'Save Profile'}
           </button>
         </div>
       </div>

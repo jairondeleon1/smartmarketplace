@@ -126,10 +126,10 @@ export default function CoreMenusSection({ onAddToPlate }) {
               onClick={() => setOpenMenu(menu.id)}
               className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 ${menu.bg} ${menu.border} transition-all active:scale-95 hover:shadow-md group`}
             >
-              <div className={`p-3 rounded-xl bg-white shadow-sm border ${menu.border} group-hover:scale-110 transition-transform`}>
-                <menu.icon className={`w-6 h-6 ${menu.color}`} />
+              <div className={`p-2 rounded-xl bg-white shadow-sm border ${menu.border} group-hover:scale-110 transition-transform`}>
+                <menu.icon className={`w-4 h-4 ${menu.color}`} />
               </div>
-              <span className={`text-[11px] font-bold uppercase tracking-widest ${menu.color}`}>{menu.label}</span>
+              <span className={`text-[10px] font-bold uppercase tracking-widest ${menu.color}`}>{menu.label}</span>
             </button>
           ))}
         </div>

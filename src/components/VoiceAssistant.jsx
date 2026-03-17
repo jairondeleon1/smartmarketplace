@@ -71,15 +71,20 @@ export default function VoiceAssistant({ menuItems = [] }) {
       stopSpeaking();
 
       try {
-        // Minimal menu context — only what's needed for fast LLM response
         const slimMenu = menuItems.slice(0, 40).map(({ name, day, station, calories, protein, allergens, tags }) => ({
           name, day, station, calories, protein, allergens, tags
         }));
 
-        // Kick off LLM and TTS in the fastest path possible
+        // Build conversation history string for context
+        const pastTurns = historyRef.current.slice(-6).map(m =>
+          `${m.role === 'user' ? 'User' : 'Michelle'}: ${m.content}`
+        ).join('\n');
+
         const response = await base44.integrations.Core.InvokeLLM({
           model: 'gpt_5_mini',
-          prompt: `You are Michelle, a friendly voice assistant for a corporate cafe. Answer in 1-2 short sentences max, no markdown, no lists, speak naturally. Menu: ${JSON.stringify(slimMenu)}. User: "${transcript}"`
+          prompt: `You are Michelle, a friendly voice assistant for a corporate cafe. Answer in 1-2 short sentences max, no markdown, no lists, speak naturally. Remember the conversation context.
+Menu: ${JSON.stringify(slimMenu)}
+${pastTurns ? `Conversation so far:\n${pastTurns}\n` : ''}User: "${transcript}"`
         });
 
         const aiText = typeof response === 'string' ? response : "I'm not sure about that one. Try asking about today's specials!";

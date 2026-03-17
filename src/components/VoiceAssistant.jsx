@@ -117,7 +117,7 @@ export default function VoiceAssistant({ menuItems = [] }) {
 
       setConversation(prev => [...prev, { role: 'user', content: transcript }]);
       setPhase('processing');
-      window.speechSynthesis.cancel();
+      stopSpeaking();
 
       try {
         const slimMenu = menuItems.slice(0, 60).map(({ name, day, station, calories, protein, carbs, fat, sodium, allergens, tags }) => ({

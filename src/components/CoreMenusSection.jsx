@@ -56,6 +56,8 @@ const CORE_MENUS = [
 ];
 
 function CoreMenuModal({ menu, onClose, onAddToPlate }) {
+  const [expandedIdx, setExpandedIdx] = useState(null);
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[75] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-300">
@@ -78,23 +80,47 @@ function CoreMenuModal({ menu, onClose, onAddToPlate }) {
         {/* Items */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {menu.items.map((item, idx) => (
-            <div key={idx} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition flex items-center gap-3">
-              <div className="flex-1">
-                <p className="font-bold text-gray-800 text-sm uppercase tracking-tight">{item.name}</p>
-                <p className="text-gray-500 text-xs mt-0.5 leading-relaxed">{item.description}</p>
-                <div className="flex gap-3 mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                  <span>{item.calories} Cal</span>
-                  <span>{item.protein}g Prot</span>
-                  <span>{item.carbs}g Carbs</span>
+            <div key={idx} className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition overflow-hidden">
+              <button
+                onClick={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
+                className="w-full p-4 flex items-center gap-3 text-left hover:bg-gray-50 transition"
+              >
+                <div className="flex-1">
+                  <p className="font-bold text-gray-800 text-sm uppercase tracking-tight">{item.name}</p>
+                  <p className="text-gray-500 text-xs mt-0.5 leading-relaxed">{item.description}</p>
+                  <div className="flex gap-3 mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    <span>{item.calories} Cal</span>
+                    <span>{item.protein}g Prot</span>
+                    <span>{item.carbs}g Carbs</span>
+                  </div>
                 </div>
-              </div>
-              {onAddToPlate && (
-                <button
-                  onClick={() => onAddToPlate({ ...item, station: menu.label, day: 'Daily' })}
-                  className="w-9 h-9 flex items-center justify-center bg-gray-900 text-white rounded-xl transition active:scale-90 hover:bg-black shrink-0"
-                >
-                  <span className="text-lg leading-none">+</span>
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {onAddToPlate && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddToPlate({ ...item, station: menu.label, day: 'Daily' });
+                      }}
+                      className="w-9 h-9 flex items-center justify-center bg-gray-900 text-white rounded-xl transition active:scale-90 hover:bg-black"
+                    >
+                      <span className="text-lg leading-none">+</span>
+                    </button>
+                  )}
+                  <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${expandedIdx === idx ? 'rotate-90' : ''}`} />
+                </div>
+              </button>
+
+              {/* Expanded ingredients */}
+              {expandedIdx === idx && item.ingredients && (
+                <div className="px-4 pb-4 pt-0 border-t border-gray-100 bg-gray-50 animate-in slide-in-from-top-2">
+                  <div className="flex items-start gap-2">
+                    <ChefHat className="w-4 h-4 text-gray-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-1">Contains</p>
+                      <p className="text-sm text-gray-700 leading-relaxed">{item.ingredients}</p>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           ))}

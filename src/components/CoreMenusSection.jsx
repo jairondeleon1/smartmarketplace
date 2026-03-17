@@ -46,11 +46,11 @@ const CORE_MENUS = [
     activeBg: 'bg-green-700',
     description: 'Fresh greens, proteins & toppings',
     items: [
-      { name: 'Garden Salad Base', description: 'Mixed greens, romaine, spinach — your fresh foundation.', calories: 25, protein: 2, carbs: 4, fat: 0 },
-      { name: 'Caesar Salad', description: 'Romaine, parmesan, croutons with Caesar dressing.', calories: 180, protein: 6, carbs: 14, fat: 12 },
-      { name: 'Greek Salad', description: 'Cucumber, tomato, olives, red onion, feta, oregano.', calories: 160, protein: 5, carbs: 10, fat: 12 },
-      { name: 'Protein Bowl', description: 'Mixed greens topped with grilled chicken, chickpeas, and quinoa.', calories: 380, protein: 34, carbs: 28, fat: 14 },
-      { name: 'Quinoa & Roasted Veggie Bowl', description: 'Quinoa base with seasonal roasted vegetables and tahini drizzle.', calories: 320, protein: 10, carbs: 48, fat: 12 },
+      { name: 'Garden Salad Base', description: 'Mixed greens, romaine, spinach — your fresh foundation.', calories: 25, protein: 2, carbs: 4, fat: 0, ingredients: 'Mixed Greens, Romaine Lettuce, Fresh Spinach' },
+      { name: 'Caesar Salad', description: 'Romaine, parmesan, croutons with Caesar dressing.', calories: 180, protein: 6, carbs: 14, fat: 12, ingredients: 'Romaine Lettuce, Parmesan Cheese, Croutons, Caesar Dressing, Anchovies' },
+      { name: 'Greek Salad', description: 'Cucumber, tomato, olives, red onion, feta, oregano.', calories: 160, protein: 5, carbs: 10, fat: 12, ingredients: 'Cucumber, Roma Tomato, Kalamata Olives, Red Onion, Feta Cheese, Oregano, Olive Oil' },
+      { name: 'Protein Bowl', description: 'Mixed greens topped with grilled chicken, chickpeas, and quinoa.', calories: 380, protein: 34, carbs: 28, fat: 14, ingredients: 'Mixed Greens, Grilled Chicken, Cooked Chickpeas, Cooked Quinoa, Olive Oil Vinaigrette' },
+      { name: 'Quinoa & Roasted Veggie Bowl', description: 'Quinoa base with seasonal roasted vegetables and tahini drizzle.', calories: 320, protein: 10, carbs: 48, fat: 12, ingredients: 'Cooked Quinoa, Roasted Zucchini, Bell Peppers, Carrots, Tahini Sauce, Lemon Juice' },
     ]
   }
 ];

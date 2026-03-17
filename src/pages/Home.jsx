@@ -1209,6 +1209,20 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       </div>
 
       {activeTab === 'upload' && (
+        <div className="space-y-10">
+        <CoreMenusSync onCoreItemsPublished={(items, stationId) => {
+          try {
+            const existing = JSON.parse(localStorage.getItem('coreMenuItems') || '{}');
+            existing[stationId] = items;
+            localStorage.setItem('coreMenuItems', JSON.stringify(existing));
+            alert(`✅ Published ${items.length} ${stationId} items! Refresh the menu to see them.`);
+          } catch (err) { alert('Failed to save: ' + err.message); }
+        }} />
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-gray-200" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Weekly Menu Sync</span>
+          <div className="h-px flex-1 bg-gray-200" />
+        </div>
         <div className="grid lg:grid-cols-2 gap-8">
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
             <div className="flex justify-between items-center">

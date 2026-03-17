@@ -54,6 +54,8 @@ import AdminGate from "../components/AdminGate";
 import CoreMenusSection from "../components/CoreMenusSection";
 import CoreMenusSync from "../components/admin/CoreMenusSync";
 import { AccessibilityProvider } from "@/lib/AccessibilityContext";
+import useOnlineStatus, { saveMenuToCache, loadMenuFromCache, getCacheAge } from "@/hooks/useOfflineMenu";
+import OfflineBanner from "@/components/OfflineBanner";
 import jsPDF from 'jspdf';
 
 

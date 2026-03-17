@@ -219,7 +219,7 @@ User said: "${transcript}"`
               </div>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => { setIsMuted(m => !m); if (!isMuted) window.speechSynthesis.cancel(); }}
+                  onClick={() => { setIsMuted(m => !m); if (!isMuted) stopSpeaking(); }}
                   className="p-2 hover:bg-white/10 rounded-full transition text-slate-400 hover:text-white"
                 >
                   {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}

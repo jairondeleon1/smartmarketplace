@@ -574,7 +574,7 @@ function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addTo
   );
 }
 
-function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, selectedDay, setSelectedDay, activeFilters, toggleFilter, clearFilters, filteredItems, dayScrollRef, addToPlate, myPlate, setMyPlate, isTrayModalOpen, setIsTrayModalOpen, isWeeklyPlannerOpen, setIsWeeklyPlannerOpen, changeView, user }) {
+function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, selectedDay, setSelectedDay, activeFilters, toggleFilter, clearFilters, filteredItems, dayScrollRef, addToPlate, myPlate, setMyPlate, isTrayModalOpen, setIsTrayModalOpen, isWeeklyPlannerOpen, setIsWeeklyPlannerOpen, changeView, user, isOnline }) {
   const [activeMealTab, setActiveMealTab] = useState('Lunch');
 
   const doRefresh = useCallback(async () => {
@@ -1536,7 +1536,7 @@ export default function Home() {
           <AnimatePresence mode="wait" initial={false}>
             {view === 'customer' && (
               <motion.div key="customer" variants={slideVariants} initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'} animate="center" exit={direction > 0 ? 'exitToLeft' : 'exitToRight'} transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
-                <CustomerView menuItems={menuItems} queryClient={queryClient} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} selectedDay={selectedDay} setSelectedDay={setSelectedDay} activeFilters={activeFilters} toggleFilter={toggleFilter} clearFilters={clearFilters} filteredItems={filteredItems} dayScrollRef={dayScrollRef} addToPlate={addToPlate} myPlate={myPlate} setMyPlate={setMyPlate} isTrayModalOpen={isTrayModalOpen} setIsTrayModalOpen={setIsTrayModalOpen} isWeeklyPlannerOpen={isWeeklyPlannerOpen} setIsWeeklyPlannerOpen={setIsWeeklyPlannerOpen} changeView={changeView} user={user} />
+                <CustomerView menuItems={menuItems} queryClient={queryClient} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} selectedDay={selectedDay} setSelectedDay={setSelectedDay} activeFilters={activeFilters} toggleFilter={toggleFilter} clearFilters={clearFilters} filteredItems={filteredItems} dayScrollRef={dayScrollRef} addToPlate={addToPlate} myPlate={myPlate} setMyPlate={setMyPlate} isTrayModalOpen={isTrayModalOpen} setIsTrayModalOpen={setIsTrayModalOpen} isWeeklyPlannerOpen={isWeeklyPlannerOpen} setIsWeeklyPlannerOpen={setIsWeeklyPlannerOpen} changeView={changeView} user={user} isOnline={isOnline} />
               </motion.div>
             )}
             {view === 'chat' && (

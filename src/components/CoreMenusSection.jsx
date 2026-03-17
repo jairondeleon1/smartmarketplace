@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, Sandwich, Salad, X, ChevronRight } from 'lucide-react';
+import { Flame, Sandwich, Salad, X, ChevronRight, ChefHat } from 'lucide-react';
 
 const CORE_MENUS = [
   {

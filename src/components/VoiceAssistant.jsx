@@ -3,22 +3,46 @@ import { Mic, MicOff, X, Volume2, VolumeX, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 // --- Browser TTS (Web Speech API) ---
+function getBestVoice() {
+  const voices = window.speechSynthesis.getVoices();
+  // Priority: natural/neural-sounding named voices first
+  const priority = [
+    'Samantha', 'Karen', 'Moira', 'Tessa', 'Ava', 'Allison', 'Victoria',
+    'Google US English', 'Google UK English Female',
+    'Microsoft Aria', 'Microsoft Jenny', 'Microsoft Zira',
+    'Fiona', 'Veena', 'Susan'
+  ];
+  for (const name of priority) {
+    const v = voices.find(v => v.name.includes(name));
+    if (v) return v;
+  }
+  // Fallback: any English voice that isn't "Alex" (robotic on some platforms)
+  return voices.find(v => v.lang.startsWith('en') && !v.name.includes('Alex')) || voices[0];
+}
+
 function speak(text, { onEnd, muted } = {}) {
   window.speechSynthesis.cancel();
   if (muted) { onEnd?.(); return; }
-  const clean = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/#{1,6}\s/g, '').trim().slice(0, 600);
+  const clean = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/#{1,6}\s/g, '').replace(/[*_~`]/g, '').trim().slice(0, 500);
   const utt = new SpeechSynthesisUtterance(clean);
-  utt.rate = 1.05;
-  utt.pitch = 1.1;
+  utt.rate = 0.97;   // slightly slower = more natural
+  utt.pitch = 1.0;   // neutral pitch sounds less robotic
   utt.volume = 1;
-  // Try to pick a female English voice
-  const voices = window.speechSynthesis.getVoices();
-  const preferred = voices.find(v => /samantha|karen|victoria|female|zira|susan|allison|ava|moira|tessa/i.test(v.name))
-    || voices.find(v => v.lang.startsWith('en'));
-  if (preferred) utt.voice = preferred;
-  utt.onend = () => onEnd?.();
-  utt.onerror = () => onEnd?.();
-  window.speechSynthesis.speak(utt);
+
+  // Voices may not be loaded yet — wait if needed
+  const trySpeak = () => {
+    const voice = getBestVoice();
+    if (voice) utt.voice = voice;
+    utt.onend = () => onEnd?.();
+    utt.onerror = () => onEnd?.();
+    window.speechSynthesis.speak(utt);
+  };
+
+  if (window.speechSynthesis.getVoices().length > 0) {
+    trySpeak();
+  } else {
+    window.speechSynthesis.onvoiceschanged = () => { trySpeak(); };
+  }
 }
 
 // --- Speech Recognition ---

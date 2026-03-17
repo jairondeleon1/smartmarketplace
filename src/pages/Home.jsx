@@ -1526,84 +1526,39 @@ export default function Home() {
     <AccessibilityProvider>
       <LargeTextWrapper>
         <AllergenNoticeModal />
-      <div className="hidden md:block">
-        <NavBar view={view} changeView={changeView} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} onProfileClick={() => setIsProfileModalOpen(true)} />
-      </div>
-      
-      <main className="w-full font-bold">
-        <AnimatePresence mode="wait" initial={false}>
-          {view === 'customer' && (
-            <motion.div key="customer"
-              variants={slideVariants}
-              initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'}
-              animate="center"
-              exit={direction > 0 ? 'exitToLeft' : 'exitToRight'}
-              transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
-              <CustomerView
-                menuItems={menuItems}
-                queryClient={queryClient}
-                customVegUrl={customVegUrl}
-                customVeganUrl={customVeganUrl}
-                selectedDay={selectedDay}
-                setSelectedDay={setSelectedDay}
-                activeFilters={activeFilters}
-                toggleFilter={toggleFilter}
-                clearFilters={clearFilters}
-                filteredItems={filteredItems}
-                dayScrollRef={dayScrollRef}
-                addToPlate={addToPlate}
-                myPlate={myPlate}
-                setMyPlate={setMyPlate}
-                isTrayModalOpen={isTrayModalOpen}
-                setIsTrayModalOpen={setIsTrayModalOpen}
-                isWeeklyPlannerOpen={isWeeklyPlannerOpen}
-                setIsWeeklyPlannerOpen={setIsWeeklyPlannerOpen}
-                changeView={changeView}
-                user={user}
-              />
-            </motion.div>
-          )}
-          {view === 'chat' && (
-            <motion.div key="chat"
-              variants={slideVariants}
-              initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'}
-              animate="center"
-              exit={direction > 0 ? 'exitToLeft' : 'exitToRight'}
-              transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
-              <ChatView chatHistory={chatHistory} isTyping={isTyping} userQuery={userQuery} setUserQuery={setUserQuery} handleSendChat={handleSendChat} />
-            </motion.div>
-          )}
-          {view === 'admin' && !isAdminLoggedIn && (
-            <motion.div key="admin-lock"
-              variants={slideVariants}
-              initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'}
-              animate="center"
-              exit={direction > 0 ? 'exitToLeft' : 'exitToRight'}
-              transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
-              <AdminGate onGranted={() => setIsAdminLoggedIn(true)} />
-            </motion.div>
-          )}
-          {view === 'admin' && isAdminLoggedIn && (
-            <motion.div key="admin"
-              variants={slideVariants}
-              initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'}
-              animate="center"
-              exit={direction > 0 ? 'exitToLeft' : 'exitToRight'}
-              transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
-              <AdminView menuItems={menuItems} setMenuItems={setMenuItems} onLogout={() => setIsAdminLoggedIn(false)} customVegUrl={customVegUrl} setCustomVegUrl={setCustomVegUrl} customVeganUrl={customVeganUrl} setCustomVeganUrl={setCustomVeganUrl} newItem={newItem} setNewItem={setNewItem} handleAddItem={handleAddItem} handleDeleteItem={(id) => setMenuItems(menuItems.filter(i => i.id !== id))} queryClient={queryClient} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
-      
-      <MobileBottomNav view={view} changeView={changeView} onProfileClick={() => setIsProfileModalOpen(true)} />
-
-      <NutritionCharts isOpen={isChartsOpen} onClose={() => setIsChartsOpen(false)} menuItems={menuItems} />
-      <ProfileSettingsModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} user={effectiveUser} onProfileUpdate={(profile) => { setLocalProfile(profile); localStorage.setItem('userProfile', JSON.stringify(profile)); }} />
-      <AITransparencyModal isOpen={showAINotice} onAccept={handleAINoticeAccept} />
-      <Footer onAdminClick={() => changeView('admin')} />
+        <div className="hidden md:block">
+          <NavBar view={view} changeView={changeView} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} onProfileClick={() => setIsProfileModalOpen(true)} />
+        </div>
+        <main className="w-full font-bold">
+          <AnimatePresence mode="wait" initial={false}>
+            {view === 'customer' && (
+              <motion.div key="customer" variants={slideVariants} initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'} animate="center" exit={direction > 0 ? 'exitToLeft' : 'exitToRight'} transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
+                <CustomerView menuItems={menuItems} queryClient={queryClient} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} selectedDay={selectedDay} setSelectedDay={setSelectedDay} activeFilters={activeFilters} toggleFilter={toggleFilter} clearFilters={clearFilters} filteredItems={filteredItems} dayScrollRef={dayScrollRef} addToPlate={addToPlate} myPlate={myPlate} setMyPlate={setMyPlate} isTrayModalOpen={isTrayModalOpen} setIsTrayModalOpen={setIsTrayModalOpen} isWeeklyPlannerOpen={isWeeklyPlannerOpen} setIsWeeklyPlannerOpen={setIsWeeklyPlannerOpen} changeView={changeView} user={user} />
+              </motion.div>
+            )}
+            {view === 'chat' && (
+              <motion.div key="chat" variants={slideVariants} initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'} animate="center" exit={direction > 0 ? 'exitToLeft' : 'exitToRight'} transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
+                <ChatView chatHistory={chatHistory} isTyping={isTyping} userQuery={userQuery} setUserQuery={setUserQuery} handleSendChat={handleSendChat} />
+              </motion.div>
+            )}
+            {view === 'admin' && !isAdminLoggedIn && (
+              <motion.div key="admin-lock" variants={slideVariants} initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'} animate="center" exit={direction > 0 ? 'exitToLeft' : 'exitToRight'} transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
+                <AdminGate onGranted={() => setIsAdminLoggedIn(true)} />
+              </motion.div>
+            )}
+            {view === 'admin' && isAdminLoggedIn && (
+              <motion.div key="admin" variants={slideVariants} initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'} animate="center" exit={direction > 0 ? 'exitToLeft' : 'exitToRight'} transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
+                <AdminView menuItems={menuItems} setMenuItems={setMenuItems} onLogout={() => setIsAdminLoggedIn(false)} customVegUrl={customVegUrl} setCustomVegUrl={setCustomVegUrl} customVeganUrl={customVeganUrl} setCustomVeganUrl={setCustomVeganUrl} newItem={newItem} setNewItem={setNewItem} handleAddItem={handleAddItem} handleDeleteItem={(id) => setMenuItems(menuItems.filter(i => i.id !== id))} queryClient={queryClient} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
+        <MobileBottomNav view={view} changeView={changeView} onProfileClick={() => setIsProfileModalOpen(true)} />
+        <NutritionCharts isOpen={isChartsOpen} onClose={() => setIsChartsOpen(false)} menuItems={menuItems} />
+        <ProfileSettingsModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} user={effectiveUser} onProfileUpdate={(profile) => { setLocalProfile(profile); localStorage.setItem('userProfile', JSON.stringify(profile)); }} />
+        <AITransparencyModal isOpen={showAINotice} onAccept={handleAINoticeAccept} />
+        <Footer onAdminClick={() => changeView('admin')} />
       </LargeTextWrapper>
     </AccessibilityProvider>
-
   );
 }

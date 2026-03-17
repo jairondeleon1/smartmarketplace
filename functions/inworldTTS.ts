@@ -3,6 +3,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { text } = await req.json();
     if (!text) return Response.json({ error: 'No text provided' }, { status: 400 });
@@ -10,10 +12,14 @@ Deno.serve(async (req) => {
     const INWORLD_API_KEY = Deno.env.get('INWORLD_API_KEY');
     if (!INWORLD_API_KEY) return Response.json({ error: 'INWORLD_API_KEY not configured' }, { status: 500 });
 
-    const VOICE = 'default-i-eyv3zmlf9hyqv3c7jmsg__michelle';
-    const cleanText = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/#{1,6}\s/g, '').trim().slice(0, 800);
+    const cleanText = text
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/#{1,6}\s/g, '')
+      .replace(/[*_~`]/g, '')
+      .trim()
+      .slice(0, 500);
 
-    const res = await fetch('https://studio.api.inworld.ai/v1/ai/tts', {
+    const res = await fetch('https://api.inworld.ai/tts/v1/voice', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -21,8 +27,8 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         text: cleanText,
-        voiceName: VOICE,
-        audioConfig: { audioEncoding: 'MP3' }
+        voiceId: 'default-i-eyv3zmlf9hyqv3c7jmsg__michelle',
+        modelId: 'inworld-tts-1.5-max'
       })
     });
 

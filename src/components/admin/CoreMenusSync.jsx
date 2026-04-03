@@ -17,7 +17,7 @@ function StationSync({ station, onItemsPublished }) {
 
   const uploadFile = async (file) => {
     if (!file) throw new Error('No file provided');
-    if (file.size > 5 * 1024 * 1024) throw new Error(`File too large (max 5MB).`);
+    if (file.size > 15 * 1024 * 1024) throw new Error(`File too large (max 15MB).`);
     const result = await base44.integrations.Core.UploadFile({ file });
     if (!result?.file_url) throw new Error('Upload failed - no URL returned');
     return result.file_url;
@@ -50,6 +50,17 @@ function StationSync({ station, onItemsPublished }) {
     }
   };
 
+  const invokeLLMWithRetry = async (params, retries = 2) => {
+    for (let i = 0; i <= retries; i++) {
+      try {
+        return await base44.integrations.Core.InvokeLLM(params);
+      } catch (err) {
+        if (i === retries) throw err;
+        await new Promise(r => setTimeout(r, 2000 * (i + 1)));
+      }
+    }
+  };
+
   const handleProcessAndPublish = async () => {
     if (!uploadedFiles.weekMenu && !uploadedFiles.fda && !uploadedFiles.allergen && !uploadedFiles.ingredients) {
       alert('Please upload at least one file to process'); return;
@@ -61,9 +72,8 @@ function StationSync({ station, onItemsPublished }) {
     try {
       if (uploadedFiles.weekMenu) {
         setProgressStep('Step 1: Parsing menu PDF...'); setProgress(20);
-        const weekResult = await base44.integrations.Core.InvokeLLM({
-          model: 'claude_sonnet_4_6',
-          prompt: `You are extracting menu items from a ${station.label} station menu document. Extract EVERY SINGLE food item listed — do not skip any. For each item, extract: name (the full dish name), recipe_number (any number/code associated with it, or empty string if none), description (a brief description if available, otherwise empty string). Look for all items in tables, lists, or any structured format. Return ALL items as a JSON array — it is critical that no items are missed.`,
+        const weekResult = await invokeLLMWithRetry({
+          prompt: `Extract ALL food item names from this ${station.label} menu document. For each item return: name, recipe_number (or empty string), description (or empty string). Return as JSON array of all items found.`,
           file_urls: [uploadedFiles.weekMenu],
           response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { name: { type: "string" }, recipe_number: { type: "string" }, description: { type: "string" } } } } } }
         });
@@ -73,7 +83,7 @@ function StationSync({ station, onItemsPublished }) {
 
       if (uploadedFiles.fda && finalItems.length > 0) {
         setProgressStep('Step 2: Matching FDA nutrition data...'); setProgress(50);
-        const fdaResult = await base44.integrations.Core.InvokeLLM({
+        const fdaResult = await invokeLLMWithRetry({
           prompt: `Extract nutrition data: name, recipe_number, calories, protein, carbs, fat, saturated_fat, sodium, fiber, sugar, cholesterol, vitamin_a, vitamin_c, vitamin_d, calcium, iron, potassium. Return as JSON.`,
           file_urls: [uploadedFiles.fda],
           response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { name: { type: "string" }, recipe_number: { type: "string" }, calories: { type: "number" }, protein: { type: "number" }, carbs: { type: "number" }, fat: { type: "number" }, saturated_fat: { type: "number" }, sodium: { type: "number" }, fiber: { type: "number" }, sugar: { type: "number" }, cholesterol: { type: "number" }, vitamin_a: { type: "number" }, vitamin_c: { type: "number" }, vitamin_d: { type: "number" }, calcium: { type: "number" }, iron: { type: "number" }, potassium: { type: "number" } } } } } }
@@ -100,7 +110,7 @@ function StationSync({ station, onItemsPublished }) {
 
       if (uploadedFiles.allergen && finalItems.length > 0) {
         setProgressStep('Step 3: Matching allergen data...'); setProgress(70);
-        const allergenResult = await base44.integrations.Core.InvokeLLM({
+        const allergenResult = await invokeLLMWithRetry({
           prompt: `Extract allergen and dietary tag information for each menu item. Return recipe_number, allergens (array), tags (array like Vegetarian, Vegan, Fit, Dairy Free) as JSON.`,
           file_urls: [uploadedFiles.allergen],
           response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { recipe_number: { type: "string" }, allergens: { type: "array", items: { type: "string" } }, tags: { type: "array", items: { type: "string" } } } } } } }
@@ -119,7 +129,7 @@ function StationSync({ station, onItemsPublished }) {
       if (uploadedFiles.ingredients && finalItems.length > 0) {
         setProgressStep('Step 4: Matching ingredients...'); setProgress(85);
         const csvChunk = uploadedFiles.ingredients.slice(0, 8000);
-        const ingResult = await base44.integrations.Core.InvokeLLM({
+        const ingResult = await invokeLLMWithRetry({
           prompt: `Parse this CSV. Extract recipe_number, ingredients, is_vegan, is_vegetarian, is_fit for each row. Return ALL rows as JSON.\n\n${csvChunk}`,
           response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { recipe_number: { type: "string" }, ingredients: { type: "string" }, is_vegan: { type: "boolean" }, is_vegetarian: { type: "boolean" }, is_fit: { type: "boolean" } } } } } }
         });

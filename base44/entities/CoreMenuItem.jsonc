@@ -1,0 +1,77 @@
+{
+  "name": "CoreMenuItem",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Item name"
+    },
+    "station": {
+      "type": "string",
+      "description": "Station: Grill, Deli, Salad Bar"
+    },
+    "description": {
+      "type": "string"
+    },
+    "recipe_number": {
+      "type": "string"
+    },
+    "ingredients": {
+      "type": "string"
+    },
+    "calories": {
+      "type": "number",
+      "default": 0
+    },
+    "protein": {
+      "type": "number",
+      "default": 0
+    },
+    "carbs": {
+      "type": "number",
+      "default": 0
+    },
+    "fat": {
+      "type": "number",
+      "default": 0
+    },
+    "saturated_fat": {
+      "type": "number",
+      "default": 0
+    },
+    "sodium": {
+      "type": "number",
+      "default": 0
+    },
+    "fiber": {
+      "type": "number",
+      "default": 0
+    },
+    "sugar": {
+      "type": "number",
+      "default": 0
+    },
+    "cholesterol": {
+      "type": "number",
+      "default": 0
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "allergens": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  },
+  "required": [
+    "name",
+    "station"
+  ]
+}

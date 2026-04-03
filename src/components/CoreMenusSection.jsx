@@ -68,17 +68,10 @@ function CoreMenuModal({ stationId, onClose, onAddToPlate }) {
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const results = await base44.entities.MenuItem.filter({ station: config.dbStation });
+        const all = await base44.entities.CoreMenuItem.list();
+        const results = all.filter(i => i.station === config.dbStation);
         if (results && results.length > 0) {
-          // Deduplicate by name (keep unique items)
-          const seen = new Set();
-          const unique = results.filter(item => {
-            const key = item.name?.toLowerCase().trim();
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-          });
-          setItems(unique);
+          setItems(results);
         } else {
           setItems(FALLBACK_ITEMS[stationId] || []);
         }

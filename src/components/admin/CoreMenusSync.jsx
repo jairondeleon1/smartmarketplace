@@ -150,17 +150,24 @@ function StationSync({ station, onItemsPublished }) {
 
       setProgressStep('Saving to database...'); setProgress(97);
 
-      // Delete existing items for this station, then bulk-create new ones
-      const existing = await base44.entities.MenuItem.filter({ station: station.label });
-      if (existing.length > 0) {
-        await Promise.all(existing.map(item => base44.entities.MenuItem.delete(item.id)));
+      // Delete existing CoreMenuItems for this station, then bulk-create new ones
+      const existing = await base44.entities.CoreMenuItem.list();
+      const stationExisting = existing.filter(i => i.station === station.label);
+      if (stationExisting.length > 0) {
+        await Promise.all(stationExisting.map(item => base44.entities.CoreMenuItem.delete(item.id)));
       }
-      await base44.entities.MenuItem.bulkCreate(finalItems);
+
+      // Strip day/meal_period — CoreMenuItems are permanent, not day-specific
+      const coreItems = finalItems.map(({ day, meal_period, unsaturated_fat, ...rest }) => ({
+        ...rest,
+        station: station.label,
+      }));
+      await base44.entities.CoreMenuItem.bulkCreate(coreItems);
 
       setProgress(100);
       setProgressStep('');
       setUploadedFiles({ weekMenu: null, fda: null, allergen: null, ingredients: null });
-      alert(`✅ Published ${finalItems.length} ${station.label} items to the menu!`);
+      alert(`✅ Published ${coreItems.length} ${station.label} items to the Core Menu popup!`);
     } catch (err) {
       alert(`Error: ${err.message}`);
     } finally {

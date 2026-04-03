@@ -140,10 +140,15 @@ export default function CoreMenusSection({ onAddToPlate }) {
   const [dynamicItems, setDynamicItems] = useState({});
 
   useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('coreMenuItems') || '{}');
-      setDynamicItems(stored);
-    } catch {}
+    const load = () => {
+      try {
+        const stored = JSON.parse(localStorage.getItem('coreMenuItems') || '{}');
+        setDynamicItems(stored);
+      } catch {}
+    };
+    load();
+    window.addEventListener('coreMenuItemsUpdated', load);
+    return () => window.removeEventListener('coreMenuItemsUpdated', load);
   }, []);
 
   // Merge default items with any published items

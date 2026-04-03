@@ -1295,7 +1295,8 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
             const existing = JSON.parse(localStorage.getItem('coreMenuItems') || '{}');
             existing[stationId] = items;
             localStorage.setItem('coreMenuItems', JSON.stringify(existing));
-            alert(`✅ Published ${items.length} ${stationId} items! Refresh the menu to see them.`);
+            window.dispatchEvent(new Event('coreMenuItemsUpdated'));
+            alert(`✅ Published ${items.length} ${stationId} items!`);
           } catch (err) { alert('Failed to save: ' + err.message); }
         }} />
         </div>

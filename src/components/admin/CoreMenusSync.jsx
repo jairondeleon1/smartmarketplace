@@ -152,16 +152,23 @@ function StationSync({ station, onItemsPublished }) {
       // STEP 4: Ingredients CSV
       if (uploadedFiles.ingredients && finalItems.length > 0) {
         setProgressStep('Step 4: Adding ingredients...'); setProgress(88);
-        const csvChunk = uploadedFiles.ingredients.slice(0, 8000);
+        const csvChunk = uploadedFiles.ingredients.slice(0, 20000);
         const ingResult = await invokeLLMWithRetry({
-          prompt: `Parse this CSV. Extract recipe_number, ingredients, is_vegan, is_vegetarian, is_fit for each row. Return ALL rows as JSON.\n\n${csvChunk}`,
-          response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { recipe_number: { type: "string" }, ingredients: { type: "string" }, is_vegan: { type: "boolean" }, is_vegetarian: { type: "boolean" }, is_fit: { type: "boolean" } } } } } }
+          prompt: `Parse this CSV file and extract ingredient information for each row. For each row return: name (dish/item name), recipe_number (recipe number or code, as a string), ingredients (full ingredients list as a single string), is_vegan (boolean), is_vegetarian (boolean), is_fit (boolean). Return ALL rows. If a column doesn't exist set it to empty string or false.\n\nCSV DATA:\n${csvChunk}`,
+          response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { name: { type: "string" }, recipe_number: { type: "string" }, ingredients: { type: "string" }, is_vegan: { type: "boolean" }, is_vegetarian: { type: "boolean" }, is_fit: { type: "boolean" } } } } } }
         });
-        if (ingResult?.items) {
-          const norm = (n) => String(n || '').trim().replace(/^0+/, '');
+        if (ingResult?.items?.length > 0) {
+          const norm = (n) => String(n || '').trim().replace(/^0+/, '').toLowerCase();
           finalItems = finalItems.map(item => {
-            const match = ingResult.items.find(i => norm(i.recipe_number) === norm(item.recipe_number));
-            if (match?.ingredients?.length > 5) {
+            const itemName = item.name?.toLowerCase().trim() || '';
+            const itemRecipe = norm(item.recipe_number);
+            // Match by recipe_number first, then fall back to name matching
+            const match = ingResult.items.find(i => {
+              if (itemRecipe && norm(i.recipe_number) === itemRecipe) return true;
+              const iName = i.name?.toLowerCase().trim() || '';
+              return iName && (iName === itemName || iName.includes(itemName.slice(0, 15)) || itemName.includes(iName.slice(0, 15)));
+            });
+            if (match?.ingredients?.length > 3) {
               const csvTags = [];
               if (match.is_vegan) csvTags.push('Vegan');
               if (match.is_vegetarian) csvTags.push('Vegetarian');

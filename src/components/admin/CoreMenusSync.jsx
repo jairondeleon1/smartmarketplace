@@ -9,39 +9,26 @@ const STATIONS = [
 ];
 
 function StationSync({ station }) {
-  const [uploadedFiles, setUploadedFiles] = useState({ weekMenu: null, fda: null, allergen: null, ingredients: null });
+  const [uploadedFiles, setUploadedFiles] = useState({ weekMenu: null, fda: null, allergen: null });
   const [isSyncing, setIsSyncing] = useState(null);
   const [isPublishing, setIsPublishing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [progressStep, setProgressStep] = useState('');
+  const [publishedCount, setPublishedCount] = useState(null);
 
   const uploadFile = async (file) => {
-    if (!file) throw new Error('No file provided');
-    if (file.size > 20 * 1024 * 1024) throw new Error('File too large (max 20MB).');
     const result = await base44.integrations.Core.UploadFile({ file });
     if (!result?.file_url) throw new Error('Upload failed - no URL returned');
     return result.file_url;
   };
-
-  const readFileAsText = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => resolve(e.target.result);
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsText(file);
-  });
 
   const handleFileUpload = async (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
     setIsSyncing(type);
     try {
-      if (type === 'ingredients') {
-        const text = await readFileAsText(file);
-        setUploadedFiles(prev => ({ ...prev, ingredients: text }));
-      } else {
-        const url = await uploadFile(file);
-        setUploadedFiles(prev => ({ ...prev, [type]: url }));
-      }
+      const url = await uploadFile(file);
+      setUploadedFiles(prev => ({ ...prev, [type]: url }));
     } catch (err) {
       alert(`Upload failed: ${err.message}`);
     } finally {
@@ -50,15 +37,14 @@ function StationSync({ station }) {
     }
   };
 
-  const callLLM = async (params) => {
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        return await base44.integrations.Core.InvokeLLM(params);
-      } catch (err) {
-        if (attempt === 2) throw err;
-        await new Promise(r => setTimeout(r, 3000));
-      }
-    }
+  const callBackend = async (fileUrl, fileType) => {
+    const res = await base44.functions.invoke('processCoreMenu', {
+      fileUrl,
+      station: station.label,
+      fileType
+    });
+    if (res.data?.error) throw new Error(res.data.error);
+    return res.data?.data;
   };
 
   const clearStation = async () => {
@@ -68,204 +54,114 @@ function StationSync({ station }) {
     }
   };
 
-  const saveItems = async (items) => {
-    const toSave = items.map(({ day, meal_period, unsaturated_fat, id, ...rest }) => ({
-      ...rest,
-      station: station.dbStation,
-    }));
-    await base44.entities.CoreMenuItem.bulkCreate(toSave);
-    return toSave;
-  };
-
   const handleProcessAndPublish = async () => {
-    if (!uploadedFiles.weekMenu && !uploadedFiles.fda) {
-      alert('Please upload at least the Week Menu PDF to continue.');
+    if (!uploadedFiles.weekMenu) {
+      alert('Please upload the Week Menu PDF first.');
       return;
     }
 
     setIsPublishing(true);
-    setProgress(5);
+    setPublishedCount(null);
     let finalItems = [];
 
     try {
-      if (uploadedFiles.weekMenu) {
-        setProgressStep('Parsing menu PDF...');
-        setProgress(15);
+      // STEP 1: Parse week menu via backend
+      setProgressStep('Parsing menu PDF...');
+      setProgress(20);
 
-        const result = await callLLM({
-          prompt: `Extract EVERY food item from this ${station.label} station menu PDF. For each item provide: name, recipe_number (numeric code in parentheses or empty string), description (brief if available). Return ALL items as JSON.`,
-          file_urls: [uploadedFiles.weekMenu],
-          response_json_schema: {
-            type: "object",
-            properties: {
-              items: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    name: { type: "string" },
-                    recipe_number: { type: "string" },
-                    description: { type: "string" }
-                  }
-                }
-              }
-            }
-          }
-        });
-
-        if (!result?.items?.length) {
-          alert('No items found in the menu PDF. Please check the file and try again.');
-          return;
-        }
-
-        finalItems = result.items;
-        setProgressStep(`Found ${finalItems.length} items. Saving...`);
-        setProgress(35);
-        await clearStation();
-        await saveItems(finalItems);
-        setProgress(40);
+      const menuData = await callBackend(uploadedFiles.weekMenu, 'weekMenu');
+      if (!menuData?.items?.length) {
+        alert('No items found in the menu PDF. Please check the file and try again.');
+        return;
       }
 
-      if (uploadedFiles.fda && finalItems.length > 0) {
+      finalItems = menuData.items;
+      setProgressStep(`Found ${finalItems.length} items. Saving to database...`);
+      setProgress(40);
+
+      // Clear old and save basic items immediately
+      await clearStation();
+      const toSave = finalItems.map(item => ({
+        name: item.name,
+        station: station.dbStation,
+        description: item.description || '',
+        recipe_number: item.recipe_number || '',
+        calories: 0, protein: 0, carbs: 0, fat: 0,
+        saturated_fat: 0, sodium: 0, fiber: 0, sugar: 0, cholesterol: 0,
+        tags: [], allergens: []
+      }));
+      await base44.entities.CoreMenuItem.bulkCreate(toSave);
+      setProgressStep(`✓ ${finalItems.length} items saved!`);
+      setProgress(55);
+
+      // STEP 2: FDA nutrition (optional)
+      if (uploadedFiles.fda) {
         setProgressStep('Adding nutrition data...');
-        setProgress(50);
+        setProgress(65);
+        const fdaData = await callBackend(uploadedFiles.fda, 'fda');
 
-        const fdaResult = await callLLM({
-          prompt: `Extract nutrition data for menu items: name, recipe_number, calories, protein, carbs, fat, saturated_fat, sodium, fiber, sugar, cholesterol. Return as JSON.`,
-          file_urls: [uploadedFiles.fda],
-          response_json_schema: {
-            type: "object",
-            properties: {
-              items: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    name: { type: "string" },
-                    recipe_number: { type: "string" },
-                    calories: { type: "number" },
-                    protein: { type: "number" },
-                    carbs: { type: "number" },
-                    fat: { type: "number" },
-                    saturated_fat: { type: "number" },
-                    sodium: { type: "number" },
-                    fiber: { type: "number" },
-                    sugar: { type: "number" },
-                    cholesterol: { type: "number" }
-                  }
-                }
-              }
-            }
-          }
-        });
-
-        if (fdaResult?.items?.length > 0) {
+        if (fdaData?.items?.length > 0) {
           const norm = (n) => String(n || '').trim().replace(/^0+/, '').toLowerCase();
           finalItems = finalItems.map(item => {
-            const itemName = item.name?.toLowerCase().trim() || '';
-            const match = fdaResult.items.find(f =>
+            const match = fdaData.items.find(f =>
               (norm(f.recipe_number) && norm(f.recipe_number) === norm(item.recipe_number)) ||
-              f.name?.toLowerCase().trim() === itemName
+              f.name?.toLowerCase().trim() === item.name?.toLowerCase().trim()
             );
-            if (match) {
-              return { ...item, calories: match.calories || 0, protein: match.protein || 0, carbs: match.carbs || 0, fat: match.fat || 0, saturated_fat: match.saturated_fat || 0, sodium: match.sodium || 0, fiber: match.fiber || 0, sugar: match.sugar || 0, cholesterol: match.cholesterol || 0 };
-            }
+            if (match) return { ...item, ...match };
             return item;
           });
-          setProgress(62);
+
+          // Re-save with nutrition
           await clearStation();
-          await saveItems(finalItems);
+          await base44.entities.CoreMenuItem.bulkCreate(finalItems.map(item => ({
+            name: item.name,
+            station: station.dbStation,
+            description: item.description || '',
+            recipe_number: item.recipe_number || '',
+            calories: item.calories || 0, protein: item.protein || 0,
+            carbs: item.carbs || 0, fat: item.fat || 0,
+            saturated_fat: item.saturated_fat || 0, sodium: item.sodium || 0,
+            fiber: item.fiber || 0, sugar: item.sugar || 0, cholesterol: item.cholesterol || 0,
+            tags: item.tags || [], allergens: item.allergens || []
+          })));
         }
       }
 
-      if (uploadedFiles.allergen && finalItems.length > 0) {
+      // STEP 3: Allergens (optional)
+      if (uploadedFiles.allergen) {
         setProgressStep('Adding allergen data...');
-        setProgress(70);
+        setProgress(82);
+        const allergenData = await callBackend(uploadedFiles.allergen, 'allergen');
 
-        const allergenResult = await callLLM({
-          prompt: `Extract allergen info: recipe_number, allergens (array), tags (array like Vegetarian, Vegan, Fit, Dairy Free). Return as JSON.`,
-          file_urls: [uploadedFiles.allergen],
-          response_json_schema: {
-            type: "object",
-            properties: {
-              items: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    recipe_number: { type: "string" },
-                    allergens: { type: "array", items: { type: "string" } },
-                    tags: { type: "array", items: { type: "string" } }
-                  }
-                }
-              }
-            }
-          }
-        });
-
-        if (allergenResult?.items?.length > 0) {
+        if (allergenData?.items?.length > 0) {
           const norm = (n) => String(n || '').trim().replace(/^0+/, '').toLowerCase();
           finalItems = finalItems.map(item => {
-            const match = allergenResult.items.find(a => norm(a.recipe_number) === norm(item.recipe_number));
-            if (match) return { ...item, allergens: match.allergens || [], tags: match.tags || [] };
+            const match = allergenData.items.find(a => norm(a.recipe_number) === norm(item.recipe_number));
+            if (match) return { ...item, allergens: match.allergens || [], tags: [...new Set([...(item.tags || []), ...(match.tags || [])])] };
             return item;
           });
-          setProgress(82);
+
+          // Re-save with allergens
           await clearStation();
-          await saveItems(finalItems);
-        }
-      }
-
-      if (uploadedFiles.ingredients && finalItems.length > 0) {
-        setProgressStep('Adding ingredients...');
-        setProgress(88);
-
-        const csvChunk = uploadedFiles.ingredients.slice(0, 8000);
-        const ingResult = await callLLM({
-          prompt: `Parse this CSV and extract: recipe_number, ingredients, is_vegan, is_vegetarian, is_fit for each row. Return ALL rows as JSON.\n\n${csvChunk}`,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              items: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    recipe_number: { type: "string" },
-                    ingredients: { type: "string" },
-                    is_vegan: { type: "boolean" },
-                    is_vegetarian: { type: "boolean" },
-                    is_fit: { type: "boolean" }
-                  }
-                }
-              }
-            }
-          }
-        });
-
-        if (ingResult?.items?.length > 0) {
-          const norm = (n) => String(n || '').trim().replace(/^0+/, '');
-          finalItems = finalItems.map(item => {
-            const match = ingResult.items.find(i => norm(i.recipe_number) === norm(item.recipe_number));
-            if (match?.ingredients?.length > 5) {
-              const csvTags = [];
-              if (match.is_vegan) csvTags.push('Vegan');
-              if (match.is_vegetarian) csvTags.push('Vegetarian');
-              if (match.is_fit) csvTags.push('Fit');
-              return { ...item, ingredients: match.ingredients.trim(), tags: [...new Set([...(item.tags || []), ...csvTags])] };
-            }
-            return item;
-          });
-          setProgress(95);
-          await clearStation();
-          await saveItems(finalItems);
+          await base44.entities.CoreMenuItem.bulkCreate(finalItems.map(item => ({
+            name: item.name,
+            station: station.dbStation,
+            description: item.description || '',
+            recipe_number: item.recipe_number || '',
+            calories: item.calories || 0, protein: item.protein || 0,
+            carbs: item.carbs || 0, fat: item.fat || 0,
+            saturated_fat: item.saturated_fat || 0, sodium: item.sodium || 0,
+            fiber: item.fiber || 0, sugar: item.sugar || 0, cholesterol: item.cholesterol || 0,
+            tags: item.tags || [], allergens: item.allergens || []
+          })));
         }
       }
 
       setProgress(100);
+      setPublishedCount(finalItems.length);
       setProgressStep('');
-      setUploadedFiles({ weekMenu: null, fda: null, allergen: null, ingredients: null });
-      alert(`✅ ${finalItems.length} ${station.label} items published!`);
+      setUploadedFiles({ weekMenu: null, fda: null, allergen: null });
+      alert(`✅ ${finalItems.length} ${station.label} items published! Open the ${station.label} popup on the menu page to see them.`);
 
     } catch (err) {
       alert(`Error: ${err.message}`);
@@ -280,23 +176,24 @@ function StationSync({ station }) {
     { key: 'weekMenu', label: '1. Week Menu PDF', icon: Calendar, accept: '.pdf', desc: 'Required — menu items with recipe #s' },
     { key: 'fda', label: '2. FDA Nutrition File', icon: Sparkles, accept: '.pdf,.xlsx,.xls', desc: 'Optional — match by recipe #' },
     { key: 'allergen', label: '3. Allergen PDF', icon: AlertTriangle, accept: '.pdf', desc: 'Optional — match by recipe #' },
-    { key: 'ingredients', label: '4. Ingredients CSV', icon: FileText, accept: '.csv', desc: 'Optional — match by recipe #' },
   ];
-
-  const hasRequiredFile = Boolean(uploadedFiles.weekMenu || uploadedFiles.fda);
 
   return (
     <div className={`bg-white rounded-2xl border-2 ${station.border} p-5 space-y-4`}>
+      {/* Header */}
       <div className={`flex items-center gap-3 pb-3 border-b ${station.border}`}>
         <div className={`p-2 rounded-xl ${station.bg} border ${station.border}`}>
           <station.icon className={`w-5 h-5 ${station.color}`} />
         </div>
         <div>
-          <h4 className={`font-bold text-sm uppercase tracking-widest ${station.color}`}>{station.label} Matrix Sync</h4>
-          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Upload station-specific files</p>
+          <h4 className={`font-bold text-sm uppercase tracking-widest ${station.color}`}>{station.label} Station Sync</h4>
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">
+            {publishedCount !== null ? `${publishedCount} items published` : 'Upload station-specific files'}
+          </p>
         </div>
       </div>
 
+      {/* File upload buttons */}
       <div className="space-y-2">
         {syncOptions.map(opt => (
           <div key={opt.key}>
@@ -323,13 +220,14 @@ function StationSync({ station }) {
         ))}
       </div>
 
+      {/* Status */}
       <div className={`${station.bg} border ${station.border} rounded-xl p-3`}>
         <div className="flex items-center gap-2 mb-2">
           <Info className={`w-3.5 h-3.5 ${station.color}`} />
-          <span className={`text-[10px] font-bold uppercase tracking-widest ${station.color}`}>Files Status</span>
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${station.color}`}>Files Ready</span>
         </div>
-        <div className="grid grid-cols-2 gap-1">
-          {[['weekMenu', 'Week Menu'], ['fda', 'FDA Nutrition'], ['allergen', 'Allergen Data'], ['ingredients', 'Ingredients']].map(([key, label]) => (
+        <div className="grid grid-cols-3 gap-1">
+          {[['weekMenu', 'Week Menu'], ['fda', 'Nutrition'], ['allergen', 'Allergens']].map(([key, label]) => (
             <div key={key} className="flex items-center gap-1.5">
               {uploadedFiles[key]
                 ? <CheckCircle className={`w-3 h-3 ${station.color}`} />
@@ -340,6 +238,7 @@ function StationSync({ station }) {
         </div>
       </div>
 
+      {/* Publish button / progress */}
       {isPublishing ? (
         <div className="space-y-2">
           <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
@@ -353,7 +252,7 @@ function StationSync({ station }) {
       ) : (
         <button
           onClick={handleProcessAndPublish}
-          disabled={!hasRequiredFile}
+          disabled={!uploadedFiles.weekMenu}
           className={`w-full py-3 ${station.activeBg} text-white rounded-xl font-bold uppercase text-xs tracking-widest disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 hover:opacity-90`}
         >
           <Sparkles className="w-4 h-4" /> Process & Publish {station.label}

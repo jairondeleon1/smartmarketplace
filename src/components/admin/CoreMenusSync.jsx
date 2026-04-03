@@ -62,7 +62,8 @@ function StationSync({ station, onItemsPublished }) {
       if (uploadedFiles.weekMenu) {
         setProgressStep('Step 1: Parsing menu PDF...'); setProgress(20);
         const weekResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `Extract ALL menu items from this ${station.label} station menu document. For each item extract: name, recipe_number (if present), description (if available). Return as JSON array.`,
+          model: 'claude_sonnet_4_6',
+          prompt: `You are extracting menu items from a ${station.label} station menu document. Extract EVERY SINGLE food item listed — do not skip any. For each item, extract: name (the full dish name), recipe_number (any number/code associated with it, or empty string if none), description (a brief description if available, otherwise empty string). Look for all items in tables, lists, or any structured format. Return ALL items as a JSON array — it is critical that no items are missed.`,
           file_urls: [uploadedFiles.weekMenu],
           response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { name: { type: "string" }, recipe_number: { type: "string" }, description: { type: "string" } } } } } }
         });
@@ -80,7 +81,13 @@ function StationSync({ station, onItemsPublished }) {
         if (fdaResult?.items) {
           const norm = (n) => String(n || '').trim().replace(/^0+/, '').toLowerCase();
           finalItems = finalItems.map(item => {
-            const match = fdaResult.items.find(f => norm(f.recipe_number) === norm(item.recipe_number) || f.name?.toLowerCase().includes(item.name?.toLowerCase().slice(0, 8)));
+            const itemNameLower = item.name?.toLowerCase().trim() || '';
+            const match = fdaResult.items.find(f =>
+              (norm(f.recipe_number) && norm(f.recipe_number) === norm(item.recipe_number)) ||
+              f.name?.toLowerCase().trim() === itemNameLower ||
+              f.name?.toLowerCase().includes(itemNameLower.slice(0, 12)) ||
+              itemNameLower.includes(f.name?.toLowerCase().trim().slice(0, 12))
+            );
             if (match) {
               const sat = match.saturated_fat || 0; const total = match.fat || 0;
               return { ...item, calories: match.calories || 0, protein: match.protein || 0, carbs: match.carbs || 0, fat: total, saturated_fat: sat, unsaturated_fat: total > sat ? total - sat : 0, sodium: match.sodium || 0, fiber: match.fiber || 0, sugar: match.sugar || 0, cholesterol: match.cholesterol || 0, vitamin_a: match.vitamin_a || 0, vitamin_c: match.vitamin_c || 0, vitamin_d: match.vitamin_d || 0, calcium: match.calcium || 0, iron: match.iron || 0, potassium: match.potassium || 0 };

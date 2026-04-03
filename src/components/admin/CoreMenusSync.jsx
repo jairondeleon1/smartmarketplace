@@ -25,12 +25,17 @@ function StationSync({ station }) {
   const handleFileUpload = async (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      alert(`File is too large (${Math.round(file.size/1024/1024)}MB). Maximum size is 10MB.`);
+      e.target.value = '';
+      return;
+    }
     setIsSyncing(type);
     try {
       const url = await uploadFile(file);
       setUploadedFiles(prev => ({ ...prev, [type]: url }));
     } catch (err) {
-      alert(`Upload failed: ${err.message}`);
+      alert(`File upload failed: ${err?.message || 'Network error — check your internet connection and try again'}`);
     } finally {
       setIsSyncing(null);
       e.target.value = '';
@@ -38,11 +43,16 @@ function StationSync({ station }) {
   };
 
   const callBackend = async (fileUrl, fileType) => {
-    const res = await base44.functions.invoke('processCoreMenu', {
-      fileUrl,
-      station: station.label,
-      fileType
-    });
+    let res;
+    try {
+      res = await base44.functions.invoke('processCoreMenu', {
+        fileUrl,
+        station: station.label,
+        fileType
+      });
+    } catch (err) {
+      throw new Error(`Backend call failed: ${err?.message || err?.toString() || 'Network error — check your connection'}`);
+    }
     if (res.data?.error) throw new Error(res.data.error);
     return res.data?.data;
   };

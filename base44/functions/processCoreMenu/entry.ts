@@ -84,7 +84,8 @@ Deno.serve(async (req) => {
     const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
       file_urls: [fileUrl],
-      response_json_schema: schema
+      response_json_schema: schema,
+      model: 'gpt_5_mini'
     });
 
     return Response.json({ success: true, data: result });

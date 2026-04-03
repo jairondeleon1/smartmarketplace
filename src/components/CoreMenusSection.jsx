@@ -116,9 +116,9 @@ function CoreMenuModal({ stationId, onClose, onAddToPlate }) {
           ) : (
             items.map((item, idx) => (
               <div key={idx} className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition overflow-hidden">
-                <button
+                <div
                   onClick={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
-                  className="w-full p-4 flex items-center gap-3 text-left hover:bg-gray-50 transition"
+                  className="w-full p-4 flex items-center gap-3 text-left hover:bg-gray-50 transition cursor-pointer"
                 >
                   <div className="flex-1">
                     <p className="font-bold text-gray-800 text-sm uppercase tracking-tight">{item.name}</p>
@@ -143,19 +143,23 @@ function CoreMenuModal({ stationId, onClose, onAddToPlate }) {
                     )}
                     <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${expandedIdx === idx ? 'rotate-90' : ''}`} />
                   </div>
-                </button>
+                </div>
 
-                {expandedIdx === idx && item.ingredients && (
-                  <div className="px-4 pb-4 pt-0 border-t border-gray-100 bg-gray-50 animate-in slide-in-from-top-2">
-                    <div className="flex items-start gap-2">
-                      <ChefHat className="w-4 h-4 text-gray-600 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-1">Contains</p>
-                        <p className="text-sm text-gray-700 leading-relaxed">{item.ingredients}</p>
+                {expandedIdx === idx && (
+                  <div className="px-4 pb-4 pt-3 border-t border-gray-100 bg-gray-50 animate-in slide-in-from-top-2 space-y-2">
+                    {item.ingredients ? (
+                      <div className="flex items-start gap-2">
+                        <ChefHat className="w-4 h-4 text-gray-600 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-1">Contains</p>
+                          <p className="text-sm text-gray-700 leading-relaxed">{item.ingredients}</p>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <p className="text-xs text-gray-400 italic">No ingredient info available.</p>
+                    )}
                     {item.allergens?.length > 0 && (
-                      <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                      <div className="bg-red-50 border border-red-100 rounded-lg px-3 py-2">
                         <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest">Allergens: </span>
                         <span className="text-[10px] text-red-700">{item.allergens.join(', ')}</span>
                       </div>

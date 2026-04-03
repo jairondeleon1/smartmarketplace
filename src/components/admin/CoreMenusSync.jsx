@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flame, Sandwich, Salad, Upload, Loader2, CheckCircle, XCircle, Sparkles, Calendar, AlertTriangle, FileText, Info } from 'lucide-react';
+import { Flame, Sandwich, Salad, Upload, Loader2, CheckCircle, XCircle, Sparkles, Calendar, AlertTriangle, Info } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 const STATIONS = [
@@ -16,43 +16,51 @@ function StationSync({ station }) {
   const [progressStep, setProgressStep] = useState('');
   const [publishedCount, setPublishedCount] = useState(null);
 
-  const uploadFile = async (file) => {
-    const result = await base44.integrations.Core.UploadFile({ file });
-    if (!result?.file_url) throw new Error('Upload failed - no URL returned');
-    return result.file_url;
-  };
+  // Store actual File objects
+  const [pendingFiles, setPendingFiles] = useState({ weekMenu: null, fda: null, allergen: null });
 
-  const handleFileUpload = async (e, type) => {
+  const handleFileUpload = (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      alert(`File is too large (${Math.round(file.size/1024/1024)}MB). Maximum size is 10MB.`);
+    if (file.size > 15 * 1024 * 1024) {
+      alert(`File too large (${Math.round(file.size/1024/1024)}MB). Max is 15MB.`);
       e.target.value = '';
       return;
     }
-    setIsSyncing(type);
-    try {
-      const url = await uploadFile(file);
-      setUploadedFiles(prev => ({ ...prev, [type]: url }));
-    } catch (err) {
-      alert(`File upload failed: ${err?.message || 'Network error — check your internet connection and try again'}`);
-    } finally {
-      setIsSyncing(null);
-      e.target.value = '';
-    }
+    setPendingFiles(prev => ({ ...prev, [type]: file }));
+    setUploadedFiles(prev => ({ ...prev, [type]: file.name }));
+    e.target.value = '';
   };
 
-  const callBackend = async (fileUrl, fileType) => {
-    let res;
-    try {
-      res = await base44.functions.invoke('processCoreMenu', {
-        fileUrl,
-        station: station.label,
-        fileType
-      });
-    } catch (err) {
-      throw new Error(`Backend call failed: ${err?.message || err?.toString() || 'Network error — check your connection'}`);
-    }
+  // Convert file to base64 string for JSON transport
+  const fileToBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      // Strip the data:...;base64, prefix
+      const b64 = e.target.result.split(',')[1];
+      resolve(b64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  // Upload file via base44 SDK then call processCoreMenu backend
+  const uploadAndProcess = async (file, fileType) => {
+    // Step A: Read file as ArrayBuffer and create a proper Blob
+    const arrayBuffer = await file.arrayBuffer();
+    const blob = new Blob([arrayBuffer], { type: file.type || 'application/pdf' });
+    // Attach filename
+    const namedFile = new File([blob], file.name, { type: blob.type });
+
+    const uploadResult = await base44.integrations.Core.UploadFile({ file: namedFile });
+    if (!uploadResult?.file_url) throw new Error('File upload returned no URL');
+
+    // Step B: call backend LLM processor
+    const res = await base44.functions.invoke('processCoreMenu', {
+      fileUrl: uploadResult.file_url,
+      station: station.label,
+      fileType
+    });
     if (res.data?.error) throw new Error(res.data.error);
     return res.data?.data;
   };
@@ -65,7 +73,7 @@ function StationSync({ station }) {
   };
 
   const handleProcessAndPublish = async () => {
-    if (!uploadedFiles.weekMenu) {
+    if (!pendingFiles.weekMenu) {
       alert('Please upload the Week Menu PDF first.');
       return;
     }
@@ -75,11 +83,11 @@ function StationSync({ station }) {
     let finalItems = [];
 
     try {
-      // STEP 1: Parse week menu via backend
-      setProgressStep('Parsing menu PDF...');
+      // STEP 1: Upload + parse week menu via backend
+      setProgressStep('Uploading & parsing menu PDF...');
       setProgress(20);
 
-      const menuData = await callBackend(uploadedFiles.weekMenu, 'weekMenu');
+      const menuData = await uploadAndProcess(pendingFiles.weekMenu, 'weekMenu');
       if (!menuData?.items?.length) {
         alert('No items found in the menu PDF. Please check the file and try again.');
         return;
@@ -105,10 +113,10 @@ function StationSync({ station }) {
       setProgress(55);
 
       // STEP 2: FDA nutrition (optional)
-      if (uploadedFiles.fda) {
-        setProgressStep('Adding nutrition data...');
+      if (pendingFiles.fda) {
+        setProgressStep('Uploading & processing nutrition data...');
         setProgress(65);
-        const fdaData = await callBackend(uploadedFiles.fda, 'fda');
+        const fdaData = await uploadAndProcess(pendingFiles.fda, 'fda');
 
         if (fdaData?.items?.length > 0) {
           const norm = (n) => String(n || '').trim().replace(/^0+/, '').toLowerCase();
@@ -138,10 +146,10 @@ function StationSync({ station }) {
       }
 
       // STEP 3: Allergens (optional)
-      if (uploadedFiles.allergen) {
-        setProgressStep('Adding allergen data...');
+      if (pendingFiles.allergen) {
+        setProgressStep('Uploading & processing allergen data...');
         setProgress(82);
-        const allergenData = await callBackend(uploadedFiles.allergen, 'allergen');
+        const allergenData = await uploadAndProcess(pendingFiles.allergen, 'allergen');
 
         if (allergenData?.items?.length > 0) {
           const norm = (n) => String(n || '').trim().replace(/^0+/, '').toLowerCase();
@@ -171,6 +179,7 @@ function StationSync({ station }) {
       setPublishedCount(finalItems.length);
       setProgressStep('');
       setUploadedFiles({ weekMenu: null, fda: null, allergen: null });
+      setPendingFiles({ weekMenu: null, fda: null, allergen: null });
       alert(`✅ ${finalItems.length} ${station.label} items published! Open the ${station.label} popup on the menu page to see them.`);
 
     } catch (err) {

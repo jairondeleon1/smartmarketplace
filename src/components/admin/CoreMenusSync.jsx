@@ -1,214 +1,211 @@
 import React, { useState } from 'react';
-import { Flame, Sandwich, Salad, Upload, Loader2, CheckCircle, XCircle, Sparkles, Calendar, AlertTriangle, Info } from 'lucide-react';
+import { Flame, Sandwich, Salad, Upload, Loader2, CheckCircle, XCircle, Sparkles, Calendar, AlertTriangle, FileText, Info } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 const STATIONS = [
-  { id: 'grill', label: 'Grill', dbStation: 'Grill', icon: Flame, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200', activeBg: 'bg-orange-600' },
-  { id: 'deli', label: 'Deli', dbStation: 'Deli', icon: Sandwich, color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200', activeBg: 'bg-amber-700' },
-  { id: 'salad-bar', label: 'Salad Bar', dbStation: 'Salad Bar', icon: Salad, color: 'text-green-700', bg: 'bg-green-50', border: 'border-green-200', activeBg: 'bg-green-700' },
+  { id: 'grill', label: 'Grill', icon: Flame, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200', activeBg: 'bg-orange-600' },
+  { id: 'deli', label: 'Deli', icon: Sandwich, color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200', activeBg: 'bg-amber-700' },
+  { id: 'salad-bar', label: 'Salad Bar', icon: Salad, color: 'text-green-700', bg: 'bg-green-50', border: 'border-green-200', activeBg: 'bg-green-700' },
 ];
 
-function StationSync({ station }) {
-  const [uploadedFiles, setUploadedFiles] = useState({ weekMenu: null, fda: null, allergen: null });
+function StationSync({ station, onItemsPublished }) {
+  const [uploadedFiles, setUploadedFiles] = useState({ weekMenu: null, fda: null, allergen: null, ingredients: null });
   const [isSyncing, setIsSyncing] = useState(null);
   const [isPublishing, setIsPublishing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [progressStep, setProgressStep] = useState('');
-  const [publishedCount, setPublishedCount] = useState(null);
 
-  // Store actual File objects
-  const [pendingFiles, setPendingFiles] = useState({ weekMenu: null, fda: null, allergen: null });
-
-  const handleFileUpload = (e, type) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 15 * 1024 * 1024) {
-      alert(`File too large (${Math.round(file.size/1024/1024)}MB). Max is 15MB.`);
-      e.target.value = '';
-      return;
-    }
-    setPendingFiles(prev => ({ ...prev, [type]: file }));
-    setUploadedFiles(prev => ({ ...prev, [type]: file.name }));
-    e.target.value = '';
+  const uploadFile = async (file) => {
+    if (!file) throw new Error('No file provided');
+    if (file.size > 15 * 1024 * 1024) throw new Error(`File too large (max 15MB).`);
+    const result = await base44.integrations.Core.UploadFile({ file });
+    if (!result?.file_url) throw new Error('Upload failed - no URL returned');
+    return result.file_url;
   };
 
-  // Convert file to base64 string for JSON transport
-  const fileToBase64 = (file) => new Promise((resolve, reject) => {
+  const readFileAsText = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
-      // Strip the data:...;base64, prefix
-      const b64 = e.target.result.split(',')[1];
-      resolve(b64);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsText(file);
   });
 
-  // Upload file via base44 SDK then call processCoreMenu backend
-  const uploadAndProcess = async (file, fileType) => {
-    // Step A: Read file as ArrayBuffer and create a proper Blob
-    const arrayBuffer = await file.arrayBuffer();
-    const blob = new Blob([arrayBuffer], { type: file.type || 'application/pdf' });
-    // Attach filename
-    const namedFile = new File([blob], file.name, { type: blob.type });
-
-    const uploadResult = await base44.integrations.Core.UploadFile({ file: namedFile });
-    if (!uploadResult?.file_url) throw new Error('File upload returned no URL');
-
-    // Step B: call backend LLM processor
-    const res = await base44.functions.invoke('processCoreMenu', {
-      fileUrl: uploadResult.file_url,
-      station: station.label,
-      fileType
-    });
-    if (res.data?.error) throw new Error(res.data.error);
-    return res.data?.data;
+  const handleFileUpload = async (e, type) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsSyncing(type);
+    try {
+      if (type === 'ingredients') {
+        const text = await readFileAsText(file);
+        setUploadedFiles(prev => ({ ...prev, ingredients: text }));
+      } else {
+        const url = await uploadFile(file);
+        setUploadedFiles(prev => ({ ...prev, [type]: url }));
+      }
+    } catch (err) {
+      alert(`Upload failed: ${err.message}`);
+    } finally {
+      setIsSyncing(null);
+      e.target.value = '';
+    }
   };
 
-  const clearStation = async () => {
-    const existing = await base44.entities.CoreMenuItem.filter({ station: station.dbStation });
-    if (existing.length > 0) {
-      await Promise.all(existing.map(i => base44.entities.CoreMenuItem.delete(i.id)));
+  const invokeLLMWithRetry = async (params, retries = 2) => {
+    for (let i = 0; i <= retries; i++) {
+      try {
+        return await base44.integrations.Core.InvokeLLM(params);
+      } catch (err) {
+        if (i === retries) throw err;
+        await new Promise(r => setTimeout(r, 2000 * (i + 1)));
+      }
     }
+  };
+
+  const saveToDatabase = async (items) => {
+    // Delete existing for this station first
+    const existing = await base44.entities.CoreMenuItem.filter({ station: station.label });
+    if (existing.length > 0) {
+      await Promise.all(existing.map(item => base44.entities.CoreMenuItem.delete(item.id)));
+    }
+    // Strip fields not in CoreMenuItem schema
+    const coreItems = items.map(({ day, meal_period, unsaturated_fat, id, ...rest }) => ({
+      ...rest,
+      station: station.label,
+    }));
+    await base44.entities.CoreMenuItem.bulkCreate(coreItems);
+    return coreItems;
   };
 
   const handleProcessAndPublish = async () => {
-    if (!pendingFiles.weekMenu) {
-      alert('Please upload the Week Menu PDF first.');
-      return;
+    if (!uploadedFiles.weekMenu && !uploadedFiles.fda && !uploadedFiles.allergen && !uploadedFiles.ingredients) {
+      alert('Please upload at least one file to process'); return;
     }
+    setIsPublishing(true); setProgress(0);
 
-    setIsPublishing(true);
-    setPublishedCount(null);
     let finalItems = [];
 
     try {
-      // STEP 1: Upload + parse week menu via backend
-      setProgressStep('Uploading & parsing menu PDF...');
-      setProgress(20);
-
-      const menuData = await uploadAndProcess(pendingFiles.weekMenu, 'weekMenu');
-      if (!menuData?.items?.length) {
-        alert('No items found in the menu PDF. Please check the file and try again.');
-        return;
-      }
-
-      finalItems = menuData.items;
-      setProgressStep(`Found ${finalItems.length} items. Saving to database...`);
-      setProgress(40);
-
-      // Clear old and save basic items immediately
-      await clearStation();
-      const toSave = finalItems.map(item => ({
-        name: item.name,
-        station: station.dbStation,
-        description: item.description || '',
-        recipe_number: item.recipe_number || '',
-        calories: 0, protein: 0, carbs: 0, fat: 0,
-        saturated_fat: 0, sodium: 0, fiber: 0, sugar: 0, cholesterol: 0,
-        tags: [], allergens: []
-      }));
-      await base44.entities.CoreMenuItem.bulkCreate(toSave);
-      setProgressStep(`✓ ${finalItems.length} items saved!`);
-      setProgress(55);
-
-      // STEP 2: FDA nutrition (optional)
-      if (pendingFiles.fda) {
-        setProgressStep('Uploading & processing nutrition data...');
-        setProgress(65);
-        const fdaData = await uploadAndProcess(pendingFiles.fda, 'fda');
-
-        if (fdaData?.items?.length > 0) {
-          const norm = (n) => String(n || '').trim().replace(/^0+/, '').toLowerCase();
-          finalItems = finalItems.map(item => {
-            const match = fdaData.items.find(f =>
-              (norm(f.recipe_number) && norm(f.recipe_number) === norm(item.recipe_number)) ||
-              f.name?.toLowerCase().trim() === item.name?.toLowerCase().trim()
-            );
-            if (match) return { ...item, ...match };
-            return item;
-          });
-
-          // Re-save with nutrition
-          await clearStation();
-          await base44.entities.CoreMenuItem.bulkCreate(finalItems.map(item => ({
-            name: item.name,
-            station: station.dbStation,
-            description: item.description || '',
-            recipe_number: item.recipe_number || '',
-            calories: item.calories || 0, protein: item.protein || 0,
-            carbs: item.carbs || 0, fat: item.fat || 0,
-            saturated_fat: item.saturated_fat || 0, sodium: item.sodium || 0,
-            fiber: item.fiber || 0, sugar: item.sugar || 0, cholesterol: item.cholesterol || 0,
-            tags: item.tags || [], allergens: item.allergens || []
-          })));
+      // STEP 1: Parse menu PDF — save immediately so data is never lost
+      if (uploadedFiles.weekMenu) {
+        setProgressStep('Step 1: Parsing menu PDF...'); setProgress(15);
+        const weekResult = await invokeLLMWithRetry({
+          prompt: `Extract ALL food item names from this ${station.label} station menu document. Return every dish/item listed. For each: name (full dish name), recipe_number (number/code if shown, else empty string), description (brief description if available, else empty string). Return as JSON.`,
+          file_urls: [uploadedFiles.weekMenu],
+          response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { name: { type: "string" }, recipe_number: { type: "string" }, description: { type: "string" } } } } } }
+        });
+        if (weekResult?.items?.length > 0) {
+          finalItems = weekResult.items;
+          // Save basic items to DB immediately — even without nutrition data
+          setProgressStep(`Saving ${finalItems.length} items...`); setProgress(30);
+          await saveToDatabase(finalItems);
         }
       }
 
-      // STEP 3: Allergens (optional)
-      if (pendingFiles.allergen) {
-        setProgressStep('Uploading & processing allergen data...');
-        setProgress(82);
-        const allergenData = await uploadAndProcess(pendingFiles.allergen, 'allergen');
-
-        if (allergenData?.items?.length > 0) {
+      // STEP 2: Enrich with FDA nutrition
+      if (uploadedFiles.fda && finalItems.length > 0) {
+        setProgressStep('Step 2: Adding nutrition data...'); setProgress(45);
+        const fdaResult = await invokeLLMWithRetry({
+          prompt: `Extract nutrition info per item: name, recipe_number, calories, protein, carbs, fat, saturated_fat, sodium, fiber, sugar, cholesterol. Return as JSON.`,
+          file_urls: [uploadedFiles.fda],
+          response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { name: { type: "string" }, recipe_number: { type: "string" }, calories: { type: "number" }, protein: { type: "number" }, carbs: { type: "number" }, fat: { type: "number" }, saturated_fat: { type: "number" }, sodium: { type: "number" }, fiber: { type: "number" }, sugar: { type: "number" }, cholesterol: { type: "number" } } } } } }
+        });
+        if (fdaResult?.items) {
           const norm = (n) => String(n || '').trim().replace(/^0+/, '').toLowerCase();
           finalItems = finalItems.map(item => {
-            const match = allergenData.items.find(a => norm(a.recipe_number) === norm(item.recipe_number));
-            if (match) return { ...item, allergens: match.allergens || [], tags: [...new Set([...(item.tags || []), ...(match.tags || [])])] };
+            const itemNameLower = item.name?.toLowerCase().trim() || '';
+            const match = fdaResult.items.find(f =>
+              (norm(f.recipe_number) && norm(f.recipe_number) === norm(item.recipe_number)) ||
+              f.name?.toLowerCase().trim() === itemNameLower ||
+              f.name?.toLowerCase().includes(itemNameLower.slice(0, 12)) ||
+              itemNameLower.includes((f.name?.toLowerCase().trim() || '').slice(0, 12))
+            );
+            if (match) {
+              return { ...item, calories: match.calories || 0, protein: match.protein || 0, carbs: match.carbs || 0, fat: match.fat || 0, saturated_fat: match.saturated_fat || 0, sodium: match.sodium || 0, fiber: match.fiber || 0, sugar: match.sugar || 0, cholesterol: match.cholesterol || 0 };
+            }
             return item;
           });
+          setProgressStep('Saving nutrition data...'); setProgress(60);
+          await saveToDatabase(finalItems);
+        }
+      }
 
-          // Re-save with allergens
-          await clearStation();
-          await base44.entities.CoreMenuItem.bulkCreate(finalItems.map(item => ({
-            name: item.name,
-            station: station.dbStation,
-            description: item.description || '',
-            recipe_number: item.recipe_number || '',
-            calories: item.calories || 0, protein: item.protein || 0,
-            carbs: item.carbs || 0, fat: item.fat || 0,
-            saturated_fat: item.saturated_fat || 0, sodium: item.sodium || 0,
-            fiber: item.fiber || 0, sugar: item.sugar || 0, cholesterol: item.cholesterol || 0,
-            tags: item.tags || [], allergens: item.allergens || []
-          })));
+      // STEP 3: Allergens
+      if (uploadedFiles.allergen && finalItems.length > 0) {
+        setProgressStep('Step 3: Adding allergen data...'); setProgress(70);
+        const allergenResult = await invokeLLMWithRetry({
+          prompt: `Extract allergen info for each menu item: recipe_number, allergens (array of strings), tags (array like Vegetarian, Vegan, Fit, Dairy Free). Return as JSON.`,
+          file_urls: [uploadedFiles.allergen],
+          response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { recipe_number: { type: "string" }, allergens: { type: "array", items: { type: "string" } }, tags: { type: "array", items: { type: "string" } } } } } } }
+        });
+        if (allergenResult?.items) {
+          const norm = (n) => String(n || '').trim().replace(/^0+/, '').toLowerCase();
+          finalItems = finalItems.map(item => {
+            const match = allergenResult.items.find(a => norm(a.recipe_number) === norm(item.recipe_number));
+            if (match) return { ...item, allergens: match.allergens || [], tags: match.tags || [] };
+            return item;
+          });
+          setProgressStep('Saving allergen data...'); setProgress(80);
+          await saveToDatabase(finalItems);
+        }
+      }
+
+      // STEP 4: Ingredients CSV
+      if (uploadedFiles.ingredients && finalItems.length > 0) {
+        setProgressStep('Step 4: Adding ingredients...'); setProgress(88);
+        const csvChunk = uploadedFiles.ingredients.slice(0, 8000);
+        const ingResult = await invokeLLMWithRetry({
+          prompt: `Parse this CSV. Extract recipe_number, ingredients, is_vegan, is_vegetarian, is_fit for each row. Return ALL rows as JSON.\n\n${csvChunk}`,
+          response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { recipe_number: { type: "string" }, ingredients: { type: "string" }, is_vegan: { type: "boolean" }, is_vegetarian: { type: "boolean" }, is_fit: { type: "boolean" } } } } } }
+        });
+        if (ingResult?.items) {
+          const norm = (n) => String(n || '').trim().replace(/^0+/, '');
+          finalItems = finalItems.map(item => {
+            const match = ingResult.items.find(i => norm(i.recipe_number) === norm(item.recipe_number));
+            if (match?.ingredients?.length > 5) {
+              const csvTags = [];
+              if (match.is_vegan) csvTags.push('Vegan');
+              if (match.is_vegetarian) csvTags.push('Vegetarian');
+              if (match.is_fit) csvTags.push('Fit');
+              return { ...item, ingredients: match.ingredients.trim(), tags: [...new Set([...(item.tags || []), ...csvTags])] };
+            }
+            return item;
+          });
+          setProgressStep('Saving ingredients...'); setProgress(95);
+          await saveToDatabase(finalItems);
         }
       }
 
       setProgress(100);
-      setPublishedCount(finalItems.length);
       setProgressStep('');
-      setUploadedFiles({ weekMenu: null, fda: null, allergen: null });
-      setPendingFiles({ weekMenu: null, fda: null, allergen: null });
-      alert(`✅ ${finalItems.length} ${station.label} items published! Open the ${station.label} popup on the menu page to see them.`);
-
+      setUploadedFiles({ weekMenu: null, fda: null, allergen: null, ingredients: null });
+      alert(`✅ Published ${finalItems.length} ${station.label} items to the Core Menu popup!`);
     } catch (err) {
       alert(`Error: ${err.message}`);
     } finally {
       setIsPublishing(false);
       setProgress(0);
-      setProgressStep('');
     }
   };
 
   const syncOptions = [
-    { key: 'weekMenu', label: '1. Week Menu PDF', icon: Calendar, accept: '.pdf', desc: 'Required — menu items with recipe #s' },
-    { key: 'fda', label: '2. FDA Nutrition File', icon: Sparkles, accept: '.pdf,.xlsx,.xls', desc: 'Optional — match by recipe #' },
-    { key: 'allergen', label: '3. Allergen PDF', icon: AlertTriangle, accept: '.pdf', desc: 'Optional — match by recipe #' },
+    { key: 'weekMenu', label: '1. Week Menu PDF', icon: Calendar, accept: '.pdf', desc: 'Menu items with recipe #s' },
+    { key: 'fda', label: '2. FDA Nutrition File', icon: Sparkles, accept: '.pdf,.xlsx,.xls', desc: 'Match by recipe #' },
+    { key: 'allergen', label: '3. Allergen PDF', icon: AlertTriangle, accept: '.pdf', desc: 'Match by recipe #' },
+    { key: 'ingredients', label: '4. Ingredients CSV', icon: FileText, accept: '.csv', desc: 'Match by recipe #' },
   ];
+
+  const hasAnyFile = Object.values(uploadedFiles).some(Boolean);
 
   return (
     <div className={`bg-white rounded-2xl border-2 ${station.border} p-5 space-y-4`}>
-      {/* Header */}
+      {/* Station header */}
       <div className={`flex items-center gap-3 pb-3 border-b ${station.border}`}>
         <div className={`p-2 rounded-xl ${station.bg} border ${station.border}`}>
           <station.icon className={`w-5 h-5 ${station.color}`} />
         </div>
         <div>
-          <h4 className={`font-bold text-sm uppercase tracking-widest ${station.color}`}>{station.label} Station Sync</h4>
-          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">
-            {publishedCount !== null ? `${publishedCount} items published` : 'Upload station-specific files'}
-          </p>
+          <h4 className={`font-bold text-sm uppercase tracking-widest ${station.color}`}>{station.label} Matrix Sync</h4>
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Upload station-specific files</p>
         </div>
       </div>
 
@@ -217,47 +214,40 @@ function StationSync({ station }) {
         {syncOptions.map(opt => (
           <div key={opt.key}>
             <input type="file" accept={opt.accept} id={`core-${station.id}-${opt.key}`} className="hidden" onChange={(e) => handleFileUpload(e, opt.key)} />
-            <label
-              htmlFor={`core-${station.id}-${opt.key}`}
-              className={`w-full p-3 border-2 border-dashed rounded-xl flex items-center gap-3 transition cursor-pointer ${
-                uploadedFiles[opt.key] ? `${station.border} ${station.bg}` : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
+            <label htmlFor={`core-${station.id}-${opt.key}`} className={`w-full p-4 border-2 border-dashed rounded-xl flex items-center gap-3 hover:${station.bg} transition cursor-pointer ${uploadedFiles[opt.key] ? `${station.border} ${station.bg}` : 'border-gray-100'}`}>
               {isSyncing === opt.key
-                ? <Loader2 className="animate-spin w-4 h-4 text-gray-400 shrink-0" />
+                ? <Loader2 className="animate-spin w-5 h-5 text-gray-400" />
                 : uploadedFiles[opt.key]
-                  ? <CheckCircle className={`w-4 h-4 ${station.color} shrink-0`} />
-                  : <Upload className="w-4 h-4 text-gray-300 shrink-0" />
+                  ? <CheckCircle className={`w-5 h-5 ${station.color}`} />
+                  : <Upload className="w-5 h-5 text-gray-300" />
               }
               <div className="flex-1 text-left">
                 <div className="text-xs font-bold uppercase tracking-widest text-slate-700">{opt.label}</div>
                 <div className="text-[10px] text-gray-400 mt-0.5">{opt.desc}</div>
               </div>
-              {uploadedFiles[opt.key] && <span className={`text-[10px] font-bold ${station.color} uppercase shrink-0`}>✓ Ready</span>}
+              {uploadedFiles[opt.key] && <span className={`text-[10px] font-bold ${station.color} uppercase`}>✓ Ready</span>}
             </label>
           </div>
         ))}
       </div>
 
-      {/* Status */}
+      {/* File status */}
       <div className={`${station.bg} border ${station.border} rounded-xl p-3`}>
         <div className="flex items-center gap-2 mb-2">
           <Info className={`w-3.5 h-3.5 ${station.color}`} />
           <span className={`text-[10px] font-bold uppercase tracking-widest ${station.color}`}>Files Ready</span>
         </div>
-        <div className="grid grid-cols-3 gap-1">
-          {[['weekMenu', 'Week Menu'], ['fda', 'Nutrition'], ['allergen', 'Allergens']].map(([key, label]) => (
+        <div className="grid grid-cols-2 gap-1">
+          {[['weekMenu', 'Week Menu'], ['fda', 'FDA Nutrition'], ['allergen', 'Allergen Data'], ['ingredients', 'Ingredients']].map(([key, label]) => (
             <div key={key} className="flex items-center gap-1.5">
-              {uploadedFiles[key]
-                ? <CheckCircle className={`w-3 h-3 ${station.color}`} />
-                : <XCircle className="w-3 h-3 text-gray-300" />}
+              {uploadedFiles[key] ? <CheckCircle className={`w-3 h-3 ${station.color}`} /> : <XCircle className="w-3 h-3 text-gray-300" />}
               <span className="text-[10px] text-gray-500 font-bold">{label}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Publish button / progress */}
+      {/* Publish button */}
       {isPublishing ? (
         <div className="space-y-2">
           <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
@@ -265,13 +255,13 @@ function StationSync({ station }) {
           </div>
           <div className={`flex items-center justify-center gap-2 text-xs ${station.color}`}>
             <Loader2 className="w-3 h-3 animate-spin" />
-            <span className="font-bold">{progressStep || 'Processing...'}</span>
+            <span className="font-bold">{progressStep}</span>
           </div>
         </div>
       ) : (
         <button
           onClick={handleProcessAndPublish}
-          disabled={!uploadedFiles.weekMenu}
+          disabled={!hasAnyFile}
           className={`w-full py-3 ${station.activeBg} text-white rounded-xl font-bold uppercase text-xs tracking-widest disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 hover:opacity-90`}
         >
           <Sparkles className="w-4 h-4" /> Process & Publish {station.label}
@@ -291,7 +281,11 @@ export default function CoreMenusSync({ onCoreItemsPublished }) {
       </div>
       <div className="grid lg:grid-cols-3 gap-6">
         {STATIONS.map(station => (
-          <StationSync key={station.id} station={station} />
+          <StationSync
+            key={station.id}
+            station={station}
+            onItemsPublished={onCoreItemsPublished}
+          />
         ))}
       </div>
     </div>

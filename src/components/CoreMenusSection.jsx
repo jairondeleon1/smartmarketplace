@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, Sandwich, Salad, X, ChevronDown, ChefHat, Loader2, Plus } from 'lucide-react';
+import { Flame, Sandwich, Salad, X, ChevronRight, ChefHat, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+
+const CORE_STATION_IDS = ['grill', 'deli', 'salad-bar'];
 
 const STATION_CONFIG = {
   grill: {
@@ -38,18 +40,22 @@ const STATION_CONFIG = {
   },
 };
 
+// Fallback items per station if DB has none
 const FALLBACK_ITEMS = {
   grill: [
-    { name: 'Grilled Chicken Breast', description: 'Seasoned grilled chicken breast.', calories: 220, protein: 42, carbs: 0, fat: 5, ingredients: 'Chicken Breast, Olive Oil, Salt, Pepper, Garlic, Herbs' },
-    { name: 'Grilled Salmon', description: 'Atlantic salmon with lemon herb seasoning.', calories: 280, protein: 38, carbs: 0, fat: 14, ingredients: 'Atlantic Salmon, Lemon, Rosemary, Thyme, Olive Oil, Salt' },
+    { name: 'Grilled Chicken Breast', description: 'Seasoned grilled chicken breast served with your choice of sides.', calories: 220, protein: 42, carbs: 0, fat: 5, ingredients: 'Chicken Breast, Olive Oil, Salt, Pepper, Garlic, Herbs' },
+    { name: 'Grilled Salmon', description: 'Atlantic salmon fillet with lemon herb seasoning.', calories: 280, protein: 38, carbs: 0, fat: 14, ingredients: 'Atlantic Salmon, Lemon, Rosemary, Thyme, Olive Oil, Salt' },
+    { name: 'Grilled Veggie Plate', description: 'Seasonal vegetables grilled with olive oil and herbs.', calories: 150, protein: 4, carbs: 18, fat: 8, ingredients: 'Seasonal Vegetables, Olive Oil, Garlic, Italian Herbs, Salt, Pepper' },
   ],
   deli: [
     { name: 'Turkey Club Sandwich', description: 'Sliced turkey, bacon, lettuce, tomato on toasted bread.', calories: 480, protein: 32, carbs: 42, fat: 18, ingredients: 'Sliced Turkey, Bacon, Lettuce, Tomato, Whole Wheat Bread, Mayonnaise' },
-    { name: 'Veggie Wrap', description: 'Hummus, roasted veggies, feta in a whole wheat tortilla.', calories: 360, protein: 12, carbs: 52, fat: 14, ingredients: 'Whole Wheat Tortilla, Hummus, Roasted Veggies, Feta Cheese' },
+    { name: 'Roast Beef Sub', description: 'Thinly sliced roast beef with horseradish on a hoagie roll.', calories: 520, protein: 36, carbs: 48, fat: 20, ingredients: 'Roast Beef, Horseradish Sauce, Hoagie Roll, Onion, Arugula, Olive Oil' },
+    { name: 'Veggie Wrap', description: 'Hummus, roasted veggies, feta in a whole wheat tortilla.', calories: 360, protein: 12, carbs: 52, fat: 14, ingredients: 'Whole Wheat Tortilla, Hummus, Roasted Zucchini, Bell Peppers, Carrots, Feta Cheese' },
   ],
   'salad-bar': [
-    { name: 'Garden Salad', description: 'Mixed greens, romaine, spinach.', calories: 25, protein: 2, carbs: 4, fat: 0, ingredients: 'Mixed Greens, Romaine Lettuce, Fresh Spinach' },
-    { name: 'Caesar Salad', description: 'Romaine, parmesan, croutons with Caesar dressing.', calories: 180, protein: 6, carbs: 14, fat: 12, ingredients: 'Romaine Lettuce, Parmesan Cheese, Croutons, Caesar Dressing' },
+    { name: 'Garden Salad Base', description: 'Mixed greens, romaine, spinach — your fresh foundation.', calories: 25, protein: 2, carbs: 4, fat: 0, ingredients: 'Mixed Greens, Romaine Lettuce, Fresh Spinach' },
+    { name: 'Caesar Salad', description: 'Romaine, parmesan, croutons with Caesar dressing.', calories: 180, protein: 6, carbs: 14, fat: 12, ingredients: 'Romaine Lettuce, Parmesan Cheese, Croutons, Caesar Dressing, Anchovies' },
+    { name: 'Greek Salad', description: 'Cucumber, tomato, olives, red onion, feta, oregano.', calories: 160, protein: 5, carbs: 10, fat: 12, ingredients: 'Cucumber, Roma Tomato, Kalamata Olives, Red Onion, Feta Cheese, Oregano, Olive Oil' },
   ],
 };
 
@@ -69,7 +75,7 @@ function CoreMenuModal({ stationId, onClose, onAddToPlate }) {
           setItems(FALLBACK_ITEMS[stationId] || []);
         }
       } catch (err) {
-        console.error('CoreMenu fetch error:', err);
+        console.error('CoreMenusSection fetch error:', err);
         setItems(FALLBACK_ITEMS[stationId] || []);
       } finally {
         setLoading(false);
@@ -80,7 +86,7 @@ function CoreMenuModal({ stationId, onClose, onAddToPlate }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[75] flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-300">
         {/* Header */}
         <div className={`${config.activeBg} p-5 text-white flex justify-between items-center shrink-0`}>
           <div className="flex items-center gap-3">
@@ -97,8 +103,8 @@ function CoreMenuModal({ stationId, onClose, onAddToPlate }) {
           </button>
         </div>
 
-        {/* Items list */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+        {/* Items */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {loading ? (
             <div className="flex items-center justify-center py-16">
               <Loader2 className={`w-6 h-6 animate-spin ${config.color}`} />
@@ -109,17 +115,15 @@ function CoreMenuModal({ stationId, onClose, onAddToPlate }) {
             </div>
           ) : (
             items.map((item, idx) => (
-              <div key={item.id || idx} className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-                <div
+              <div key={idx} className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition overflow-hidden">
+                <button
                   onClick={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
-                  className="p-4 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition"
+                  className="w-full p-4 flex items-center gap-3 text-left hover:bg-gray-50 transition"
                 >
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1">
                     <p className="font-bold text-gray-800 text-sm uppercase tracking-tight">{item.name}</p>
-                    {item.description && (
-                      <p className="text-gray-500 text-xs mt-0.5 leading-relaxed line-clamp-1">{item.description}</p>
-                    )}
-                    <div className="flex gap-3 mt-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    <p className="text-gray-500 text-xs mt-0.5 leading-relaxed">{item.description}</p>
+                    <div className="flex gap-3 mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                       {item.calories > 0 && <span>{item.calories} Cal</span>}
                       {item.protein > 0 && <span>{item.protein}g Prot</span>}
                       {item.carbs > 0 && <span>{item.carbs}g Carbs</span>}
@@ -127,42 +131,33 @@ function CoreMenuModal({ stationId, onClose, onAddToPlate }) {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {onAddToPlate && (
-                      <div
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          onAddToPlate({ ...item, station: config.label, day: 'Daily' });
+                          onAddToPlate({ ...item, station: config.label, day: item.day || 'Daily' });
                         }}
-                        className="w-9 h-9 flex items-center justify-center bg-gray-900 text-white rounded-xl cursor-pointer hover:bg-black active:scale-90 transition"
+                        className="w-9 h-9 flex items-center justify-center bg-gray-900 text-white rounded-xl transition active:scale-90 hover:bg-black"
                       >
-                        <Plus className="w-4 h-4" />
-                      </div>
+                        <span className="text-lg leading-none">+</span>
+                      </button>
                     )}
-                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${expandedIdx === idx ? 'rotate-180' : ''}`} />
+                    <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${expandedIdx === idx ? 'rotate-90' : ''}`} />
                   </div>
-                </div>
+                </button>
 
-                {expandedIdx === idx && (
-                  <div className="px-4 pb-4 border-t border-gray-100 bg-gray-50">
-                    {item.ingredients && (
-                      <div className="flex items-start gap-2 pt-3">
-                        <ChefHat className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Ingredients</p>
-                          <p className="text-sm text-gray-700 leading-relaxed">{item.ingredients}</p>
-                        </div>
+                {expandedIdx === idx && item.ingredients && (
+                  <div className="px-4 pb-4 pt-0 border-t border-gray-100 bg-gray-50 animate-in slide-in-from-top-2">
+                    <div className="flex items-start gap-2">
+                      <ChefHat className="w-4 h-4 text-gray-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-1">Contains</p>
+                        <p className="text-sm text-gray-700 leading-relaxed">{item.ingredients}</p>
                       </div>
-                    )}
+                    </div>
                     {item.allergens?.length > 0 && (
                       <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
                         <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest">Allergens: </span>
                         <span className="text-[10px] text-red-700">{item.allergens.join(', ')}</span>
-                      </div>
-                    )}
-                    {item.tags?.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {item.tags.map((tag, t) => (
-                          <span key={t} className="px-2 py-0.5 bg-teal-50 text-teal-700 border border-teal-100 rounded-full text-[9px] font-bold uppercase">{tag}</span>
-                        ))}
                       </div>
                     )}
                   </div>
@@ -181,7 +176,6 @@ function CoreMenuModal({ stationId, onClose, onAddToPlate }) {
 
 export default function CoreMenusSection({ onAddToPlate }) {
   const [openMenu, setOpenMenu] = useState(null);
-  const STATION_IDS = ['grill', 'deli', 'salad-bar'];
 
   return (
     <>
@@ -192,7 +186,7 @@ export default function CoreMenusSection({ onAddToPlate }) {
           <div className="h-px flex-1 bg-gray-100" />
         </div>
         <div className="flex flex-wrap justify-center gap-2">
-          {STATION_IDS.map(id => {
+          {CORE_STATION_IDS.map(id => {
             const cfg = STATION_CONFIG[id];
             return (
               <button

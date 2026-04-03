@@ -68,14 +68,14 @@ function CoreMenuModal({ stationId, onClose, onAddToPlate }) {
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const all = await base44.entities.CoreMenuItem.list();
-        const results = all.filter(i => i.station === config.dbStation);
+        const results = await base44.entities.CoreMenuItem.filter({ station: config.dbStation });
         if (results && results.length > 0) {
           setItems(results);
         } else {
           setItems(FALLBACK_ITEMS[stationId] || []);
         }
-      } catch {
+      } catch (err) {
+        console.error('CoreMenusSection fetch error:', err);
         setItems(FALLBACK_ITEMS[stationId] || []);
       } finally {
         setLoading(false);

@@ -148,14 +148,24 @@ function StationSync({ station, onItemsPublished }) {
         meal_period: 'Lunch',
       }));
 
-      setProgressStep('Publishing...'); setProgress(100);
-      onItemsPublished(finalItems, station.id);
+      setProgressStep('Saving to database...'); setProgress(97);
+
+      // Delete existing items for this station, then bulk-create new ones
+      const existing = await base44.entities.MenuItem.filter({ station: station.label });
+      if (existing.length > 0) {
+        await Promise.all(existing.map(item => base44.entities.MenuItem.delete(item.id)));
+      }
+      await base44.entities.MenuItem.bulkCreate(finalItems);
+
+      setProgress(100);
+      setProgressStep('');
       setUploadedFiles({ weekMenu: null, fda: null, allergen: null, ingredients: null });
-      setTimeout(() => { setProgressStep(''); setProgress(0); }, 500);
+      alert(`✅ Published ${finalItems.length} ${station.label} items to the menu!`);
     } catch (err) {
       alert(`Error: ${err.message}`);
     } finally {
       setIsPublishing(false);
+      setProgress(0);
     }
   };
 

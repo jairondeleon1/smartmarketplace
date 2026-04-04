@@ -50,21 +50,20 @@ function StationSync({ station, onItemsPublished }) {
     }
   };
 
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
   const invokeLLMWithRetry = async (params, retries = 3) => {
     for (let i = 0; i <= retries; i++) {
       try {
         return await base44.integrations.Core.InvokeLLM(params);
       } catch (err) {
-        const isRateLimit = err?.message?.toLowerCase().includes('rate limit') || err?.status === 429;
         if (i === retries) throw err;
-        // Longer wait for rate limit errors
-        const delay = isRateLimit ? 8000 * (i + 1) : 2000 * (i + 1);
-        await new Promise(r => setTimeout(r, delay));
+        // Always wait at least 15s, longer on each retry
+        const delay = 15000 * (i + 1);
+        await sleep(delay);
       }
     }
   };
-
-  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
   const saveToDatabase = async (items) => {
     // Delete existing for this station first
@@ -107,7 +106,7 @@ function StationSync({ station, onItemsPublished }) {
       }
 
       // STEP 2: Enrich with FDA nutrition
-      await sleep(4000);
+      await sleep(10000);
       if (uploadedFiles.fda && finalItems.length > 0) {
         setProgressStep('Step 2: Adding nutrition data...'); setProgress(45);
         const fdaResult = await invokeLLMWithRetry({
@@ -136,7 +135,7 @@ function StationSync({ station, onItemsPublished }) {
       }
 
       // STEP 3: Allergens
-      await sleep(4000);
+      await sleep(10000);
       if (uploadedFiles.allergen && finalItems.length > 0) {
         setProgressStep('Step 3: Adding allergen data...'); setProgress(70);
         const allergenResult = await invokeLLMWithRetry({
@@ -157,7 +156,7 @@ function StationSync({ station, onItemsPublished }) {
       }
 
       // STEP 4: Ingredients CSV
-      await sleep(4000);
+      await sleep(10000);
       if (uploadedFiles.ingredients && finalItems.length > 0) {
         setProgressStep('Step 4: Adding ingredients...'); setProgress(88);
         const csvChunk = uploadedFiles.ingredients.slice(0, 20000);

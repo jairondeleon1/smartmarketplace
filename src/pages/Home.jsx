@@ -53,6 +53,8 @@ import Footer from "../components/Footer";
 import AdminGate from "../components/AdminGate";
 import CoreMenusSection from "../components/CoreMenusSection";
 import CoreMenusSync from "../components/admin/CoreMenusSync";
+import FeatureFlags from "../components/admin/FeatureFlags";
+import { useAppSettings } from "@/hooks/useAppSettings";
 import { AccessibilityProvider } from "@/lib/AccessibilityContext";
 import useOnlineStatus, { saveMenuToCache, loadMenuFromCache, getCacheAge } from "@/hooks/useOfflineMenu";
 import OfflineBanner from "@/components/OfflineBanner";
@@ -367,7 +369,7 @@ function TrayDetailsModal({ isOpen, onClose, plate, setPlate }) {
   );
 }
 
-function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
+function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl, allergenEnabled }) {
   const [showDetails, setShowDetails] = useState(false);
   const isRecommended = item.matchesGoal;
   
@@ -419,7 +421,7 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
             </div>
           )}
           <NutritionDetailView item={item} />
-          {item.allergens && item.allergens.filter(a => !['Garlic', 'Gluten', 'Onion'].includes(a)).length > 0 && (
+          {allergenEnabled && item.allergens && item.allergens.filter(a => !['Garlic', 'Gluten', 'Onion'].includes(a)).length > 0 && (
             <div className="mt-3 bg-red-50 border border-red-100 rounded-lg p-3">
               <div className="text-red-600 font-bold uppercase text-[10px] tracking-widest">
                 Contains: {item.allergens.filter(a => !['Garlic', 'Gluten', 'Onion'].includes(a)).join(', ')}
@@ -542,7 +544,7 @@ function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addTo
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {mains.map(item => (
-              <MenuItemCard key={item.id} item={item} addToPlate={addToPlate} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} />
+              <MenuItemCard key={item.id} item={item} addToPlate={addToPlate} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} allergenEnabled={allergenEnabled} />
             ))}
           </div>
         </div>
@@ -560,7 +562,7 @@ function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addTo
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sides.map(item => (
-              <MenuItemCard key={item.id} item={item} addToPlate={addToPlate} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} />
+              <MenuItemCard key={item.id} item={item} addToPlate={addToPlate} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} allergenEnabled={allergenEnabled} />
             ))}
           </div>
         </div>
@@ -1216,6 +1218,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         <button onClick={() => setActiveTab('upload')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'upload' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Upload Files</button>
         <button onClick={() => setActiveTab('manage')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'manage' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Manage Items ({menuItems.length})</button>
         <button onClick={() => setActiveTab('users')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'users' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Users</button>
+        <button onClick={() => setActiveTab('features')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'features' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Features</button>
       </div>
 
       {activeTab === 'upload' && (
@@ -1314,6 +1317,12 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         </div>
       )}
 
+      {activeTab === 'features' && (
+        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+          <FeatureFlags />
+        </div>
+      )}
+
       <BulkEditModal isOpen={showBulkEdit} onClose={() => setShowBulkEdit(false)} selectedItems={bulkEditItems} onSave={applyBulkEdit} />
       <EditMenuItemModal isOpen={!!editingItem} item={editingItem} onClose={() => setEditingItem(null)} onSave={handleEditItem} />
     </div>
@@ -1323,18 +1332,8 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
 // --- MAIN APP ---
 
 export default function Home() {
-  const getCurrentDay = () => {
-    const day = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-    return (day === 'Saturday' || day === 'Sunday') ? 'Monday' : day;
-  };
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const apply = (e) => document.documentElement.classList.toggle('dark', e.matches);
-    apply(mq);
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
-  }, []);
+  const { settings: appSettings } = useAppSettings();
+  const allergenEnabled = appSettings?.allergen_display_enabled ?? false;
 
   const [view, setView] = useState('customer');
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
@@ -1560,7 +1559,7 @@ export default function Home() {
         </main>
         <MobileBottomNav view={view} changeView={changeView} onProfileClick={() => setIsProfileModalOpen(true)} />
         <NutritionCharts isOpen={isChartsOpen} onClose={() => setIsChartsOpen(false)} menuItems={menuItems} />
-        <ProfileSettingsModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} user={effectiveUser} onProfileUpdate={(profile) => { setLocalProfile(profile); localStorage.setItem('userProfile', JSON.stringify(profile)); }} />
+        <ProfileSettingsModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} user={effectiveUser} allergenEnabled={allergenEnabled} onProfileUpdate={(profile) => { setLocalProfile(profile); localStorage.setItem('userProfile', JSON.stringify(profile)); }} />
         <AITransparencyModal isOpen={showAINotice} onAccept={handleAINoticeAccept} />
         <VoiceAssistant menuItems={menuItems} />
         <Footer onAdminClick={() => changeView('admin')} />

@@ -6,7 +6,7 @@ const SEVERE_ALLERGENS = ['Shellfish', 'Tree Nuts', 'Peanuts', 'Fish', 'Sesame']
 const DIET_PREFERENCES = ['Vegan', 'Vegetarian', 'Fit'];
 const HEALTH_GOALS = ['High Protein', 'Low Carb', 'High Fiber'];
 
-export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileUpdate }) {
+export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileUpdate, allergenEnabled = false }) {
   const [restrictions, setRestrictions] = useState([]);
   const [preferences, setPreferences] = useState([]);
   const [goals, setGoals] = useState([]);
@@ -132,7 +132,8 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
             </label>
           </div>
 
-          {/* Dietary Restrictions */}
+          {/* Dietary Restrictions — only shown when allergen feature is enabled */}
+          {allergenEnabled && (
           <div className="bg-red-50 border border-red-100 rounded-2xl p-6">
             <div className="flex items-center gap-2 mb-4">
               <AlertTriangle className="w-5 h-5 text-red-600" />
@@ -168,6 +169,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
               </div>
             )}
           </div>
+          )}
 
           {/* Dietary Preferences */}
           <div className="bg-green-50 border border-green-100 rounded-2xl p-6">

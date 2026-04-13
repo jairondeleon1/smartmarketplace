@@ -95,6 +95,12 @@ const VEGAN_URL = "https://i.postimg.cc/MH7cDSz4/vegan.png";
 const VEG_URL = "https://i.postimg.cc/hvsDvPDt/vegetarian.png";
 const FIT_URL = "https://i.postimg.cc/KjQkB6SF/fit.png";
 
+function getCurrentDay() {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const today = days[new Date().getDay()];
+  return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(today) ? today : 'All Days';
+}
+
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Daily Special', 'All Days'];
 
 const SUGGESTIONS = [
@@ -488,7 +494,7 @@ function isSideItem(item) {
   return SIDE_STATION_KEYWORDS.some(k => station.includes(k));
 }
 
-function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addToPlate, customVegUrl, customVeganUrl, selectedDay, setSelectedDay, clearFilters }) {
+function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addToPlate, customVegUrl, customVeganUrl, selectedDay, setSelectedDay, clearFilters, allergenEnabled }) {
   const breakfastItems = filteredItems.filter(i => getMealPeriodFromStation(i) === 'Breakfast');
   const lunchItems = filteredItems.filter(i => getMealPeriodFromStation(i) === 'Lunch');
 
@@ -640,6 +646,7 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
         selectedDay={selectedDay}
         setSelectedDay={setSelectedDay}
         clearFilters={clearFilters}
+        allergenEnabled={allergenEnabled}
       />
 
       {/* Persistent AI Insights Disclaimer */}

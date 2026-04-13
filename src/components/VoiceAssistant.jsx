@@ -66,7 +66,7 @@ export default function VoiceAssistant({ menuItems = [] }) {
     const file = e.target.files[0];
     if (!file) return;
     setIsUploading(true);
-    setShowUploadHint(false);
+
     try {
       // Use AI to cartoonify the image
       const uploadResult = await base44.integrations.Core.UploadFile({ file });

@@ -1081,6 +1081,15 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       } else {
         finalItems = menuItems.map(item => ({ ...item }));
       }
+
+      // Normalize station names
+      const normalizeStation = (station) => {
+        const s = (station || '').toLowerCase().trim();
+        if (s.includes('main') || s.includes('comfort') || s.includes('entree')) return 'Entree';
+        return station;
+      };
+      finalItems = finalItems.map(item => ({ ...item, station: normalizeStation(item.station) }));
+
       setProcessingProgress(35);
 
       if (uploadedFiles.fda) {

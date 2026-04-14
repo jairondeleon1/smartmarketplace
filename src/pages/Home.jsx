@@ -1517,7 +1517,13 @@ export default function Home() {
     return { suitable, reasons, matchesGoal };
   };
 
-  const filteredItems = menuItems.filter(item => {
+  const normalizeStation = (station) => {
+    const s = (station || '').toLowerCase().trim();
+    if (s.includes('main') || s.includes('comfort') || s.includes('entree')) return 'Entree';
+    return station;
+  };
+
+  const filteredItems = menuItems.map(item => ({ ...item, station: normalizeStation(item.station) })).filter(item => {
     const itemDay = item.day?.split('(')[0].trim() || item.day;
     const matchesDay = selectedDay === 'All Days' || itemDay === selectedDay || itemDay === 'Daily Special';
     if (!matchesDay) return false;

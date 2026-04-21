@@ -139,8 +139,11 @@ ${pastTurns ? `Context:\n${pastTurns}\n` : ''}U: "${transcript}"`
       }
     };
 
-    rec.onend = () => { if (recRef.current) setPhase('idle'); };
-    rec.onerror = () => setPhase('idle');
+    rec.onend = () => {
+      // Only reset to idle if we're still in listening phase — don't interrupt processing/speaking
+      setPhase(prev => prev === 'listening' ? 'idle' : prev);
+    };
+    rec.onerror = () => setPhase(prev => prev === 'listening' ? 'idle' : prev);
     rec.start();
   }, [menuItems]);
 

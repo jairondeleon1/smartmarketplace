@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         text: cleanText,
         voiceId: 'default-i-eyv3zmlf9hyqv3c7jmsg__michelle',
-        modelId: 'inworld-tts-1.5-max'
+        modelId: 'inworld-tts-1'
       }),
       signal: controller.signal
     });

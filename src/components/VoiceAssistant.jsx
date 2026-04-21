@@ -110,7 +110,7 @@ export default function VoiceAssistant({ menuItems = [] }) {
 
         const response = await base44.integrations.Core.InvokeLLM({
           model: 'gpt_5_mini',
-          prompt: `You are Michelle, a friendly voice assistant for a corporate cafe. Answer in 1-2 short sentences max, no markdown, no lists, speak naturally. Remember the conversation context.
+          prompt: `You are Michelle, a friendly voice assistant for a corporate cafe. Answer in 1 short sentence only, no markdown, no lists, speak naturally.
 Menu: ${JSON.stringify(slimMenu)}
 ${pastTurns ? `Conversation so far:\n${pastTurns}\n` : ''}User: "${transcript}"`
         });

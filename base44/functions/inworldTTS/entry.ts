@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
       .replace(/#{1,6}\s/g, '')
       .replace(/[*_~`]/g, '')
       .trim()
-      .slice(0, 500);
+      .slice(0, 200); // Keep short for faster TTS
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);

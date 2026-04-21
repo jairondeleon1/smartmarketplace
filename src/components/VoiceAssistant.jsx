@@ -100,22 +100,23 @@ export default function VoiceAssistant({ menuItems = [] }) {
       stopSpeaking();
 
       try {
-        const slimMenu = menuItems.slice(0, 40).map(({ name, day, station, calories, protein, allergens, tags }) => ({
-          name, day, station, calories, protein, allergens, tags
+        // Only send top 20 items and minimal fields to reduce payload
+        const slimMenu = menuItems.slice(0, 20).map(({ name, day, station, calories, allergens, tags }) => ({
+          name, day, station, calories, allergens, tags
         }));
 
-        const pastTurns = historyRef.current.slice(-6).map(m =>
-          `${m.role === 'user' ? 'User' : 'Michelle'}: ${m.content}`
+        const pastTurns = historyRef.current.slice(-4).map(m =>
+          `${m.role === 'user' ? 'U' : 'M'}: ${m.content}`
         ).join('\n');
 
         const response = await base44.integrations.Core.InvokeLLM({
           model: 'gpt_5_mini',
-          prompt: `You are Michelle, a friendly voice assistant for a corporate cafe. Answer in 1 short sentence only, no markdown, no lists, speak naturally.
+          prompt: `You are Michelle, cafe voice assistant. Reply in 1 short sentence, no markdown.
 Menu: ${JSON.stringify(slimMenu)}
-${pastTurns ? `Conversation so far:\n${pastTurns}\n` : ''}User: "${transcript}"`
+${pastTurns ? `Context:\n${pastTurns}\n` : ''}U: "${transcript}"`
         });
 
-        const aiText = typeof response === 'string' ? response : "I'm not sure about that one. Try asking about today's specials!";
+        const aiText = typeof response === 'string' ? response : "Try asking about today's specials!";
         setHistory(prev => [...prev, { role: 'user', content: transcript }, { role: 'ai', content: aiText }]);
 
         setPhase('speaking');

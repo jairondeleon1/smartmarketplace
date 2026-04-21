@@ -99,6 +99,11 @@ export default function VoiceAssistant({ menuItems = [] }) {
       setPhase('processing');
       stopSpeaking();
 
+      // Speak a quick acknowledgment immediately so user knows Michelle heard them
+      const acks = ["Let me check the menu for you!", "One moment!", "Looking that up for you!"];
+      const ack = acks[Math.floor(Math.random() * acks.length)];
+      speak(ack, { muted: mutedRef.current });
+
       try {
         // Only send top 20 items and minimal fields to reduce payload
         const slimMenu = menuItems.slice(0, 20).map(({ name, day, station, calories, allergens, tags }) => ({
@@ -185,7 +190,7 @@ ${pastTurns ? `Context:\n${pastTurns}\n` : ''}U: "${transcript}"`
     phase === 'listening' ? '🎤 Listening...'
     : phase === 'speaking' ? '🔊 Speaking...'
     : phase === 'greeting' ? '👋 Hi!'
-    : phase === 'processing' ? '💭 Thinking...'
+    : phase === 'processing' ? '🔍 Looking it up...'
     : '💬 Talk to Michelle';
 
   return (

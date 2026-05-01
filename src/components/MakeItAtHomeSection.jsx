@@ -16,25 +16,43 @@ export function MakeItAtHomeAdmin() {
 
   useEffect(() => { loadCards(); }, []);
 
+  // Extract URLs embedded in PDF binary (QR code links are stored as /URI actions)
+  const extractUrlsFromPdf = async (file) => {
+    const buffer = await file.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    const text = new TextDecoder('latin1').decode(bytes);
+
+    // /URI actions — this is where QR code and hyperlink URLs live in PDFs
+    const uriMatches = [...text.matchAll(/\/URI\s*\(([^)]+)\)/g)];
+    const uris = uriMatches.map(m => m[1].trim()).filter(u => u.startsWith('http'));
+
+    // Also scan for raw https:// strings in the PDF stream
+    const rawMatches = [...text.matchAll(/https?:\/\/[^\s)<>"'\]\\]+/g)].map(m => m[0]).filter(u => u.length > 20);
+
+    const all = [...new Set([...uris, ...rawMatches])];
+    // Return the longest URL (most specific = recipe/instacart link, not a short brand URL)
+    return all.sort((a, b) => b.length - a.length)[0] || '';
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setIsProcessing(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      // Extract URL from PDF locally BEFORE uploading (most reliable for QR links)
+      const pdfUrl = await extractUrlsFromPdf(file);
 
-      // Run AI text extraction and image extraction in parallel
-      const [result, imageResult] = await Promise.all([
+      // Upload file and run AI extraction in parallel
+      const [{ file_url }, result] = await Promise.all([
+        base44.integrations.Core.UploadFile({ file }),
         base44.integrations.Core.InvokeLLM({
           model: 'claude_sonnet_4_6',
-          prompt: `This is a "Make It At Home" recipe flyer. Please extract the following:
-1. dish_name: The name of the dish prominently displayed (e.g. "Everything Green Juice Shot")
-2. description: Any tagline or call-to-action text (e.g. "Get the recipe and add the ingredients to your Instacart!")
-3. recipe_link: Look VERY carefully for any URL printed as text anywhere on the flyer (e.g. starting with https://). 
-   Also look at the QR code if present — try to decode it and extract the URL it encodes.
-   Return the full URL if found, otherwise return empty string.
+          prompt: `This is a "Make It At Home" recipe flyer. Extract:
+1. dish_name: The name of the dish prominently displayed
+2. description: Any tagline or call-to-action text
+3. recipe_link: Any URL printed as visible text on the flyer (starting with https://). Return empty string if none visible as text.
 Return as JSON only.`,
-          file_urls: [file_url],
+          file_urls: [URL.createObjectURL(file)],
           response_json_schema: {
             type: "object",
             properties: {
@@ -43,19 +61,17 @@ Return as JSON only.`,
               recipe_link: { type: "string" }
             }
           }
-        }),
-        base44.functions.invoke('extractPdfImage', { file_url }).then(r => r?.data).catch(() => null)
+        }).catch(() => null)
       ]);
 
-      const extractedImageUrl = imageResult?.image_url || null;
-      // Use LLM-extracted link first, then fall back to URL found in PDF text/URI actions
-      const recipe_link = result?.recipe_link || imageResult?.qr_url || '';
+      // PDF binary scan wins over LLM (more accurate for QR-embedded links)
+      const recipe_link = pdfUrl || result?.recipe_link || '';
 
-      const newCard = await base44.entities.MakeItAtHome.create({
+      await base44.entities.MakeItAtHome.create({
         dish_name: result?.dish_name || file.name.replace('.pdf', ''),
         description: result?.description || 'Make this dish at home!',
         recipe_link,
-        image_url: extractedImageUrl || file_url,
+        image_url: file_url,
         active: true
       });
 

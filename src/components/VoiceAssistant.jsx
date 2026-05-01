@@ -99,17 +99,32 @@ export default function VoiceAssistant({ menuItems = [] }) {
       setPhase('processing');
       stopSpeaking();
 
-      // Only say a search acknowledgment for actual menu/food questions, not conversational phrases
       const isConversational = /^(thank|thanks|thank you|ok|okay|cool|great|got it|bye|goodbye|hello|hi|hey|awesome|perfect|sure|no|yes|nope|yep|yup|alright|sounds good)/i.test(transcript.trim());
       const isAllergenQuestion = /allergen|allergy|allergic|contains|ingredient/i.test(transcript);
-      if (!isConversational && !isAllergenQuestion) {
+
+      // Handle allergen questions immediately without LLM call
+      if (isAllergenQuestion) {
+        const allergenReply = "For allergen information, please contact one of the Ingredient Ambassadors in the Marketplace!";
+        setHistory(prev => [...prev, { role: 'user', content: transcript }, { role: 'ai', content: allergenReply }]);
+        setPhase('speaking');
+        speak(allergenReply, {
+          muted: mutedRef.current,
+          onEnd: () => {
+            setPhase('idle');
+            setTimeout(() => { if (recRef.current !== null) startListening(); }, 400);
+          }
+        });
+        return;
+      }
+
+      // Say a bridging ack for non-conversational questions
+      if (!isConversational) {
         const acks = ["Let me check the menu for you!", "One moment!", "Looking that up for you!"];
         const ack = acks[Math.floor(Math.random() * acks.length)];
         speak(ack, { muted: mutedRef.current });
       }
 
       try {
-        // Only send top 20 items and minimal fields to reduce payload
         const slimMenu = menuItems.slice(0, 20).map(({ name, day, station, calories, allergens, tags }) => ({
           name, day, station, calories, allergens, tags
         }));
@@ -122,8 +137,7 @@ export default function VoiceAssistant({ menuItems = [] }) {
           model: 'gpt_5_mini',
           prompt: `You are Michelle, cafe voice assistant. Reply in 1 short sentence, no markdown.
 Menu: ${JSON.stringify(slimMenu)}
-${pastTurns ? `Context:\n${pastTurns}\n` : ''}IMPORTANT: If the user asks about allergens or allergen information, always say: "For allergen information, please contact one of the Ingredient Ambassadors in the Marketplace!" and nothing else about allergens.
-U: "${transcript}"`
+${pastTurns ? `Context:\n${pastTurns}\n` : ''}U: "${transcript}"`
         });
 
         const aiText = typeof response === 'string' ? response : "Try asking about today's specials!";

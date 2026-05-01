@@ -125,8 +125,8 @@ export default function VoiceAssistant({ menuItems = [] }) {
       }
 
       try {
-        const slimMenu = menuItems.slice(0, 20).map(({ name, day, station, calories, allergens, tags }) => ({
-          name, day, station, calories, allergens, tags
+        const slimMenu = menuItems.slice(0, 20).map(({ name, day, station, calories, tags }) => ({
+          name, day, station, calories, tags
         }));
 
         const pastTurns = historyRef.current.slice(-4).map(m =>

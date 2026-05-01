@@ -26,11 +26,14 @@ export function MakeItAtHomeAdmin() {
       // Run AI text extraction and image extraction in parallel
       const [result, imageResult] = await Promise.all([
         base44.integrations.Core.InvokeLLM({
-          prompt: `This is a "Make It At Home" recipe flyer PDF. Extract:
-1. dish_name: The name of the dish (e.g. "Everything Green Juice Shot")
-2. description: The tagline/call-to-action text visible on the flyer (e.g. "Get the recipe and add the ingredients to your Instacart!")
-3. recipe_link: Look carefully for any full URL text printed anywhere on the flyer (e.g. https://...). Return empty string if none found.
-Return as JSON.`,
+          model: 'claude_sonnet_4_6',
+          prompt: `This is a "Make It At Home" recipe flyer. Please extract the following:
+1. dish_name: The name of the dish prominently displayed (e.g. "Everything Green Juice Shot")
+2. description: Any tagline or call-to-action text (e.g. "Get the recipe and add the ingredients to your Instacart!")
+3. recipe_link: Look VERY carefully for any URL printed as text anywhere on the flyer (e.g. starting with https://). 
+   Also look at the QR code if present — try to decode it and extract the URL it encodes.
+   Return the full URL if found, otherwise return empty string.
+Return as JSON only.`,
           file_urls: [file_url],
           response_json_schema: {
             type: "object",
@@ -45,11 +48,13 @@ Return as JSON.`,
       ]);
 
       const extractedImageUrl = imageResult?.image_url || null;
+      // Use LLM-extracted link first, then fall back to URL found in PDF text/URI actions
+      const recipe_link = result?.recipe_link || imageResult?.qr_url || '';
 
       const newCard = await base44.entities.MakeItAtHome.create({
         dish_name: result?.dish_name || file.name.replace('.pdf', ''),
         description: result?.description || 'Make this dish at home!',
-        recipe_link: result?.recipe_link || '',
+        recipe_link,
         image_url: extractedImageUrl || file_url,
         active: true
       });

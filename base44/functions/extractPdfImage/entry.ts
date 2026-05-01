@@ -49,31 +49,52 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Try to extract URL directly from PDF text stream (URLs are often in plain text in PDF)
+    let qr_url = null;
+    try {
+      const pdfText = new TextDecoder('latin1').decode(pdfBytes);
+      // Look for URLs in PDF text/URI actions
+      const uriMatches = pdfText.match(/\/URI\s*\(([^)]+)\)/g) || [];
+      const urls = uriMatches
+        .map(m => m.match(/\/URI\s*\(([^)]+)\)/)?.[1])
+        .filter(u => u && u.startsWith('http'));
+      
+      if (urls.length > 0) {
+        // Pick the longest/most specific URL (likely the recipe link, not a logo link)
+        qr_url = urls.sort((a, b) => b.length - a.length)[0];
+      }
+
+      // Also search for raw https:// URLs in the text
+      if (!qr_url) {
+        const rawUrls = pdfText.match(/https?:\/\/[^\s)<>"\]]+/g) || [];
+        const filtered = rawUrls.filter(u => u.length > 20);
+        if (filtered.length > 0) {
+          qr_url = filtered.sort((a, b) => b.length - a.length)[0];
+        }
+      }
+    } catch (e) {
+      // ignore text extraction errors
+    }
+
     const allImages = [
       ...jpegImages.map(img => ({ ...img, type: 'jpeg', mime: 'image/jpeg' })),
       ...pngImages.map(img => ({ ...img, type: 'png', mime: 'image/png' }))
     ].sort((a, b) => b.size - a.size);
 
-    if (allImages.length === 0) {
-      return Response.json({ image_url: null, message: 'No embedded images found' });
+    let image_url = null;
+
+    if (allImages.length > 0) {
+      const best = allImages[0];
+      const imageBytes = pdfBytes.slice(best.start, best.end);
+      const blob = new Blob([imageBytes], { type: best.mime });
+      const uploadResult = await base44.asServiceRole.integrations.Core.UploadFile({ file: blob });
+      image_url = uploadResult.file_url;
     }
 
-    const best = allImages[0];
-    const imageBytes = pdfBytes.slice(best.start, best.end);
-
-    // Upload the extracted image using fetch + multipart form
-    const formData = new FormData();
-    const blob = new Blob([imageBytes], { type: best.mime });
-    const ext = best.type === 'jpeg' ? 'jpg' : 'png';
-    formData.append('file', blob, `flyer_image.${ext}`);
-
-    // Use the SDK integration to upload
-    const uploadResult = await base44.asServiceRole.integrations.Core.UploadFile({ file: blob });
-
     return Response.json({ 
-      image_url: uploadResult.file_url,
-      images_found: allImages.length,
-      type: best.type
+      image_url,
+      qr_url,
+      images_found: allImages.length
     });
 
   } catch (error) {

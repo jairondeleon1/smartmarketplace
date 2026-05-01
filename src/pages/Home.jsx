@@ -53,6 +53,7 @@ import Footer from "../components/Footer";
 import AdminGate from "../components/AdminGate";
 import CoreMenusSection from "../components/CoreMenusSection";
 import CoreMenusSync from "../components/admin/CoreMenusSync";
+import MakeItAtHomeSection, { MakeItAtHomeAdmin } from "../components/MakeItAtHomeSection";
 import FeatureFlags from "../components/admin/FeatureFlags";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import { AccessibilityProvider } from "@/lib/AccessibilityContext";
@@ -579,6 +580,9 @@ function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addTo
           No {effectiveTab} items for this day
         </div>
       )}
+
+      {/* Make It At Home — only shown under Lunch tab */}
+      {effectiveTab === 'Lunch' && <MakeItAtHomeSection />}
     </div>
   );
 }
@@ -1309,6 +1313,13 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
           <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Core Menu Stations</span>
           <div className="h-px flex-1 bg-gray-200" />
         </div>
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-gray-200" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Make It At Home Flyers</span>
+          <div className="h-px flex-1 bg-gray-200" />
+        </div>
+        <MakeItAtHomeAdmin />
+
         <CoreMenusSync onCoreItemsPublished={(items, stationId) => {
           try {
             const existing = JSON.parse(localStorage.getItem('coreMenuItems') || '{}');

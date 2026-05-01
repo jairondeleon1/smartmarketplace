@@ -1,0 +1,48 @@
+{
+  "name": "MakeItAtHome",
+  "type": "object",
+  "properties": {
+    "dish_name": {
+      "type": "string",
+      "description": "Name of the dish"
+    },
+    "description": {
+      "type": "string",
+      "description": "Short description or tagline"
+    },
+    "recipe_link": {
+      "type": "string",
+      "description": "URL from the QR code to the recipe / Instacart link"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Uploaded image from the PDF flyer"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to display this card"
+    }
+  },
+  "required": [
+    "dish_name"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {},
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

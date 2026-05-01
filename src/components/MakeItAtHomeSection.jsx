@@ -41,10 +41,10 @@ Return as JSON.`,
             }
           }
         }),
-        base44.functions.invoke('extractPdfImage', { file_url }).catch(() => ({ data: null }))
+        base44.functions.invoke('extractPdfImage', { file_url }).then(r => r?.data).catch(() => null)
       ]);
 
-      const extractedImageUrl = imageResult?.data?.image_url || null;
+      const extractedImageUrl = imageResult?.image_url || null;
 
       const newCard = await base44.entities.MakeItAtHome.create({
         dish_name: result?.dish_name || file.name.replace('.pdf', ''),

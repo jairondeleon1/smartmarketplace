@@ -121,7 +121,8 @@ export default function VoiceAssistant({ menuItems = [] }) {
           model: 'gpt_5_mini',
           prompt: `You are Michelle, cafe voice assistant. Reply in 1 short sentence, no markdown.
 Menu: ${JSON.stringify(slimMenu)}
-${pastTurns ? `Context:\n${pastTurns}\n` : ''}U: "${transcript}"`
+${pastTurns ? `Context:\n${pastTurns}\n` : ''}IMPORTANT: If the user asks about allergens or allergen information, always say: "For allergen information, please contact one of the Ingredient Ambassadors in the Marketplace!" and nothing else about allergens.
+U: "${transcript}"`
         });
 
         const aiText = typeof response === 'string' ? response : "Try asking about today's specials!";

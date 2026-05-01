@@ -1491,7 +1491,7 @@ export default function Home() {
         name, day, station, meal_period, calories, protein, carbs, fat, sodium, fiber, sugar, allergens, tags, description
       }));
       const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a helpful nutrition assistant for a corporate Marketplace. Menu: ${JSON.stringify(slimMenu)}. Question: ${textToSend}. Be concise.`
+        prompt: `You are a helpful nutrition assistant for a corporate Marketplace. Menu: ${JSON.stringify(slimMenu)}. Question: ${textToSend}. Be concise. IMPORTANT: If the user asks about allergens or allergen information for any item, always respond with: "For specific allergen information, please contact one of the Ingredient Ambassadors in the Marketplace — they'll be happy to help you!" and do not attempt to provide allergen details yourself.`
       });
       if (response) setChatHistory(prev => [...prev, { role: 'ai', content: response }]);
     } catch (e) { 

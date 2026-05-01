@@ -90,7 +90,7 @@ export default function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPl
           {!plan ? (
             <>
               <div className="grid grid-cols-1 gap-2">
-                {['High Protein', 'Balanced Strategy', 'Vegan Meal Prep', 'Vegetarian', 'Avoid Gluten', 'Low Carb Plan', 'Heart Healthy'].map(g => (
+                {['High Protein', 'Balanced Strategy', 'Vegan Meal Prep', 'Vegetarian', 'Pescatarian', 'Low Carb Plan', 'Heart Healthy'].map(g => (
                   <button key={g} onClick={() => setGoal(g)} className={`p-4 rounded-xl border-2 text-left transition-all font-bold ${goal === g ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/30 text-teal-900 dark:text-teal-300' : 'border-gray-100 dark:border-slate-700 text-gray-500 dark:text-slate-400'}`}>
                     <span className="uppercase text-xs tracking-widest font-bold">{g}</span>
                   </button>

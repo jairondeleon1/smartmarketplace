@@ -1220,7 +1220,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   const syncOptions = [
     { label: "1. Week Menu PDF", type: "week-menu", icon: Calendar, accept: ".pdf", handler: handleWeekMenuUpload, desc: "Menu items with recipe #s" }, 
     { label: "2. FDA Nutrition File", type: "fda", icon: Sparkles, accept: ".pdf,.xlsx,.xls", handler: handleFDAUpload, desc: "Match by recipe #" }, 
-    { label: "3. Allergen PDF", type: "allergen", icon: AlertTriangle, accept: ".pdf", handler: handleAllergenUpload, desc: "Match by recipe #" },
+    { label: "3. Allergen PDF", type: "allergen", icon: AlertTriangle, accept: ".pdf", handler: handleAllergenUpload, desc: "Match by recipe #", comingSoon: true },
     { label: "4. Ingredients CSV", type: "ingredients", icon: FileText, accept: ".csv", handler: handleIngredientsUpload, desc: "Match by recipe #" }
   ];
 
@@ -1257,14 +1257,28 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
             </div>
             <div className="space-y-3">
               {syncOptions.map(opt => (
-                <div key={opt.type}>
-                  <input type="file" accept={opt.accept} id={`file-upload-${opt.type}`} className="hidden" onChange={opt.handler} />
-                  <label htmlFor={`file-upload-${opt.type}`} className="w-full p-5 border-2 border-dashed border-teal-100 rounded-2xl flex items-center gap-4 text-teal-800 hover:bg-teal-50 transition active:scale-[0.98] cursor-pointer">
-                    {isSyncing === opt.type ? <Loader2 className="animate-spin w-6 h-6" /> : (
-                      <><div className="bg-teal-50 p-3 rounded-xl border border-teal-100"><opt.icon className="w-5 h-5 text-teal-600"/></div>
-                      <div className="flex-1 text-left"><div className="text-xs font-bold uppercase tracking-widest text-slate-800">{opt.label}</div><div className="text-[10px] text-gray-500 mt-0.5">{opt.desc}</div></div></>
-                    )}
-                  </label>
+                <div key={opt.type} className="relative">
+                  {opt.comingSoon ? (
+                    <div className="w-full p-5 border-2 border-dashed border-gray-200 rounded-2xl flex items-center gap-4 opacity-40 cursor-not-allowed select-none bg-gray-50">
+                      <div className="bg-gray-100 p-3 rounded-xl border border-gray-200"><opt.icon className="w-5 h-5 text-gray-400"/></div>
+                      <div className="flex-1 text-left"><div className="text-xs font-bold uppercase tracking-widest text-gray-400">{opt.label}</div><div className="text-[10px] text-gray-400 mt-0.5">{opt.desc}</div></div>
+                    </div>
+                  ) : (
+                    <>
+                      <input type="file" accept={opt.accept} id={`file-upload-${opt.type}`} className="hidden" onChange={opt.handler} />
+                      <label htmlFor={`file-upload-${opt.type}`} className="w-full p-5 border-2 border-dashed border-teal-100 rounded-2xl flex items-center gap-4 text-teal-800 hover:bg-teal-50 transition active:scale-[0.98] cursor-pointer">
+                        {isSyncing === opt.type ? <Loader2 className="animate-spin w-6 h-6" /> : (
+                          <><div className="bg-teal-50 p-3 rounded-xl border border-teal-100"><opt.icon className="w-5 h-5 text-teal-600"/></div>
+                          <div className="flex-1 text-left"><div className="text-xs font-bold uppercase tracking-widest text-slate-800">{opt.label}</div><div className="text-[10px] text-gray-500 mt-0.5">{opt.desc}</div></div></>
+                        )}
+                      </label>
+                    </>
+                  )}
+                  {opt.comingSoon && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <span className="bg-gray-200 text-gray-500 text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-gray-300">Coming Soon</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

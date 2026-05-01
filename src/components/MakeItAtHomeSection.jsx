@@ -6,6 +6,8 @@ import { base44 } from '@/api/base44Client';
 export function MakeItAtHomeAdmin() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [cards, setCards] = useState([]);
+  const [editingLink, setEditingLink] = useState({}); // { [id]: url string }
+  const [savingLink, setSavingLink] = useState(null);
 
   const loadCards = async () => {
     const items = await base44.entities.MakeItAtHome.list('-created_date');
@@ -19,15 +21,13 @@ export function MakeItAtHomeAdmin() {
     if (!file) return;
     setIsProcessing(true);
     try {
-      // Upload the PDF
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
-      // Extract info from the flyer using AI
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `This is a "Make It At Home" recipe flyer. Extract:
-1. dish_name: The name of the dish shown on the flyer (e.g. "Everything Green Juice Shot")
-2. description: The tagline or call-to-action text (e.g. "Get the recipe and add ingredients to your Instacart!")
-3. recipe_link: The URL that the QR code points to (look for any URLs printed on the flyer, often from instacart.com or similar). If no URL is visible, return an empty string.
+        prompt: `This is a "Make It At Home" recipe flyer PDF. Extract:
+1. dish_name: The name of the dish (e.g. "Everything Green Juice Shot")
+2. description: The tagline/call-to-action text visible on the flyer (e.g. "Get the recipe and add the ingredients to your Instacart!")
+3. recipe_link: Look carefully for any full URL text printed anywhere on the flyer (e.g. https://...). QR codes encode a URL — if you can decode the QR code image, return that URL. Otherwise return empty string.
 Return as JSON.`,
         file_urls: [file_url],
         response_json_schema: {
@@ -40,7 +40,7 @@ Return as JSON.`,
         }
       });
 
-      await base44.entities.MakeItAtHome.create({
+      const newCard = await base44.entities.MakeItAtHome.create({
         dish_name: result?.dish_name || file.name.replace('.pdf', ''),
         description: result?.description || 'Make this dish at home!',
         recipe_link: result?.recipe_link || '',
@@ -62,13 +62,24 @@ Return as JSON.`,
     setCards(prev => prev.filter(c => c.id !== id));
   };
 
+  const handleSaveLink = async (card) => {
+    const newLink = editingLink[card.id] ?? card.recipe_link;
+    setSavingLink(card.id);
+    await base44.entities.MakeItAtHome.update(card.id, { recipe_link: newLink });
+    setCards(prev => prev.map(c => c.id === card.id ? { ...c, recipe_link: newLink } : c));
+    setEditingLink(prev => { const n = { ...prev }; delete n[card.id]; return n; });
+    setSavingLink(null);
+  };
+
   return (
     <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
       <div className="flex items-center gap-2">
         <ChefHat className="w-5 h-5 text-teal-600" />
         <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs">Make It At Home — Upload Flyer</h3>
       </div>
-      <p className="text-[11px] text-gray-500">Upload a "Make It At Home" PDF flyer. AI will extract the dish name, description, and QR code link automatically.</p>
+      <p className="text-[11px] text-gray-500">
+        Upload a PDF flyer. AI extracts the dish name and description. <strong>Paste the QR code URL below each card</strong> so users can click "Get the Recipe".
+      </p>
 
       <input type="file" accept=".pdf" id="miah-upload" className="hidden" onChange={handleFileUpload} />
       <label htmlFor="miah-upload" className={`w-full p-4 border-2 border-dashed rounded-xl flex items-center justify-center gap-3 cursor-pointer transition ${isProcessing ? 'border-teal-200 bg-teal-50' : 'border-teal-100 hover:bg-teal-50'}`}>
@@ -80,17 +91,42 @@ Return as JSON.`,
       </label>
 
       {cards.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Published Cards</p>
           {cards.map(card => (
-            <div key={card.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
-              <div>
-                <p className="font-bold text-sm text-slate-800">{card.dish_name}</p>
-                <p className="text-[10px] text-gray-400 truncate max-w-xs">{card.recipe_link || 'No link'}</p>
+            <div key={card.id} className="p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="font-bold text-sm text-slate-800">{card.dish_name}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{card.description}</p>
+                </div>
+                <button onClick={() => handleDelete(card.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition shrink-0">
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
-              <button onClick={() => handleDelete(card.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition">
-                <Trash2 className="w-4 h-4" />
-              </button>
+              {/* Editable link field */}
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-teal-700">QR Code / Recipe URL</p>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    placeholder="Paste the URL the QR code points to (e.g. https://instacart.com/...)"
+                    className="flex-1 p-2.5 text-xs border border-gray-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-teal-400 font-medium"
+                    value={editingLink[card.id] ?? card.recipe_link ?? ''}
+                    onChange={e => setEditingLink(prev => ({ ...prev, [card.id]: e.target.value }))}
+                  />
+                  <button
+                    onClick={() => handleSaveLink(card)}
+                    disabled={savingLink === card.id}
+                    className="px-4 py-2 bg-teal-600 text-white text-xs font-bold rounded-lg hover:bg-teal-700 transition disabled:opacity-50 shrink-0"
+                  >
+                    {savingLink === card.id ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Save'}
+                  </button>
+                </div>
+                {card.recipe_link && (
+                  <p className="text-[10px] text-green-600 font-bold">✓ Link saved — button will appear on the menu</p>
+                )}
+              </div>
             </div>
           ))}
         </div>

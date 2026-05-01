@@ -107,7 +107,7 @@ const SUGGESTIONS = [
   { text: "What is for lunch on Thursday?", icon: Calendar, color: "text-blue-500", bg: "bg-blue-50" },
   { text: "Which items are low in sodium?", icon: Heart, color: "text-rose-500", bg: "bg-rose-50" },
   { text: "Show me high protein options", icon: Zap, color: "text-amber-500", bg: "bg-amber-50" },
-  { text: "Show me vegetarian options", icon: Leaf, color: "text-green-500", bg: "bg-green-50" }
+  { text: "Show me vegetarian options", icon: null, color: "text-green-500", bg: "bg-green-50", vegIcon: true }
 ];
 
 // MENU DATA FROM PDF: Week of Feb 16 - Feb 20, 2026
@@ -737,7 +737,7 @@ function MobileBottomNav({ view, changeView, onProfileClick }) {
   );
 }
 
-function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendChat }) {
+function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendChat, customVegUrl }) {
   const chatEndRef = useRef(null);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatHistory, isTyping]);
 
@@ -921,7 +921,7 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
                   const IconComp = s.icon;
                   return (
                     <button key={i} onClick={() => handleSendChat(s.text)} className="text-left p-4 bg-white border border-indigo-100 text-indigo-700 rounded-xl font-bold text-xs hover:bg-indigo-50 transition-all flex items-center gap-3 group shadow-sm active:scale-95">
-                      <div className={`p-2 rounded-lg ${s.bg} ${s.color}`}><IconComp className="w-4 h-4" /></div>
+                      <div className={`p-2 rounded-lg ${s.bg} ${s.color}`}>{s.vegIcon ? <VegProgramIcon url={customVegUrl} className="w-4 h-4" /> : <IconComp className="w-4 h-4" />}</div>
                       <span className="flex-1 font-bold">{s.text}</span>
                       <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400" />
                     </button>
@@ -1564,7 +1564,7 @@ export default function Home() {
             )}
             {view === 'chat' && (
               <motion.div key="chat" variants={slideVariants} initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'} animate="center" exit={direction > 0 ? 'exitToLeft' : 'exitToRight'} transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
-                <ChatView chatHistory={chatHistory} isTyping={isTyping} userQuery={userQuery} setUserQuery={setUserQuery} handleSendChat={handleSendChat} />
+                <ChatView chatHistory={chatHistory} isTyping={isTyping} userQuery={userQuery} setUserQuery={setUserQuery} handleSendChat={handleSendChat} customVegUrl={customVegUrl} />
               </motion.div>
             )}
             {view === 'admin' && !isAdminLoggedIn && (

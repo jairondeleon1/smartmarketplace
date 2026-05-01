@@ -101,7 +101,8 @@ export default function VoiceAssistant({ menuItems = [] }) {
 
       // Only say a search acknowledgment for actual menu/food questions, not conversational phrases
       const isConversational = /^(thank|thanks|thank you|ok|okay|cool|great|got it|bye|goodbye|hello|hi|hey|awesome|perfect|sure|no|yes|nope|yep|yup|alright|sounds good)/i.test(transcript.trim());
-      if (!isConversational) {
+      const isAllergenQuestion = /allergen|allergy|allergic|contains|ingredient/i.test(transcript);
+      if (!isConversational && !isAllergenQuestion) {
         const acks = ["Let me check the menu for you!", "One moment!", "Looking that up for you!"];
         const ack = acks[Math.floor(Math.random() * acks.length)];
         speak(ack, { muted: mutedRef.current });

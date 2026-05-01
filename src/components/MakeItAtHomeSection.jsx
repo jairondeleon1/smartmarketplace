@@ -23,28 +23,34 @@ export function MakeItAtHomeAdmin() {
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `This is a "Make It At Home" recipe flyer PDF. Extract:
+      // Run AI text extraction and image extraction in parallel
+      const [result, imageResult] = await Promise.all([
+        base44.integrations.Core.InvokeLLM({
+          prompt: `This is a "Make It At Home" recipe flyer PDF. Extract:
 1. dish_name: The name of the dish (e.g. "Everything Green Juice Shot")
 2. description: The tagline/call-to-action text visible on the flyer (e.g. "Get the recipe and add the ingredients to your Instacart!")
-3. recipe_link: Look carefully for any full URL text printed anywhere on the flyer (e.g. https://...). QR codes encode a URL — if you can decode the QR code image, return that URL. Otherwise return empty string.
+3. recipe_link: Look carefully for any full URL text printed anywhere on the flyer (e.g. https://...). Return empty string if none found.
 Return as JSON.`,
-        file_urls: [file_url],
-        response_json_schema: {
-          type: "object",
-          properties: {
-            dish_name: { type: "string" },
-            description: { type: "string" },
-            recipe_link: { type: "string" }
+          file_urls: [file_url],
+          response_json_schema: {
+            type: "object",
+            properties: {
+              dish_name: { type: "string" },
+              description: { type: "string" },
+              recipe_link: { type: "string" }
+            }
           }
-        }
-      });
+        }),
+        base44.functions.invoke('extractPdfImage', { file_url }).catch(() => ({ data: null }))
+      ]);
+
+      const extractedImageUrl = imageResult?.data?.image_url || null;
 
       const newCard = await base44.entities.MakeItAtHome.create({
         dish_name: result?.dish_name || file.name.replace('.pdf', ''),
         description: result?.description || 'Make this dish at home!',
         recipe_link: result?.recipe_link || '',
-        image_url: file_url,
+        image_url: extractedImageUrl || file_url,
         active: true
       });
 
@@ -160,6 +166,10 @@ export default function MakeItAtHomeSection() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {cards.map(card => (
           <div key={card.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+            {/* Flyer image if available */}
+            {card.image_url && !card.image_url.endsWith('.pdf') && (
+              <img src={card.image_url} alt={card.dish_name} className="w-full object-cover max-h-48" />
+            )}
             {/* Header band */}
             <div className="bg-slate-900 px-5 py-3 flex items-center justify-between">
               <div>

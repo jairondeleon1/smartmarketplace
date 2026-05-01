@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Upload, Loader2, ExternalLink, ChefHat, Trash2, QrCode } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
+// Default recipe link used for all Make It At Home cards
+const RECIPE_LINK = 'https://nam11.safelinks.protection.outlook.com/?url=https%3A%2F%2Fwww.weeatlivedowell.com%2Frecipes%2F&data=05%7C02%7CJairon.DeLeon%40compass-usa.com%7C15fac157973c487ab90d08dea79b52bc%7Ccd62b7dd4b4844bd90e7e143a22c8ead%7C0%7C0%7C639132482716854007%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=82ljV9Uo1lMMyoUIRm%2B%2F4YyBXkBUclYUi4byOpejxiA%3D&reserved=0';
+
 // --- Admin Upload Panel (shown only to admins) ---
 export function MakeItAtHomeAdmin() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [cards, setCards] = useState([]);
-  const [editingLink, setEditingLink] = useState({}); // { [id]: url string }
+  const [editingLink, setEditingLink] = useState({});
   const [savingLink, setSavingLink] = useState(null);
 
   const loadCards = async () => {
@@ -16,33 +19,11 @@ export function MakeItAtHomeAdmin() {
 
   useEffect(() => { loadCards(); }, []);
 
-  // Extract URLs embedded in PDF binary (QR code links are stored as /URI actions)
-  const extractUrlsFromPdf = async (file) => {
-    const buffer = await file.arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-    const text = new TextDecoder('latin1').decode(bytes);
-
-    // /URI actions — this is where QR code and hyperlink URLs live in PDFs
-    const uriMatches = [...text.matchAll(/\/URI\s*\(([^)]+)\)/g)];
-    const uris = uriMatches.map(m => m[1].trim()).filter(u => u.startsWith('http'));
-
-    // Also scan for raw https:// strings in the PDF stream
-    const rawMatches = [...text.matchAll(/https?:\/\/[^\s)<>"'\]\\]+/g)].map(m => m[0]).filter(u => u.length > 20);
-
-    const all = [...new Set([...uris, ...rawMatches])];
-    // Return the longest URL (most specific = recipe/instacart link, not a short brand URL)
-    return all.sort((a, b) => b.length - a.length)[0] || '';
-  };
-
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setIsProcessing(true);
     try {
-      // Extract URL from PDF locally BEFORE uploading (most reliable for QR links)
-      const pdfUrl = await extractUrlsFromPdf(file);
-
-      // Upload file and run AI extraction in parallel
       const [{ file_url }, result] = await Promise.all([
         base44.integrations.Core.UploadFile({ file }),
         base44.integrations.Core.InvokeLLM({
@@ -50,27 +31,22 @@ export function MakeItAtHomeAdmin() {
           prompt: `This is a "Make It At Home" recipe flyer. Extract:
 1. dish_name: The name of the dish prominently displayed
 2. description: Any tagline or call-to-action text
-3. recipe_link: Any URL printed as visible text on the flyer (starting with https://). Return empty string if none visible as text.
 Return as JSON only.`,
           file_urls: [URL.createObjectURL(file)],
           response_json_schema: {
             type: "object",
             properties: {
               dish_name: { type: "string" },
-              description: { type: "string" },
-              recipe_link: { type: "string" }
+              description: { type: "string" }
             }
           }
         }).catch(() => null)
       ]);
 
-      // PDF binary scan wins over LLM (more accurate for QR-embedded links)
-      const recipe_link = pdfUrl || result?.recipe_link || '';
-
       await base44.entities.MakeItAtHome.create({
         dish_name: result?.dish_name || file.name.replace('.pdf', ''),
         description: result?.description || 'Make this dish at home!',
-        recipe_link,
+        recipe_link: RECIPE_LINK,
         image_url: file_url,
         active: true
       });
@@ -105,7 +81,7 @@ Return as JSON only.`,
         <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs">Make It At Home — Upload Flyer</h3>
       </div>
       <p className="text-[11px] text-gray-500">
-        Upload a PDF flyer. AI extracts the dish name and description. <strong>Paste the QR code URL below each card</strong> so users can click "Get the Recipe".
+        Upload a PDF flyer. AI extracts the dish name and description. All cards link to the <strong>weeatlivedowell.com/recipes</strong> page.
       </p>
 
       <input type="file" accept=".pdf" id="miah-upload" className="hidden" onChange={handleFileUpload} />
@@ -133,11 +109,11 @@ Return as JSON only.`,
               </div>
               {/* Editable link field */}
               <div className="space-y-1.5">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-teal-700">QR Code / Recipe URL</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-teal-700">Recipe URL</p>
                 <div className="flex gap-2">
                   <input
                     type="url"
-                    placeholder="Paste the URL the QR code points to (e.g. https://instacart.com/...)"
+                    placeholder="Override recipe link if needed"
                     className="flex-1 p-2.5 text-xs border border-gray-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-teal-400 font-medium"
                     value={editingLink[card.id] ?? card.recipe_link ?? ''}
                     onChange={e => setEditingLink(prev => ({ ...prev, [card.id]: e.target.value }))}
@@ -151,7 +127,7 @@ Return as JSON only.`,
                   </button>
                 </div>
                 {card.recipe_link && (
-                  <p className="text-[10px] text-green-600 font-bold">✓ Link saved — button will appear on the menu</p>
+                  <p className="text-[10px] text-green-600 font-bold">✓ Link active — "Get the Recipe" button is live</p>
                 )}
               </div>
             </div>
@@ -174,7 +150,6 @@ export default function MakeItAtHomeSection() {
 
   return (
     <div className="space-y-3">
-      {/* Section header */}
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-gray-100" />
         <span className="text-[10px] font-bold uppercase tracking-widest text-teal-700 bg-teal-50 px-3 py-1 rounded-full border border-teal-100 flex items-center gap-1.5">
@@ -183,15 +158,12 @@ export default function MakeItAtHomeSection() {
         <div className="h-px flex-1 bg-gray-100" />
       </div>
 
-      {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {cards.map(card => (
           <div key={card.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-            {/* Flyer image if available */}
             {card.image_url && !card.image_url.endsWith('.pdf') && (
               <img src={card.image_url} alt={card.dish_name} className="w-full object-cover max-h-48" />
             )}
-            {/* Header band */}
             <div className="bg-slate-900 px-5 py-3 flex items-center justify-between">
               <div>
                 <p className="text-white font-bold text-sm uppercase tracking-tight">{card.dish_name}</p>
@@ -200,7 +172,6 @@ export default function MakeItAtHomeSection() {
               <QrCode className="w-6 h-6 text-teal-400 shrink-0" />
             </div>
 
-            {/* Body */}
             <div className="p-5 flex-1 space-y-3">
               {card.description && (
                 <p className="text-gray-600 text-sm leading-relaxed">{card.description}</p>

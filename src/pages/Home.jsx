@@ -107,7 +107,7 @@ const SUGGESTIONS = [
   { text: "What is for lunch on Thursday?", icon: Calendar, color: "text-blue-500", bg: "bg-blue-50" },
   { text: "Which items are low in sodium?", icon: Heart, color: "text-rose-500", bg: "bg-rose-50" },
   { text: "Show me high protein options", icon: Zap, color: "text-amber-500", bg: "bg-amber-50" },
-  { text: "Any shellfish allergens?", icon: AlertTriangle, color: "text-orange-500", bg: "bg-orange-50" }
+  { text: "Show me vegetarian options", icon: Leaf, color: "text-green-500", bg: "bg-green-50" }
 ];
 
 // MENU DATA FROM PDF: Week of Feb 16 - Feb 20, 2026

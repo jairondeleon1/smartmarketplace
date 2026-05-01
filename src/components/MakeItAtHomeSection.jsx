@@ -24,27 +24,27 @@ export function MakeItAtHomeAdmin() {
     if (!file) return;
     setIsProcessing(true);
     try {
-      const [{ file_url }, result] = await Promise.all([
-        base44.integrations.Core.UploadFile({ file }),
-        base44.integrations.Core.InvokeLLM({
-          model: 'claude_sonnet_4_6',
-          prompt: `This is a "Make It At Home" recipe flyer. Extract:
-1. dish_name: The name of the dish prominently displayed
-2. description: Any tagline or call-to-action text
+      // Upload first so we have a real URL for the LLM
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        model: 'claude_sonnet_4_6',
+        prompt: `This is a "Make It At Home" recipe flyer PDF. Extract:
+1. dish_name: The main dish or recipe name prominently displayed (e.g. "Green Juice Shot", "Chicken Tikka Masala")
+2. description: Any tagline, subtitle, or call-to-action text
 Return as JSON only.`,
-          file_urls: [URL.createObjectURL(file)],
-          response_json_schema: {
-            type: "object",
-            properties: {
-              dish_name: { type: "string" },
-              description: { type: "string" }
-            }
+        file_urls: [file_url],
+        response_json_schema: {
+          type: "object",
+          properties: {
+            dish_name: { type: "string" },
+            description: { type: "string" }
           }
-        }).catch(() => null)
-      ]);
+        }
+      }).catch(() => null);
 
       await base44.entities.MakeItAtHome.create({
-        dish_name: result?.dish_name || file.name.replace('.pdf', ''),
+        dish_name: result?.dish_name || file.name.replace(/_/g, ' ').replace(/\.[^.]+$/, ''),
         description: result?.description || 'Make this dish at home!',
         recipe_link: RECIPE_LINK,
         image_url: file_url,

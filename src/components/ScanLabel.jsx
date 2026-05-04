@@ -260,7 +260,7 @@ export default function ScanLabel({ onClose }) {
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[90] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div
         className="bg-white rounded-t-[2.5rem] sm:rounded-3xl shadow-2xl w-full max-w-lg flex flex-col"
-        style={{ height: '90vh', maxHeight: '90vh' }}
+        style={{ height: '92dvh', maxHeight: '92dvh' }}
       >
         {/* Header */}
         <div className="bg-slate-900 px-5 py-4 flex items-center justify-between shrink-0 rounded-t-[2.5rem] sm:rounded-t-3xl">
@@ -274,7 +274,7 @@ export default function ScanLabel({ onClose }) {
         </div>
 
         {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
 
           {/* Camera scan phase */}
           {phase === 'scan' && (

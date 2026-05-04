@@ -87,22 +87,19 @@ function ProductResult({ product, onClose }) {
   const allergens = (product.allergens_hierarchy ?? []).map(a => a.replace('en:', ''));
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="bg-slate-900 px-5 py-4 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          {product.image_front_small_url && (
-            <img src={product.image_front_small_url} alt={product.product_name} className="w-12 h-12 rounded-xl object-contain bg-white p-1" />
-          )}
-          <div>
-            <p className="text-white font-bold text-sm leading-tight">{product.product_name || 'Unknown Product'}</p>
-            <p className="text-teal-400 text-[10px] font-bold uppercase tracking-widest">{product.brands || ''}</p>
-          </div>
+    <div>
+      {/* Product name bar */}
+      <div className="bg-slate-800 px-5 py-3 flex items-center gap-3">
+        {product.image_front_small_url && (
+          <img src={product.image_front_small_url} alt={product.product_name} className="w-10 h-10 rounded-lg object-contain bg-white p-1 shrink-0" />
+        )}
+        <div>
+          <p className="text-white font-bold text-sm leading-tight">{product.product_name || 'Unknown Product'}</p>
+          <p className="text-teal-400 text-[10px] font-bold uppercase tracking-widest">{product.brands || ''}</p>
         </div>
-        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition"><X className="w-5 h-5 text-white" /></button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-5 space-y-5" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+      <div className="p-5 space-y-5">
         {/* Score */}
         <div className="flex items-center justify-center gap-8 bg-gray-50 rounded-2xl p-5 border border-gray-100">
           <ScoreRing score={score} />
@@ -170,6 +167,7 @@ function ProductResult({ product, onClose }) {
     </div>
   );
 }
+
 
 // --- Barcode Scanner using ZXing ---
 function CameraScanner({ onDetected }) {
@@ -260,74 +258,79 @@ export default function ScanLabel({ onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[90] flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white rounded-t-[2.5rem] sm:rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col" style={{ maxHeight: '95vh' }}>
-
-        {/* Header (shown when not in result view) */}
-        {phase !== 'result' && (
-          <div className="bg-slate-900 px-5 py-4 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-3">
-              <Barcode className="w-5 h-5 text-teal-400" />
-              <h3 className="text-white font-bold text-base uppercase tracking-widest">Scan Barcode</h3>
-            </div>
-            <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition"><X className="w-5 h-5 text-white" /></button>
+      <div
+        className="bg-white rounded-t-[2.5rem] sm:rounded-3xl shadow-2xl w-full max-w-lg flex flex-col"
+        style={{ height: '90vh', maxHeight: '90vh' }}
+      >
+        {/* Header */}
+        <div className="bg-slate-900 px-5 py-4 flex items-center justify-between shrink-0 rounded-t-[2.5rem] sm:rounded-t-3xl">
+          <div className="flex items-center gap-3">
+            <Barcode className="w-5 h-5 text-teal-400" />
+            <h3 className="text-white font-bold text-base uppercase tracking-widest">
+              {phase === 'result' ? 'Product Info' : 'Scan Barcode'}
+            </h3>
           </div>
-        )}
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition"><X className="w-5 h-5 text-white" /></button>
+        </div>
 
-        {/* Camera scan phase */}
-        {phase === 'scan' && (
-          <div className="overflow-y-auto">
-            <CameraScanner onDetected={lookup} onClose={onClose} />
-            {/* Manual entry */}
-            <div className="px-5 pb-6 space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="h-px flex-1 bg-gray-100" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">or enter barcode manually</span>
-                <div className="h-px flex-1 bg-gray-100" />
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+
+          {/* Camera scan phase */}
+          {phase === 'scan' && (
+            <div>
+              <CameraScanner onDetected={lookup} />
+              <div className="px-5 pb-6 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-gray-100" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">or enter barcode manually</span>
+                  <div className="h-px flex-1 bg-gray-100" />
+                </div>
+                <form onSubmit={handleManualSubmit} className="flex gap-2">
+                  <input
+                    type="number"
+                    placeholder="e.g. 0123456789012"
+                    className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-teal-500"
+                    value={manualBarcode}
+                    onChange={e => setManualBarcode(e.target.value)}
+                  />
+                  <button type="submit" className="px-4 py-3 bg-teal-600 text-white rounded-xl font-bold text-sm hover:bg-teal-700 transition">
+                    <Search className="w-4 h-4" />
+                  </button>
+                </form>
               </div>
-              <form onSubmit={handleManualSubmit} className="flex gap-2">
-                <input
-                  type="number"
-                  placeholder="e.g. 0123456789012"
-                  className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-teal-500"
-                  value={manualBarcode}
-                  onChange={e => setManualBarcode(e.target.value)}
-                />
-                <button type="submit" className="px-4 py-3 bg-teal-600 text-white rounded-xl font-bold text-sm hover:bg-teal-700 transition">
-                  <Search className="w-4 h-4" />
+            </div>
+          )}
+
+          {/* Loading */}
+          {phase === 'loading' && (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <Loader2 className="w-10 h-10 text-teal-600 animate-spin" />
+              <p className="text-sm font-bold text-gray-600 uppercase tracking-widest">Looking up product...</p>
+            </div>
+          )}
+
+          {/* Result */}
+          {phase === 'result' && product && (
+            <div>
+              <ProductResult product={product} onClose={onClose} />
+              <div className="p-4 border-t border-gray-100">
+                <button onClick={() => { setPhase('scan'); setProduct(null); }} className="w-full py-3 bg-slate-800 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-900 transition flex items-center justify-center gap-2">
+                  <ScanLine className="w-4 h-4" /> Scan Another
                 </button>
-              </form>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Loading */}
-        {phase === 'loading' && (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <Loader2 className="w-10 h-10 text-teal-600 animate-spin" />
-            <p className="text-sm font-bold text-gray-600 uppercase tracking-widest">Looking up product...</p>
-          </div>
-        )}
-
-        {/* Result */}
-        {phase === 'result' && product && (
-          <div className="flex flex-col min-h-0 flex-1">
-            <ProductResult product={product} onClose={onClose} />
-            <div className="p-4 border-t border-gray-100 shrink-0">
-              <button onClick={() => { setPhase('scan'); setProduct(null); }} className="w-full py-3 bg-slate-800 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-900 transition flex items-center justify-center gap-2">
-                <ScanLine className="w-4 h-4" /> Scan Another
-              </button>
+          {/* Error */}
+          {phase === 'error' && (
+            <div className="flex flex-col items-center justify-center py-16 px-6 gap-5 text-center">
+              <AlertCircle className="w-12 h-12 text-red-400" />
+              <p className="text-sm font-bold text-gray-700">{errorMsg}</p>
+              <button onClick={() => setPhase('scan')} className="px-6 py-3 bg-teal-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-teal-700 transition">Try Again</button>
             </div>
-          </div>
-        )}
-
-        {/* Error */}
-        {phase === 'error' && (
-          <div className="flex flex-col items-center justify-center py-16 px-6 gap-5 text-center">
-            <AlertCircle className="w-12 h-12 text-red-400" />
-            <p className="text-sm font-bold text-gray-700">{errorMsg}</p>
-            <button onClick={() => setPhase('scan')} className="px-6 py-3 bg-teal-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-teal-700 transition">Try Again</button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

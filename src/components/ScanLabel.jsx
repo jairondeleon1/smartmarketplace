@@ -102,7 +102,7 @@ function ProductResult({ product, onClose }) {
         <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition"><X className="w-5 h-5 text-white" /></button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-5 space-y-5">
+      <div className="flex-1 overflow-y-auto p-5 space-y-5" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
         {/* Score */}
         <div className="flex items-center justify-center gap-8 bg-gray-50 rounded-2xl p-5 border border-gray-100">
           <ScoreRing score={score} />
@@ -260,7 +260,7 @@ export default function ScanLabel({ onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[90] flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white rounded-t-[2.5rem] sm:rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[95vh]">
+      <div className="bg-white rounded-t-[2.5rem] sm:rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col" style={{ maxHeight: '95vh' }}>
 
         {/* Header (shown when not in result view) */}
         {phase !== 'result' && (
@@ -310,7 +310,7 @@ export default function ScanLabel({ onClose }) {
 
         {/* Result */}
         {phase === 'result' && product && (
-          <div className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex flex-col min-h-0 flex-1">
             <ProductResult product={product} onClose={onClose} />
             <div className="p-4 border-t border-gray-100 shrink-0">
               <button onClick={() => { setPhase('scan'); setProduct(null); }} className="w-full py-3 bg-slate-800 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-900 transition flex items-center justify-center gap-2">

@@ -55,7 +55,7 @@ import AdminGate from "../components/AdminGate";
 import CoreMenusSection from "../components/CoreMenusSection";
 import CoreMenusSync from "../components/admin/CoreMenusSync";
 import MakeItAtHomeSection, { MakeItAtHomeAdmin } from "../components/MakeItAtHomeSection";
-import ScanLabel from "../components/ScanLabel";
+import ScanLabel from "../components/ScanLabel.jsx";
 import FeatureFlags from "../components/admin/FeatureFlags";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import { AccessibilityProvider } from "@/lib/AccessibilityContext";

@@ -77,25 +77,19 @@ function NutrientRow({ label, value, unit, per }) {
   );
 }
 
-// Nutrient bar showing level visually
-function NutrientBar({ label, value, unit, level }) {
-  // level: 'bad' | 'moderate' | 'good' | 'neutral'
-  const barColor = level === 'bad' ? 'bg-red-500' : level === 'moderate' ? 'bg-amber-400' : level === 'good' ? 'bg-green-500' : 'bg-gray-300';
-  const textColor = level === 'bad' ? 'text-red-600' : level === 'moderate' ? 'text-amber-600' : level === 'good' ? 'text-green-600' : 'text-gray-500';
-  const levelLabel = level === 'bad' ? 'High' : level === 'moderate' ? 'Moderate' : level === 'good' ? 'Good' : '';
-  const barWidth = level === 'bad' ? 'w-full' : level === 'moderate' ? 'w-2/3' : level === 'good' ? 'w-1/3' : 'w-1/4';
-
+// Single Yuka-style nutrient row
+function YukaRow({ icon, label, subtitle, value, unit, level }) {
+  const dotColor = level === 'bad' ? 'bg-red-500' : level === 'moderate' ? 'bg-amber-400' : level === 'good' ? 'bg-green-500' : 'bg-gray-300';
   return (
-    <div className="space-y-1.5">
-      <div className="flex justify-between items-center">
-        <span className="text-xs font-bold text-gray-700">{label}</span>
-        <div className="flex items-center gap-2">
-          {levelLabel && <span className={`text-[10px] font-bold uppercase ${textColor}`}>{levelLabel}</span>}
-          <span className="text-xs text-gray-500">{value != null ? `${value}${unit}` : '—'}<span className="text-gray-400"> /100g</span></span>
-        </div>
+    <div className="flex items-center gap-4 py-3.5 border-b border-gray-100 last:border-0">
+      <div className="w-8 h-8 flex items-center justify-center text-gray-400 shrink-0 text-lg">{icon}</div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-gray-800">{label}</p>
+        {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
       </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-        <div className={`h-full rounded-full ${barColor} ${barWidth} transition-all duration-500`} />
+      <div className="flex items-center gap-2 shrink-0">
+        {value != null && <span className="text-sm text-gray-500">{value}{unit}</span>}
+        <div className={`w-3.5 h-3.5 rounded-full ${dotColor}`} />
       </div>
     </div>
   );
@@ -103,7 +97,8 @@ function NutrientBar({ label, value, unit, level }) {
 
 function ProductResult({ product, onClose }) {
   const [showIngredients, setShowIngredients] = useState(false);
-  const { score, negatives, positives } = calcHealthScore(product);
+  const [showAdditives, setShowAdditives] = useState(false);
+  const { score } = calcHealthScore(product);
   const n = product.nutriments ?? {};
   const per = (key) => n[`${key}_100g`] ?? n[key] ?? null;
   const fmt = (v, d = 1) => v != null ? +v.toFixed(d) : null;
@@ -111,122 +106,138 @@ function ProductResult({ product, onClose }) {
   const allergens = (product.allergens_hierarchy ?? []).map(a => a.replace('en:', ''));
   const additives = product.additives_tags ?? [];
 
-  // Classify each nutrient
   const calories = fmt(per('energy-kcal') ?? (per('energy') != null ? per('energy') / 4.184 : null), 0);
   const sugar = fmt(per('sugars'));
   const satFat = fmt(per('saturated-fat'));
-  const sodium = fmt(per('sodium') ?? (per('salt') != null ? per('salt') / 2.5 : null), 3);
+  const sodiumRaw = per('sodium') ?? (per('salt') != null ? per('salt') / 2.5 : null);
+  const sodiumMg = sodiumRaw != null ? fmt(sodiumRaw * 1000, 0) : null;
   const protein = fmt(per('proteins'));
   const fiber = fmt(per('fiber'));
 
-  const getNutrientLevel = (type, val) => {
-    if (val == null) return 'neutral';
-    if (type === 'calories') return val > 400 ? 'bad' : val > 250 ? 'moderate' : 'neutral';
-    if (type === 'sugar') return val > 22.5 ? 'bad' : val > 12 ? 'moderate' : 'good';
-    if (type === 'satFat') return val > 10 ? 'bad' : val > 5 ? 'moderate' : 'good';
-    if (type === 'sodium') return val > 0.6 ? 'bad' : val > 0.3 ? 'moderate' : 'good';
-    if (type === 'protein') return val >= 5 ? 'good' : 'neutral';
-    if (type === 'fiber') return val >= 3 ? 'good' : 'neutral';
-    return 'neutral';
+  const getLevels = () => {
+    const neg = [], pos = [];
+
+    // Additives
+    if (additives.length > 3) neg.push({ icon: '🧪', label: 'Additives', subtitle: 'Contains additives to avoid', value: additives.length, unit: '', level: 'bad', isAdditives: true });
+    else if (additives.length > 0) neg.push({ icon: '🧪', label: 'Additives', subtitle: 'Contains some additives', value: additives.length, unit: '', level: 'moderate', isAdditives: true });
+
+    // Sugar
+    if (sugar != null && sugar > 22.5) neg.push({ icon: '🍬', label: 'Sugar', subtitle: 'Too sweet', value: sugar, unit: 'g', level: 'bad' });
+    else if (sugar != null && sugar > 12) neg.push({ icon: '🍬', label: 'Sugar', subtitle: 'Moderately sweet', value: sugar, unit: 'g', level: 'moderate' });
+
+    // Calories
+    if (calories != null && calories > 400) neg.push({ icon: '🔥', label: 'Calories', subtitle: 'A bit too caloric', value: calories, unit: ' Cal', level: 'bad' });
+    else if (calories != null && calories > 250) neg.push({ icon: '🔥', label: 'Calories', subtitle: 'Moderately caloric', value: calories, unit: ' Cal', level: 'moderate' });
+
+    // Sodium
+    if (sodiumRaw != null && sodiumRaw > 0.6) neg.push({ icon: '🧂', label: 'Sodium', subtitle: 'A bit too salty', value: sodiumMg, unit: 'mg', level: 'bad' });
+    else if (sodiumRaw != null && sodiumRaw > 0.3) neg.push({ icon: '🧂', label: 'Sodium', subtitle: 'Moderately salty', value: sodiumMg, unit: 'mg', level: 'moderate' });
+
+    // Saturated fat
+    if (satFat != null && satFat > 10) neg.push({ icon: '🥩', label: 'Saturated Fat', subtitle: 'High saturated fat', value: satFat, unit: 'g', level: 'bad' });
+    else if (satFat != null && satFat > 5) neg.push({ icon: '🥩', label: 'Saturated Fat', subtitle: 'Moderate saturated fat', value: satFat, unit: 'g', level: 'moderate' });
+
+    // Fiber
+    if (fiber != null && fiber >= 3) pos.push({ icon: '🌾', label: 'Fiber', subtitle: 'Excellent amount of fiber', value: fiber, unit: 'g', level: 'good' });
+
+    // Protein
+    if (protein != null && protein >= 5) pos.push({ icon: '🐟', label: 'Protein', subtitle: 'Good source of protein', value: protein, unit: 'g', level: 'good' });
+
+    return { neg, pos };
   };
 
-  const negativeNutrients = [
-    { label: 'Calories', value: calories, unit: ' kcal', type: 'calories' },
-    { label: 'Sugar', value: sugar, unit: 'g', type: 'sugar' },
-    { label: 'Saturated Fat', value: satFat, unit: 'g', type: 'satFat' },
-    { label: 'Sodium', value: sodium != null ? fmt(sodium * 1000, 0) : null, unit: 'mg', type: 'sodium' },
-  ].filter(item => {
-    const level = getNutrientLevel(item.type, item.type === 'sodium' ? per('sodium') ?? (per('salt') != null ? per('salt') / 2.5 : null) : parseFloat(item.value));
-    return level === 'bad' || level === 'moderate';
-  });
-
-  const positiveNutrients = [
-    { label: 'Protein', value: protein, unit: 'g', type: 'protein' },
-    { label: 'Fiber', value: fiber, unit: 'g', type: 'fiber' },
-  ].filter(item => getNutrientLevel(item.type, parseFloat(item.value)) === 'good');
+  const { neg, pos } = getLevels();
+  const scoreColor = score >= 75 ? '#16a34a' : score >= 50 ? '#f59e0b' : score >= 25 ? '#ea580c' : '#dc2626';
+  const scoreLabel = score >= 75 ? 'Good' : score >= 50 ? 'Moderate' : score >= 25 ? 'Poor' : 'Bad';
 
   return (
-    <div>
-      {/* Product name bar */}
-      <div className="bg-slate-800 px-5 py-3 flex items-center gap-3">
+    <div className="bg-white">
+      {/* Header: product info + score */}
+      <div className="px-5 pt-5 pb-4 flex items-start gap-4 border-b border-gray-100">
         {product.image_front_small_url && (
-          <img src={product.image_front_small_url} alt={product.product_name} className="w-10 h-10 rounded-lg object-contain bg-white p-1 shrink-0" />
+          <img src={product.image_front_small_url} alt={product.product_name} className="w-20 h-20 rounded-xl object-contain bg-gray-50 border border-gray-100 p-1 shrink-0" />
         )}
-        <div>
-          <p className="text-white font-bold text-sm leading-tight">{product.product_name || 'Unknown Product'}</p>
-          <p className="text-teal-400 text-[10px] font-bold uppercase tracking-widest">{product.brands || ''}</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-lg font-bold text-gray-900 leading-tight">{product.product_name || 'Unknown Product'}</p>
+          <p className="text-sm text-gray-400 mt-0.5">{product.brands || ''}</p>
+          <div className="flex items-center gap-2 mt-3">
+            <div className="w-4 h-4 rounded-full shrink-0" style={{ backgroundColor: scoreColor }} />
+            <span className="text-2xl font-black text-gray-900">{score}/100</span>
+            <span className="text-sm font-bold" style={{ color: scoreColor }}>{scoreLabel}</span>
+          </div>
         </div>
       </div>
 
-      <div className="p-5 pb-8 space-y-5">
-
-        {/* Score */}
-        <div className="flex items-center justify-center gap-8 bg-gray-50 rounded-2xl p-5 border border-gray-100">
-          <ScoreRing score={score} />
-          <div className="space-y-2 flex-1">
-            {negatives.length === 0 && positives.length === 0 && (
-              <p className="text-xs text-gray-400 italic">Insufficient data to score</p>
-            )}
-            {negatives.slice(0, 3).map((neg, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span className={`text-xs shrink-0 ${neg.level === 'bad' ? 'text-red-500' : 'text-amber-500'}`}>✗</span>
-                <span className="text-xs text-gray-700 font-medium">{neg.label}</span>
-              </div>
-            ))}
-            {positives.slice(0, 3).map((pos, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span className="text-xs text-green-500 shrink-0">✓</span>
-                <span className="text-xs text-gray-700 font-medium">{pos.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Negative nutrients */}
-        {negativeNutrients.length > 0 && (
-          <div className="bg-red-50 border border-red-100 rounded-2xl p-4 space-y-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-red-600 flex items-center gap-1.5">
-              <span>✗</span> Negative Points
-            </p>
-            {negativeNutrients.map((item, i) => {
-              const rawVal = item.type === 'sodium'
-                ? (per('sodium') ?? (per('salt') != null ? per('salt') / 2.5 : null))
-                : parseFloat(item.value);
-              return <NutrientBar key={i} label={item.label} value={item.value} unit={item.unit} level={getNutrientLevel(item.type, rawVal)} />;
-            })}
-          </div>
-        )}
-
-        {/* Positive nutrients */}
-        {positiveNutrients.length > 0 && (
-          <div className="bg-green-50 border border-green-100 rounded-2xl p-4 space-y-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-green-700 flex items-center gap-1.5">
-              <span>✓</span> Positive Points
-            </p>
-            {positiveNutrients.map((item, i) => (
-              <NutrientBar key={i} label={item.label} value={item.value} unit={item.unit} level={getNutrientLevel(item.type, parseFloat(item.value))} />
-            ))}
-          </div>
-        )}
-
-        {/* Additives */}
-        {additives.length > 0 && (
-          <div className={`border rounded-2xl p-4 ${additives.length > 3 ? 'bg-red-50 border-red-100' : 'bg-amber-50 border-amber-100'}`}>
-            <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${additives.length > 3 ? 'text-red-600' : 'text-amber-600'}`}>
-              {additives.length > 3 ? '✗' : '⚠'} Additives ({additives.length})
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {additives.map((a, i) => (
-                <span key={i} className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${additives.length > 3 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
-                  {a.replace('en:', '')}
-                </span>
+      <div className="pb-8">
+        {/* Negatives */}
+        {neg.length > 0 && (
+          <div className="px-5 pt-5">
+            <p className="text-base font-black text-gray-900 mb-1">Negatives</p>
+            <div className="divide-y divide-gray-100">
+              {neg.map((item, i) => (
+                <div key={i}>
+                  <YukaRow
+                    icon={item.icon}
+                    label={item.label}
+                    subtitle={item.subtitle}
+                    value={item.value}
+                    unit={item.unit}
+                    level={item.level}
+                  />
+                  {/* Expandable additives list */}
+                  {item.isAdditives && (
+                    <div className="pb-2">
+                      <button onClick={() => setShowAdditives(v => !v)} className="text-xs text-teal-600 font-bold flex items-center gap-1 ml-12 mb-1">
+                        {showAdditives ? 'Hide additives' : 'See additives'}
+                        {showAdditives ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      </button>
+                      {showAdditives && (
+                        <div className="ml-12 flex flex-wrap gap-1.5 pb-2">
+                          {additives.map((a, j) => (
+                            <span key={j} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-[10px] font-bold uppercase">
+                              {a.replace('en:', '')}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Full nutrition table */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 space-y-1">
+        {/* Positives */}
+        {pos.length > 0 && (
+          <div className="px-5 pt-4">
+            <p className="text-base font-black text-gray-900 mb-1">Positives</p>
+            <div className="divide-y divide-gray-100">
+              {pos.map((item, i) => (
+                <YukaRow key={i} icon={item.icon} label={item.label} subtitle={item.subtitle} value={item.value} unit={item.unit} level={item.level} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {neg.length === 0 && pos.length === 0 && (
+          <p className="text-sm text-gray-400 italic text-center py-8">Insufficient nutritional data to analyze</p>
+        )}
+
+        {/* Allergens */}
+        {allergens.length > 0 && (
+          <div className="mx-5 mt-5 bg-red-50 border border-red-100 rounded-2xl p-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-red-600 mb-2">Allergens</p>
+            <div className="flex flex-wrap gap-1.5">
+              {allergens.map((a, i) => (
+                <span key={i} className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-[10px] font-bold uppercase">{a}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Full nutrition */}
+        <div className="mx-5 mt-5 bg-gray-50 rounded-2xl border border-gray-100 p-4 space-y-1">
           <p className="text-[10px] font-bold uppercase tracking-widest text-teal-700 mb-3">Full Nutrition (per 100g)</p>
           <NutrientRow label="Calories" value={calories} unit=" kcal" />
           <NutrientRow label="Total Fat" value={fmt(per('fat'))} unit="g" />
@@ -238,21 +249,9 @@ function ProductResult({ product, onClose }) {
           <NutrientRow label="Salt" value={fmt(per('salt'))} unit="g" />
         </div>
 
-        {/* Allergens */}
-        {allergens.length > 0 && (
-          <div className="bg-red-50 border border-red-100 rounded-2xl p-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-red-600 mb-2">Allergens</p>
-            <div className="flex flex-wrap gap-1.5">
-              {allergens.map((a, i) => (
-                <span key={i} className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-[10px] font-bold uppercase">{a}</span>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Ingredients */}
         {product.ingredients_text && (
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="mx-5 mt-5 bg-white rounded-2xl border border-gray-100 overflow-hidden">
             <button onClick={() => setShowIngredients(v => !v)} className="w-full flex items-center justify-between p-4">
               <span className="text-[10px] font-bold uppercase tracking-widest text-teal-700">Ingredients</span>
               {showIngredients ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
@@ -265,7 +264,7 @@ function ProductResult({ product, onClose }) {
           </div>
         )}
 
-        <p className="text-[9px] text-gray-400 text-center">Data from Open Food Facts · Score is an estimate only</p>
+        <p className="text-[9px] text-gray-400 text-center mt-5">Data from Open Food Facts · Score is an estimate only</p>
       </div>
     </div>
   );

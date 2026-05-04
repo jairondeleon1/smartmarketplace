@@ -16,8 +16,9 @@ export default function AllergenNoticeModal() {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 font-sans animate-in fade-in duration-300">
-      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-md flex flex-col animate-in zoom-in-95 duration-300" style={{ maxHeight: '92dvh' }}>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] overflow-y-auto font-sans animate-in fade-in duration-300">
+      <div className="min-h-full flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-300">
 
         {step === 1 && (
           <>
@@ -30,7 +31,7 @@ export default function AllergenNoticeModal() {
               <h2 className="font-black text-2xl uppercase tracking-tight leading-tight">Food<br />Allergies?</h2>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-4" style={{ overscrollBehavior: 'contain' }}>
+            <div className="p-6 space-y-4">
               <p className="text-gray-700 text-sm leading-relaxed">
                 Please be advised that common allergens, including{' '}
                 <span className="font-bold text-red-700">egg, milk, wheat, soy, sesame, peanuts, tree nuts, fish, and shellfish</span>{' '}
@@ -45,7 +46,7 @@ export default function AllergenNoticeModal() {
               </p>
             </div>
 
-            <div className="p-6 shrink-0 border-t border-gray-100">
+            <div className="p-6 border-t border-gray-100">
               <button
                 onClick={handleClose}
                 className="w-full py-4 bg-gradient-to-r from-red-600 to-red-800 text-white rounded-2xl font-bold uppercase text-sm shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
@@ -95,6 +96,7 @@ export default function AllergenNoticeModal() {
           </>
         )}
 
+      </div>
       </div>
     </div>
   );

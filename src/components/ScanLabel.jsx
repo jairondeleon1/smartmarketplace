@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { X, ScanLine, Camera, Search, Loader2, CheckCircle, AlertCircle, Info, ChevronDown, ChevronUp, Barcode } from 'lucide-react';
+import { X, ScanLine, Search, Loader2, AlertCircle, ChevronDown, ChevronUp, Barcode } from 'lucide-react';
+import { BrowserMultiFormatReader, NotFoundException } from '@zxing/library';
 
 // --- Health scoring (Nutri-Score inspired) ---
 function calcHealthScore(product) {
@@ -170,60 +171,37 @@ function ProductResult({ product, onClose }) {
   );
 }
 
-// --- Barcode Scanner using camera + BarcodeDetector ---
-function CameraScanner({ onDetected, onClose }) {
+// --- Barcode Scanner using ZXing ---
+function CameraScanner({ onDetected }) {
   const videoRef = useRef(null);
-  const streamRef = useRef(null);
-  const rafRef = useRef(null);
+  const readerRef = useRef(null);
   const [error, setError] = useState(null);
-  const [scanning, setScanning] = useState(true);
-
-  const startCamera = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-    } catch (e) {
-      setError('Camera access denied. Please allow camera permission or use the manual entry below.');
-    }
-  }, []);
-
-  const stopCamera = useCallback(() => {
-    cancelAnimationFrame(rafRef.current);
-    streamRef.current?.getTracks().forEach(t => t.stop());
-    streamRef.current = null;
-  }, []);
 
   useEffect(() => {
-    startCamera();
-    return () => stopCamera();
-  }, [startCamera, stopCamera]);
+    const codeReader = new BrowserMultiFormatReader();
+    readerRef.current = codeReader;
 
-  useEffect(() => {
-    if (!window.BarcodeDetector) return;
-    const detector = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'] });
-
-    const scan = async () => {
-      if (!videoRef.current || videoRef.current.readyState < 2 || !scanning) return;
-      try {
-        const barcodes = await detector.detect(videoRef.current);
-        if (barcodes.length > 0) {
-          setScanning(false);
-          stopCamera();
-          onDetected(barcodes[0].rawValue);
-          return;
+    codeReader.decodeFromConstraints(
+      { video: { facingMode: 'environment' } },
+      videoRef.current,
+      (result, err) => {
+        if (result) {
+          codeReader.reset();
+          onDetected(result.getText());
         }
-      } catch {}
-      rafRef.current = requestAnimationFrame(scan);
+        // NotFoundException is normal (no barcode in frame yet), ignore it
+        if (err && !(err instanceof NotFoundException)) {
+          setError('Camera error: ' + err.message);
+        }
+      }
+    ).catch(e => {
+      setError('Camera access denied. Please allow camera permission or use manual entry below.');
+    });
+
+    return () => {
+      codeReader.reset();
     };
-    rafRef.current = requestAnimationFrame(scan);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [scanning, onDetected, stopCamera]);
+  }, [onDetected]);
 
   return (
     <div className="flex flex-col items-center gap-4 p-5">
@@ -244,12 +222,7 @@ function CameraScanner({ onDetected, onClose }) {
           </div>
         </div>
       )}
-      {!error && !window.BarcodeDetector && (
-        <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-xs text-amber-700 text-center">
-          Auto-detection not supported in this browser. Use the manual barcode entry below.
-        </div>
-      )}
-      {!error && window.BarcodeDetector && (
+      {!error && (
         <p className="text-xs text-gray-500 font-bold uppercase tracking-widest text-center">Point camera at barcode</p>
       )}
     </div>

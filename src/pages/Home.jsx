@@ -19,6 +19,7 @@ import {
   Filter,
   XCircle,
   Upload,
+  ScanLine,
   FileText,
   CheckCircle,
   RefreshCw,
@@ -54,6 +55,7 @@ import AdminGate from "../components/AdminGate";
 import CoreMenusSection from "../components/CoreMenusSection";
 import CoreMenusSync from "../components/admin/CoreMenusSync";
 import MakeItAtHomeSection, { MakeItAtHomeAdmin } from "../components/MakeItAtHomeSection";
+import ScanLabel from "../components/ScanLabel";
 import FeatureFlags from "../components/admin/FeatureFlags";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import { AccessibilityProvider } from "@/lib/AccessibilityContext";
@@ -587,7 +589,7 @@ function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addTo
   );
 }
 
-function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, selectedDay, setSelectedDay, activeFilters, toggleFilter, clearFilters, filteredItems, dayScrollRef, addToPlate, myPlate, setMyPlate, isTrayModalOpen, setIsTrayModalOpen, isWeeklyPlannerOpen, setIsWeeklyPlannerOpen, changeView, user, isOnline, allergenEnabled }) {
+function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, selectedDay, setSelectedDay, activeFilters, toggleFilter, clearFilters, filteredItems, dayScrollRef, addToPlate, myPlate, setMyPlate, isTrayModalOpen, setIsTrayModalOpen, isWeeklyPlannerOpen, setIsWeeklyPlannerOpen, isScanLabelOpen, setIsScanLabelOpen, changeView, user, isOnline, allergenEnabled }) {
   const [activeMealTab, setActiveMealTab] = useState('Lunch');
 
   const doRefresh = useCallback(async () => {
@@ -614,6 +616,9 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
         <div className="flex flex-col gap-4 items-center max-w-xl mx-auto px-2 font-sans font-bold">
           <button onClick={() => setIsWeeklyPlannerOpen(true)} className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 border border-slate-800 uppercase tracking-widest text-xs active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2">
             <Wand className="w-5 h-5 text-teal-400" aria-hidden="true" /> Plan My Whole Week Meal
+          </button>
+          <button onClick={() => setIsScanLabelOpen(true)} className="w-full bg-teal-600 hover:bg-teal-700 text-white p-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 uppercase tracking-widest text-xs active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2">
+            <ScanLine className="w-5 h-5 text-white" aria-hidden="true" /> Scan Food Label
           </button>
           <div onClick={() => isOnline && changeView('chat')} onKeyDown={e => e.key === 'Enter' && isOnline && changeView('chat')} role="button" tabIndex={0} aria-label="Ask AI Assistant" className={`w-full bg-gradient-to-r from-indigo-700 via-purple-600 to-pink-500 rounded-2xl p-5 text-white shadow-2xl transform transition-all flex items-center justify-between text-left border border-white/10 group overflow-hidden font-bold focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 ${isOnline ? 'cursor-pointer hover:scale-[1.01]' : 'opacity-50 cursor-not-allowed'}`}>
             <div className="flex items-center gap-4 relative z-10">
@@ -663,6 +668,7 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
       <TraySummary plate={myPlate} onClick={() => setIsTrayModalOpen(true)} />
       <TrayDetailsModal isOpen={isTrayModalOpen} onClose={() => setIsTrayModalOpen(false)} plate={myPlate} setPlate={setMyPlate} />
       <WeeklyPlannerModal isOpen={isWeeklyPlannerOpen} onClose={() => setIsWeeklyPlannerOpen(false)} menuItems={menuItems} addToPlate={addToPlate} user={user} />
+      {isScanLabelOpen && <ScanLabel onClose={() => setIsScanLabelOpen(false)} />}
     </div>
   );
 }
@@ -1430,6 +1436,7 @@ export default function Home() {
   const [myPlate, setMyPlate] = useState([]);
   const [isTrayModalOpen, setIsTrayModalOpen] = useState(false);
   const [isWeeklyPlannerOpen, setIsWeeklyPlannerOpen] = useState(false);
+  const [isScanLabelOpen, setIsScanLabelOpen] = useState(false);
   const [isChartsOpen, setIsChartsOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [customVegUrl, setCustomVegUrl] = useState("");
@@ -1584,7 +1591,7 @@ export default function Home() {
           <AnimatePresence mode="wait" initial={false}>
             {view === 'customer' && (
               <motion.div key="customer" variants={slideVariants} initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'} animate="center" exit={direction > 0 ? 'exitToLeft' : 'exitToRight'} transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
-                <CustomerView menuItems={menuItems} queryClient={queryClient} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} selectedDay={selectedDay} setSelectedDay={setSelectedDay} activeFilters={activeFilters} toggleFilter={toggleFilter} clearFilters={clearFilters} filteredItems={filteredItems} dayScrollRef={dayScrollRef} addToPlate={addToPlate} myPlate={myPlate} setMyPlate={setMyPlate} isTrayModalOpen={isTrayModalOpen} setIsTrayModalOpen={setIsTrayModalOpen} isWeeklyPlannerOpen={isWeeklyPlannerOpen} setIsWeeklyPlannerOpen={setIsWeeklyPlannerOpen} changeView={changeView} user={user} isOnline={isOnline} allergenEnabled={allergenEnabled} />
+                <CustomerView menuItems={menuItems} queryClient={queryClient} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} selectedDay={selectedDay} setSelectedDay={setSelectedDay} activeFilters={activeFilters} toggleFilter={toggleFilter} clearFilters={clearFilters} filteredItems={filteredItems} dayScrollRef={dayScrollRef} addToPlate={addToPlate} myPlate={myPlate} setMyPlate={setMyPlate} isTrayModalOpen={isTrayModalOpen} setIsTrayModalOpen={setIsTrayModalOpen} isWeeklyPlannerOpen={isWeeklyPlannerOpen} setIsWeeklyPlannerOpen={setIsWeeklyPlannerOpen} isScanLabelOpen={isScanLabelOpen} setIsScanLabelOpen={setIsScanLabelOpen} changeView={changeView} user={user} isOnline={isOnline} allergenEnabled={allergenEnabled} />
               </motion.div>
             )}
             {view === 'chat' && (

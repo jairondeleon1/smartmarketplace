@@ -77,6 +77,30 @@ function NutrientRow({ label, value, unit, per }) {
   );
 }
 
+// Nutrient bar showing level visually
+function NutrientBar({ label, value, unit, level }) {
+  // level: 'bad' | 'moderate' | 'good' | 'neutral'
+  const barColor = level === 'bad' ? 'bg-red-500' : level === 'moderate' ? 'bg-amber-400' : level === 'good' ? 'bg-green-500' : 'bg-gray-300';
+  const textColor = level === 'bad' ? 'text-red-600' : level === 'moderate' ? 'text-amber-600' : level === 'good' ? 'text-green-600' : 'text-gray-500';
+  const levelLabel = level === 'bad' ? 'High' : level === 'moderate' ? 'Moderate' : level === 'good' ? 'Good' : '';
+  const barWidth = level === 'bad' ? 'w-full' : level === 'moderate' ? 'w-2/3' : level === 'good' ? 'w-1/3' : 'w-1/4';
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex justify-between items-center">
+        <span className="text-xs font-bold text-gray-700">{label}</span>
+        <div className="flex items-center gap-2">
+          {levelLabel && <span className={`text-[10px] font-bold uppercase ${textColor}`}>{levelLabel}</span>}
+          <span className="text-xs text-gray-500">{value != null ? `${value}${unit}` : '—'}<span className="text-gray-400"> /100g</span></span>
+        </div>
+      </div>
+      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div className={`h-full rounded-full ${barColor} ${barWidth} transition-all duration-500`} />
+      </div>
+    </div>
+  );
+}
+
 function ProductResult({ product, onClose }) {
   const [showIngredients, setShowIngredients] = useState(false);
   const { score, negatives, positives } = calcHealthScore(product);
@@ -85,6 +109,41 @@ function ProductResult({ product, onClose }) {
   const fmt = (v, d = 1) => v != null ? +v.toFixed(d) : null;
 
   const allergens = (product.allergens_hierarchy ?? []).map(a => a.replace('en:', ''));
+  const additives = product.additives_tags ?? [];
+
+  // Classify each nutrient
+  const calories = fmt(per('energy-kcal') ?? (per('energy') != null ? per('energy') / 4.184 : null), 0);
+  const sugar = fmt(per('sugars'));
+  const satFat = fmt(per('saturated-fat'));
+  const sodium = fmt(per('sodium') ?? (per('salt') != null ? per('salt') / 2.5 : null), 3);
+  const protein = fmt(per('proteins'));
+  const fiber = fmt(per('fiber'));
+
+  const getNutrientLevel = (type, val) => {
+    if (val == null) return 'neutral';
+    if (type === 'calories') return val > 400 ? 'bad' : val > 250 ? 'moderate' : 'neutral';
+    if (type === 'sugar') return val > 22.5 ? 'bad' : val > 12 ? 'moderate' : 'good';
+    if (type === 'satFat') return val > 10 ? 'bad' : val > 5 ? 'moderate' : 'good';
+    if (type === 'sodium') return val > 0.6 ? 'bad' : val > 0.3 ? 'moderate' : 'good';
+    if (type === 'protein') return val >= 5 ? 'good' : 'neutral';
+    if (type === 'fiber') return val >= 3 ? 'good' : 'neutral';
+    return 'neutral';
+  };
+
+  const negativeNutrients = [
+    { label: 'Calories', value: calories, unit: ' kcal', type: 'calories' },
+    { label: 'Sugar', value: sugar, unit: 'g', type: 'sugar' },
+    { label: 'Saturated Fat', value: satFat, unit: 'g', type: 'satFat' },
+    { label: 'Sodium', value: sodium != null ? fmt(sodium * 1000, 0) : null, unit: 'mg', type: 'sodium' },
+  ].filter(item => {
+    const level = getNutrientLevel(item.type, item.type === 'sodium' ? per('sodium') ?? (per('salt') != null ? per('salt') / 2.5 : null) : parseFloat(item.value));
+    return level === 'bad' || level === 'moderate';
+  });
+
+  const positiveNutrients = [
+    { label: 'Protein', value: protein, unit: 'g', type: 'protein' },
+    { label: 'Fiber', value: fiber, unit: 'g', type: 'fiber' },
+  ].filter(item => getNutrientLevel(item.type, parseFloat(item.value)) === 'good');
 
   return (
     <div>
@@ -100,38 +159,82 @@ function ProductResult({ product, onClose }) {
       </div>
 
       <div className="p-5 pb-8 space-y-5">
+
         {/* Score */}
         <div className="flex items-center justify-center gap-8 bg-gray-50 rounded-2xl p-5 border border-gray-100">
           <ScoreRing score={score} />
-          <div className="space-y-1.5">
+          <div className="space-y-2 flex-1">
             {negatives.length === 0 && positives.length === 0 && (
               <p className="text-xs text-gray-400 italic">Insufficient data to score</p>
             )}
-            {negatives.slice(0, 3).map((n, i) => (
+            {negatives.slice(0, 3).map((neg, i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full shrink-0 ${n.level === 'bad' ? 'bg-red-500' : 'bg-amber-400'}`} />
-                <span className="text-xs text-gray-700 font-medium">{n.label}</span>
+                <span className={`text-xs shrink-0 ${neg.level === 'bad' ? 'text-red-500' : 'text-amber-500'}`}>✗</span>
+                <span className="text-xs text-gray-700 font-medium">{neg.label}</span>
               </div>
             ))}
-            {positives.slice(0, 3).map((p, i) => (
+            {positives.slice(0, 3).map((pos, i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
-                <span className="text-xs text-gray-700 font-medium">{p.label}</span>
+                <span className="text-xs text-green-500 shrink-0">✓</span>
+                <span className="text-xs text-gray-700 font-medium">{pos.label}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Nutrition Facts */}
+        {/* Negative nutrients */}
+        {negativeNutrients.length > 0 && (
+          <div className="bg-red-50 border border-red-100 rounded-2xl p-4 space-y-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-red-600 flex items-center gap-1.5">
+              <span>✗</span> Negative Points
+            </p>
+            {negativeNutrients.map((item, i) => {
+              const rawVal = item.type === 'sodium'
+                ? (per('sodium') ?? (per('salt') != null ? per('salt') / 2.5 : null))
+                : parseFloat(item.value);
+              return <NutrientBar key={i} label={item.label} value={item.value} unit={item.unit} level={getNutrientLevel(item.type, rawVal)} />;
+            })}
+          </div>
+        )}
+
+        {/* Positive nutrients */}
+        {positiveNutrients.length > 0 && (
+          <div className="bg-green-50 border border-green-100 rounded-2xl p-4 space-y-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-green-700 flex items-center gap-1.5">
+              <span>✓</span> Positive Points
+            </p>
+            {positiveNutrients.map((item, i) => (
+              <NutrientBar key={i} label={item.label} value={item.value} unit={item.unit} level={getNutrientLevel(item.type, parseFloat(item.value))} />
+            ))}
+          </div>
+        )}
+
+        {/* Additives */}
+        {additives.length > 0 && (
+          <div className={`border rounded-2xl p-4 ${additives.length > 3 ? 'bg-red-50 border-red-100' : 'bg-amber-50 border-amber-100'}`}>
+            <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${additives.length > 3 ? 'text-red-600' : 'text-amber-600'}`}>
+              {additives.length > 3 ? '✗' : '⚠'} Additives ({additives.length})
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {additives.map((a, i) => (
+                <span key={i} className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${additives.length > 3 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                  {a.replace('en:', '')}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Full nutrition table */}
         <div className="bg-white rounded-2xl border border-gray-100 p-4 space-y-1">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-teal-700 mb-3">Nutrition Facts (per 100g)</p>
-          <NutrientRow label="Calories" value={fmt(per('energy-kcal') ?? (per('energy') != null ? per('energy') / 4.184 : null), 0)} unit=" kcal" />
+          <p className="text-[10px] font-bold uppercase tracking-widest text-teal-700 mb-3">Full Nutrition (per 100g)</p>
+          <NutrientRow label="Calories" value={calories} unit=" kcal" />
           <NutrientRow label="Total Fat" value={fmt(per('fat'))} unit="g" />
-          <NutrientRow label="Saturated Fat" value={fmt(per('saturated-fat'))} unit="g" />
+          <NutrientRow label="Saturated Fat" value={satFat} unit="g" />
           <NutrientRow label="Carbohydrates" value={fmt(per('carbohydrates'))} unit="g" />
-          <NutrientRow label="Sugars" value={fmt(per('sugars'))} unit="g" />
-          <NutrientRow label="Fiber" value={fmt(per('fiber'))} unit="g" />
-          <NutrientRow label="Protein" value={fmt(per('proteins'))} unit="g" />
+          <NutrientRow label="Sugars" value={sugar} unit="g" />
+          <NutrientRow label="Fiber" value={fiber} unit="g" />
+          <NutrientRow label="Protein" value={protein} unit="g" />
           <NutrientRow label="Salt" value={fmt(per('salt'))} unit="g" />
         </div>
 

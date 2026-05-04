@@ -99,7 +99,7 @@ function ProductResult({ product, onClose }) {
         </div>
       </div>
 
-      <div className="p-5 space-y-5">
+      <div className="p-5 pb-8 space-y-5">
         {/* Score */}
         <div className="flex items-center justify-center gap-8 bg-gray-50 rounded-2xl p-5 border border-gray-100">
           <ScoreRing score={score} />
@@ -312,7 +312,7 @@ export default function ScanLabel({ onClose }) {
 
           {/* Result */}
           {phase === 'result' && product && (
-            <div>
+            <div className="pb-6">
               <ProductResult product={product} onClose={onClose} />
               <div className="p-4 border-t border-gray-100">
                 <button onClick={() => { setPhase('scan'); setProduct(null); }} className="w-full py-3 bg-slate-800 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-900 transition flex items-center justify-center gap-2">

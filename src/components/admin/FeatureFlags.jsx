@@ -15,6 +15,11 @@ export default function FeatureFlags() {
       label: 'Allergen Information',
       description: 'Show "Contains:" allergen warnings on each menu item card and allow users to set dietary restrictions in their profile.',
     },
+    {
+      key: 'scan_label_enabled',
+      label: 'Scan Food Label',
+      description: 'Show the barcode scanner button so users can scan packaged food labels for nutritional analysis.',
+    },
   ];
 
   if (isLoading) {

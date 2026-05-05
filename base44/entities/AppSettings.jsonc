@@ -10,6 +10,11 @@
       "type": "boolean",
       "default": false,
       "description": "Whether allergen info is shown to users on menu items and profile"
+    },
+    "scan_label_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the Scan Food Label barcode feature is visible to end users"
     }
   },
   "required": [

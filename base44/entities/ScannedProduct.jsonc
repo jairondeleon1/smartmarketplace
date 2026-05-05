@@ -1,0 +1,118 @@
+{
+  "name": "ScannedProduct",
+  "type": "object",
+  "properties": {
+    "barcode": {
+      "type": "string",
+      "description": "Product barcode"
+    },
+    "name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "brand": {
+      "type": "string",
+      "description": "Brand name"
+    },
+    "category": {
+      "type": "string",
+      "description": "Product category"
+    },
+    "front_image_url": {
+      "type": "string",
+      "description": "Front of package photo URL"
+    },
+    "ingredients_image_url": {
+      "type": "string",
+      "description": "Ingredients label photo URL"
+    },
+    "nutrition_image_url": {
+      "type": "string",
+      "description": "Nutrition facts photo URL"
+    },
+    "ingredients_text": {
+      "type": "string",
+      "description": "Extracted ingredients text"
+    },
+    "calories": {
+      "type": "number",
+      "default": 0
+    },
+    "protein": {
+      "type": "number",
+      "default": 0
+    },
+    "carbs": {
+      "type": "number",
+      "default": 0
+    },
+    "fat": {
+      "type": "number",
+      "default": 0
+    },
+    "saturated_fat": {
+      "type": "number",
+      "default": 0
+    },
+    "sodium": {
+      "type": "number",
+      "default": 0
+    },
+    "fiber": {
+      "type": "number",
+      "default": 0
+    },
+    "sugar": {
+      "type": "number",
+      "default": 0
+    },
+    "additives": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "allergens": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "health_score": {
+      "type": "number",
+      "default": 0,
+      "description": "AI health score 0-100"
+    },
+    "score_label": {
+      "type": "string",
+      "description": "Good / Moderate / Poor / Bad"
+    },
+    "score_breakdown": {
+      "type": "string",
+      "description": "JSON string with score details"
+    },
+    "ai_analysis": {
+      "type": "string",
+      "description": "AI narrative analysis"
+    }
+  },
+  "required": [
+    "barcode"
+  ],
+  "rls": {
+    "create": {},
+    "read": {},
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

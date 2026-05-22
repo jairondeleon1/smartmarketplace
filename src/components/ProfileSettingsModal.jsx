@@ -128,7 +128,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
               className="mt-0.5 w-4 h-4 accent-teal-600 shrink-0 cursor-pointer"
             />
             <label htmlFor="disclaimer-accept" className="text-xs text-amber-900 leading-relaxed cursor-pointer">
-              I understand that SmartMenuIQ provides <span className="font-bold">estimates only</span> and I am responsible for verifying ingredients and allergens directly with the restaurant or food service staff before consuming any item.
+              I understand that SmartMenuIQ provides <span className="font-bold">estimates only</span>, and I am responsible for verifying ingredient and allergen information directly with the Cafe/Marketplace or Ingredient Ambassador before consuming any item.
             </label>
           </div>
 

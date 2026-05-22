@@ -287,7 +287,6 @@ export default function Footer({ onAdminClick }) {
     { key: 'allergens', label: 'Allergen Policy' },
     { key: 'healthdisclaimer', label: 'Health Disclaimer' },
     { key: 'aitransparency', label: 'AI Transparency' },
-    { key: 'accessibility', label: 'Accessibility' },
   ];
 
   return (

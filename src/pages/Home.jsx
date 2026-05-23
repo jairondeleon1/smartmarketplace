@@ -75,7 +75,7 @@ const slideVariants = {
   exitToRight:    { x: '100%', opacity: 0 },
   exitToLeft:     { x: '-30%', opacity: 0 },
 };
-const VIEW_ORDER = ['customer', 'chat', 'admin'];
+const VIEW_ORDER = ['customer', 'chat', 'wellness', 'admin'];
 
 function PullToRefreshIndicator({ pullDistance, isPulling, isRefreshing, threshold = 72 }) {
   if (!isPulling && !isRefreshing) return null;
@@ -696,6 +696,7 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen, onPro
           <div className="hidden md:flex gap-6 items-center text-sm font-bold uppercase tracking-widest" role="menubar">
             <button onClick={() => changeView('customer')} aria-current={view === 'customer' ? 'page' : undefined} className={`focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1 ${view === 'customer' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}`}>Menu</button>
             <button onClick={() => changeView('chat')} aria-current={view === 'chat' ? 'page' : undefined} className={`focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1 ${view === 'chat' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}`}>AI Assistant</button>
+            <button onClick={() => changeView('wellness')} aria-current={view === 'wellness' ? 'page' : undefined} className={`focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1 ${view === 'wellness' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}`}>Wellness Corner</button>
             <a href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-slate-300 opacity-70 hover:text-white hover:opacity-100 transition focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">30 Day Challenge</a>
             <button onClick={onProfileClick} className="p-2 hover:bg-white/10 rounded-full transition focus-visible:ring-2 focus-visible:ring-teal-400" aria-label="My Profile">
               <User className="w-5 h-5" aria-hidden="true" />
@@ -713,6 +714,7 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen, onPro
           style={{ top: 'calc(4rem + env(safe-area-inset-top))' }}>
           <button role="menuitem" onClick={() => { changeView('customer'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">Menu</button>
           <button role="menuitem" onClick={() => { changeView('chat'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">AI Assistant</button>
+          <button role="menuitem" onClick={() => { changeView('wellness'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">Wellness Corner</button>
           <a role="menuitem" href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">30 Day Challenge</a>
         </div>
       )}
@@ -724,6 +726,7 @@ function MobileBottomNav({ view, changeView, onProfileClick }) {
   const tabs = [
     { id: 'customer', label: 'Menu', icon: Utensils },
     { id: 'chat', label: 'AI Assistant', icon: MessageSquare },
+    { id: 'wellness', label: 'Wellness', icon: Heart },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
   return (
@@ -732,7 +735,7 @@ function MobileBottomNav({ view, changeView, onProfileClick }) {
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <div className="flex items-stretch" role="tablist">
         {tabs.map(({ id, label, icon: Icon }) => {
-          const isActive = id === 'settings' ? false : view === id;
+          const isActive = id === 'settings' ? false : view === id || (id === 'wellness' && view === 'wellness');
           return (
             <button
               key={id}
@@ -1612,6 +1615,13 @@ export default function Home() {
             {view === 'chat' && (
               <motion.div key="chat" variants={slideVariants} initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'} animate="center" exit={direction > 0 ? 'exitToLeft' : 'exitToRight'} transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
                 <ChatView chatHistory={chatHistory} isTyping={isTyping} userQuery={userQuery} setUserQuery={setUserQuery} handleSendChat={handleSendChat} customVegUrl={customVegUrl} />
+              </motion.div>
+            )}
+            {view === 'wellness' && (
+              <motion.div key="wellness" variants={slideVariants} initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'} animate="center" exit={direction > 0 ? 'exitToLeft' : 'exitToRight'} transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
+                <div className="max-w-2xl mx-auto p-4 pb-32 pt-6">
+                  <DietitianCornerSection />
+                </div>
               </motion.div>
             )}
             {view === 'admin' && !isAdminLoggedIn && (

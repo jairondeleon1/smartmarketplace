@@ -184,17 +184,8 @@ export default function MakeItAtHomeSection() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {cards.map(card => (
           <div key={card.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-            {card.image_url && (
-              card.image_url.endsWith('.pdf') ? (
-                <iframe
-                  src={card.image_url}
-                  title={card.dish_name}
-                  className="w-full border-0"
-                  style={{ height: '420px' }}
-                />
-              ) : (
-                <img src={card.image_url} alt={card.dish_name} className="w-full object-cover" />
-              )
+            {card.image_url && !card.image_url.endsWith('.pdf') && (
+              <img src={card.image_url} alt={card.dish_name} className="w-full object-cover" />
             )}
             <div className="bg-slate-900 px-5 py-3 flex items-center justify-between">
               <div>

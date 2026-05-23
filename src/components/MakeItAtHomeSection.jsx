@@ -194,7 +194,7 @@ export default function MakeItAtHomeSection() {
         <div className="h-px flex-1 bg-gray-100" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {cards.map(card => (
           <div key={card.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
             <div className="bg-slate-900 px-5 py-3 flex items-center justify-between">

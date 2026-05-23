@@ -499,7 +499,7 @@ function isSideItem(item) {
   return SIDE_STATION_KEYWORDS.some(k => station.includes(k));
 }
 
-function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addToPlate, customVegUrl, customVeganUrl, selectedDay, setSelectedDay, clearFilters, allergenEnabled }) {
+function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addToPlate, customVegUrl, customVeganUrl, selectedDay, setSelectedDay, clearFilters, allergenEnabled, wellnessEnabled }) {
   const breakfastItems = filteredItems.filter(i => getMealPeriodFromStation(i) === 'Breakfast');
   const lunchItems = filteredItems.filter(i => getMealPeriodFromStation(i) === 'Lunch');
 
@@ -589,12 +589,12 @@ function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addTo
       {effectiveTab === 'Lunch' && <MakeItAtHomeSection />}
 
       {/* Dietitian's Wellness Corner — only shown under Lunch tab */}
-      {effectiveTab === 'Lunch' && <DietitianCornerSection />}
+      {effectiveTab === 'Lunch' && wellnessEnabled && <DietitianCornerSection />}
     </div>
   );
 }
 
-function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, selectedDay, setSelectedDay, activeFilters, toggleFilter, clearFilters, filteredItems, dayScrollRef, addToPlate, myPlate, setMyPlate, isTrayModalOpen, setIsTrayModalOpen, isWeeklyPlannerOpen, setIsWeeklyPlannerOpen, isScanLabelOpen, setIsScanLabelOpen, changeView, user, isOnline, allergenEnabled, scanLabelEnabled }) {
+function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, selectedDay, setSelectedDay, activeFilters, toggleFilter, clearFilters, filteredItems, dayScrollRef, addToPlate, myPlate, setMyPlate, isTrayModalOpen, setIsTrayModalOpen, isWeeklyPlannerOpen, setIsWeeklyPlannerOpen, isScanLabelOpen, setIsScanLabelOpen, changeView, user, isOnline, allergenEnabled, scanLabelEnabled, wellnessEnabled }) {
   const [activeMealTab, setActiveMealTab] = useState('Lunch');
 
   const doRefresh = useCallback(async () => {
@@ -663,6 +663,7 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
         setSelectedDay={setSelectedDay}
         clearFilters={clearFilters}
         allergenEnabled={allergenEnabled}
+        wellnessEnabled={wellnessEnabled}
       />
 
       {/* Persistent AI Insights Disclaimer */}
@@ -682,7 +683,7 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
 
 // --- CORE VIEWS ---
 
-function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen, onProfileClick }) {
+function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen, onProfileClick, wellnessEnabled }) {
   return (
     <nav className="bg-slate-800 dark:bg-slate-900 text-white shadow-lg sticky top-0 z-50 w-full shrink-0 font-sans font-bold select-none"
       aria-label="Main navigation"
@@ -696,7 +697,7 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen, onPro
           <div className="hidden md:flex gap-6 items-center text-sm font-bold uppercase tracking-widest" role="menubar">
             <button onClick={() => changeView('customer')} aria-current={view === 'customer' ? 'page' : undefined} className={`focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1 ${view === 'customer' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}`}>Menu</button>
             <button onClick={() => changeView('chat')} aria-current={view === 'chat' ? 'page' : undefined} className={`focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1 ${view === 'chat' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}`}>AI Assistant</button>
-            <button onClick={() => changeView('wellness')} aria-current={view === 'wellness' ? 'page' : undefined} className={`focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1 ${view === 'wellness' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}`}>Wellness Corner</button>
+            {wellnessEnabled && <button onClick={() => changeView('wellness')} aria-current={view === 'wellness' ? 'page' : undefined} className={`focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1 ${view === 'wellness' ? 'text-white border-b-2 border-teal-400 pb-1' : 'text-slate-300 opacity-70'}`}>Wellness Corner</button>}
             <a href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-slate-300 opacity-70 hover:text-white hover:opacity-100 transition focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">30 Day Challenge</a>
             <button onClick={onProfileClick} className="p-2 hover:bg-white/10 rounded-full transition focus-visible:ring-2 focus-visible:ring-teal-400" aria-label="My Profile">
               <User className="w-5 h-5" aria-hidden="true" />
@@ -714,7 +715,7 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen, onPro
           style={{ top: 'calc(4rem + env(safe-area-inset-top))' }}>
           <button role="menuitem" onClick={() => { changeView('customer'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">Menu</button>
           <button role="menuitem" onClick={() => { changeView('chat'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">AI Assistant</button>
-          <button role="menuitem" onClick={() => { changeView('wellness'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">Wellness Corner</button>
+          {wellnessEnabled && <button role="menuitem" onClick={() => { changeView('wellness'); setIsMobileMenuOpen(false); }} className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">Wellness Corner</button>}
           <a role="menuitem" href="https://www.eurest-usa.com/our-impact/food-with-purpose/30-day-challenge/" target="_blank" rel="noopener noreferrer" className="text-left font-bold focus-visible:ring-2 focus-visible:ring-teal-400 rounded px-1">30 Day Challenge</a>
         </div>
       )}
@@ -722,11 +723,11 @@ function NavBar({ view, changeView, isMobileMenuOpen, setIsMobileMenuOpen, onPro
   );
 }
 
-function MobileBottomNav({ view, changeView, onProfileClick }) {
+function MobileBottomNav({ view, changeView, onProfileClick, wellnessEnabled }) {
   const tabs = [
     { id: 'customer', label: 'Menu', icon: Utensils },
     { id: 'chat', label: 'AI Assistant', icon: MessageSquare },
-    { id: 'wellness', label: 'Wellness', icon: Heart },
+    ...(wellnessEnabled ? [{ id: 'wellness', label: 'Wellness', icon: Heart }] : []),
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
   return (
@@ -1399,6 +1400,7 @@ export default function Home() {
   const { settings: appSettings } = useAppSettings();
   const allergenEnabled = appSettings?.allergen_display_enabled ?? false;
   const scanLabelEnabled = appSettings?.scan_label_enabled ?? false;
+  const wellnessEnabled = appSettings?.wellness_corner_enabled ?? true;
 
   const [view, setView] = useState('customer');
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
@@ -1603,13 +1605,13 @@ export default function Home() {
         <OfflineBanner isOnline={isOnline} cacheAge={cacheAge} />
         <AllergenNoticeModal />
         <div className="hidden md:block">
-          <NavBar view={view} changeView={changeView} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} onProfileClick={() => setIsProfileModalOpen(true)} />
+          <NavBar view={view} changeView={changeView} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} onProfileClick={() => setIsProfileModalOpen(true)} wellnessEnabled={wellnessEnabled} />
         </div>
         <main className="w-full font-bold">
           <AnimatePresence mode="wait" initial={false}>
             {view === 'customer' && (
               <motion.div key="customer" variants={slideVariants} initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'} animate="center" exit={direction > 0 ? 'exitToLeft' : 'exitToRight'} transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
-                <CustomerView menuItems={menuItems} queryClient={queryClient} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} selectedDay={selectedDay} setSelectedDay={setSelectedDay} activeFilters={activeFilters} toggleFilter={toggleFilter} clearFilters={clearFilters} filteredItems={filteredItems} dayScrollRef={dayScrollRef} addToPlate={addToPlate} myPlate={myPlate} setMyPlate={setMyPlate} isTrayModalOpen={isTrayModalOpen} setIsTrayModalOpen={setIsTrayModalOpen} isWeeklyPlannerOpen={isWeeklyPlannerOpen} setIsWeeklyPlannerOpen={setIsWeeklyPlannerOpen} isScanLabelOpen={isScanLabelOpen} setIsScanLabelOpen={setIsScanLabelOpen} changeView={changeView} user={user} isOnline={isOnline} allergenEnabled={allergenEnabled} scanLabelEnabled={scanLabelEnabled} />
+                <CustomerView menuItems={menuItems} queryClient={queryClient} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} selectedDay={selectedDay} setSelectedDay={setSelectedDay} activeFilters={activeFilters} toggleFilter={toggleFilter} clearFilters={clearFilters} filteredItems={filteredItems} dayScrollRef={dayScrollRef} addToPlate={addToPlate} myPlate={myPlate} setMyPlate={setMyPlate} isTrayModalOpen={isTrayModalOpen} setIsTrayModalOpen={setIsTrayModalOpen} isWeeklyPlannerOpen={isWeeklyPlannerOpen} setIsWeeklyPlannerOpen={setIsWeeklyPlannerOpen} isScanLabelOpen={isScanLabelOpen} setIsScanLabelOpen={setIsScanLabelOpen} changeView={changeView} user={user} isOnline={isOnline} allergenEnabled={allergenEnabled} scanLabelEnabled={scanLabelEnabled} wellnessEnabled={wellnessEnabled} />
               </motion.div>
             )}
             {view === 'chat' && (
@@ -1636,7 +1638,7 @@ export default function Home() {
             )}
           </AnimatePresence>
         </main>
-        <MobileBottomNav view={view} changeView={changeView} onProfileClick={() => setIsProfileModalOpen(true)} />
+        <MobileBottomNav view={view} changeView={changeView} onProfileClick={() => setIsProfileModalOpen(true)} wellnessEnabled={wellnessEnabled} />
         <NutritionCharts isOpen={isChartsOpen} onClose={() => setIsChartsOpen(false)} menuItems={menuItems} />
         <ProfileSettingsModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} user={effectiveUser} allergenEnabled={allergenEnabled} onProfileUpdate={(profile) => { setLocalProfile(profile); localStorage.setItem('userProfile', JSON.stringify(profile)); }} />
         <AITransparencyModal isOpen={showAINotice} onAccept={handleAINoticeAccept} />

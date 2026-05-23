@@ -15,6 +15,11 @@
       "type": "boolean",
       "default": false,
       "description": "Whether the Scan Food Label barcode feature is visible to end users"
+    },
+    "wellness_corner_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the Dietitian's Wellness Corner tab is visible to end users"
     }
   },
   "required": [

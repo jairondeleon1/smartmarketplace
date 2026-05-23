@@ -20,6 +20,11 @@ export default function FeatureFlags() {
       label: 'Scan Food Label',
       description: 'Show the barcode scanner button so users can scan packaged food labels for nutritional analysis.',
     },
+    {
+      key: 'wellness_corner_enabled',
+      label: "Dietitian's Wellness Corner",
+      description: "Show the Wellness Corner tab in the navigation so users can access dietitian resources and content.",
+    },
   ];
 
   if (isLoading) {

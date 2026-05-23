@@ -1,6 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Loader2, ExternalLink, ChefHat, Trash2, QrCode } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import * as pdfjsLib from 'pdfjs-dist';
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+
+async function renderPdfToImageFile(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const page = await pdf.getPage(1);
+  const viewport = page.getViewport({ scale: 2 });
+  const canvas = document.createElement('canvas');
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+  return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+}
 
 // Default recipe link used for all Make It At Home cards
 const RECIPE_LINK = 'https://nam11.safelinks.protection.outlook.com/?url=https%3A%2F%2Fwww.weeatlivedowell.com%2Frecipes%2F&data=05%7C02%7CJairon.DeLeon%40compass-usa.com%7C15fac157973c487ab90d08dea79b52bc%7Ccd62b7dd4b4844bd90e7e143a22c8ead%7C0%7C0%7C639132482716854007%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=82ljV9Uo1lMMyoUIRm%2B%2F4YyBXkBUclYUi4byOpejxiA%3D&reserved=0';
@@ -24,15 +39,14 @@ export function MakeItAtHomeAdmin() {
     if (!file) return;
     setIsProcessing(true);
     try {
-      // Upload first so we have a real URL for the LLM
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      // Render PDF first page to PNG client-side, then upload both
+      const pngBlob = await renderPdfToImageFile(file);
+      const pngFile = new File([pngBlob], file.name.replace(/\.pdf$/i, '.png'), { type: 'image/png' });
 
-      // Extract embedded image from the PDF to use as a preview thumbnail
-      let extracted_image_url = null;
-      try {
-        const extracted = await base44.functions.invoke('extractPdfImage', { file_url });
-        extracted_image_url = extracted?.data?.image_url || null;
-      } catch (_e) {}
+      const [{ file_url }, { file_url: image_url }] = await Promise.all([
+        base44.integrations.Core.UploadFile({ file }),
+        base44.integrations.Core.UploadFile({ file: pngFile }),
+      ]);
 
       const result = await base44.integrations.Core.InvokeLLM({
         model: 'claude_sonnet_4_6',
@@ -70,7 +84,7 @@ Return as JSON only.`,
         dish_name: cleanText(result?.dish_name) || fallbackName,
         description: cleanText(result?.description) || 'Make this dish at home!',
         recipe_link: RECIPE_LINK,
-        image_url: extracted_image_url || file_url,
+        image_url: image_url,
         active: true
       });
 

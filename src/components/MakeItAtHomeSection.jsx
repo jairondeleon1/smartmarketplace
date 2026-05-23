@@ -197,9 +197,6 @@ export default function MakeItAtHomeSection() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {cards.map(card => (
           <div key={card.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-            {card.image_url && !card.image_url.endsWith('.pdf') && (
-              <img src={card.image_url} alt={card.dish_name} className="w-full object-cover" />
-            )}
             <div className="bg-slate-900 px-5 py-3 flex items-center justify-between">
               <div>
                 <p className="text-white font-bold text-sm uppercase tracking-tight">{card.dish_name}</p>
@@ -207,6 +204,10 @@ export default function MakeItAtHomeSection() {
               </div>
               <QrCode className="w-6 h-6 text-teal-400 shrink-0" />
             </div>
+
+            {card.image_url && !card.image_url.endsWith('.pdf') && (
+              <img src={card.image_url} alt={card.dish_name} className="w-full object-cover" />
+            )}
 
             <div className="p-5 flex-1 space-y-3">
               {card.description && (

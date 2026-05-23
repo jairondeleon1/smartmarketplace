@@ -32,6 +32,7 @@ export function MakeItAtHomeAdmin() {
         prompt: `This is a "Make It At Home" recipe flyer PDF. Extract:
 1. dish_name: The main dish or recipe name prominently displayed (e.g. "Green Juice Shot", "Chicken Tikka Masala")
 2. description: Any tagline, subtitle, or call-to-action text
+IMPORTANT: Do NOT include "8.5x11 sign" or any printing/size specifications in the extracted text. Only extract the actual recipe/dish content.
 Return as JSON only.`,
         file_urls: [file_url],
         response_json_schema: {

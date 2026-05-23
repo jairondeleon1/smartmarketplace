@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Loader2, ExternalLink, ChefHat, Trash2, QrCode, FileText } from 'lucide-react';
+import { Upload, Loader2, ExternalLink, ChefHat, Trash2, QrCode } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 // Default recipe link used for all Make It At Home cards
@@ -26,6 +26,13 @@ export function MakeItAtHomeAdmin() {
     try {
       // Upload first so we have a real URL for the LLM
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
+
+      // Extract embedded image from the PDF to use as a preview thumbnail
+      let extracted_image_url = null;
+      try {
+        const extracted = await base44.functions.invoke('extractPdfImage', { file_url });
+        extracted_image_url = extracted?.data?.image_url || null;
+      } catch (_e) {}
 
       const result = await base44.integrations.Core.InvokeLLM({
         model: 'claude_sonnet_4_6',
@@ -63,7 +70,7 @@ Return as JSON only.`,
         dish_name: cleanText(result?.dish_name) || fallbackName,
         description: cleanText(result?.description) || 'Make this dish at home!',
         recipe_link: RECIPE_LINK,
-        image_url: file_url,
+        image_url: extracted_image_url || file_url,
         active: true
       });
 
@@ -177,13 +184,8 @@ export default function MakeItAtHomeSection() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {cards.map(card => (
           <div key={card.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-            {card.image_url && card.image_url.endsWith('.pdf') && (
-              <a href={card.image_url} target="_blank" rel="noopener noreferrer" className="block w-full bg-teal-50 border-b border-teal-100 py-3 flex items-center justify-center gap-2 text-teal-700 font-bold text-xs uppercase tracking-widest hover:bg-teal-100 transition">
-                <FileText className="w-4 h-4" /> View Flyer PDF
-              </a>
-            )}
             {card.image_url && !card.image_url.endsWith('.pdf') && (
-              <img src={card.image_url} alt={card.dish_name} className="w-full object-cover max-h-48" />
+              <img src={card.image_url} alt={card.dish_name} className="w-full object-cover" />
             )}
             <div className="bg-slate-900 px-5 py-3 flex items-center justify-between">
               <div>

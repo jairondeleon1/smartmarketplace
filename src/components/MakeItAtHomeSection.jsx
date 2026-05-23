@@ -30,9 +30,8 @@ export function MakeItAtHomeAdmin() {
       const result = await base44.integrations.Core.InvokeLLM({
         model: 'claude_sonnet_4_6',
         prompt: `This is a "Make It At Home" recipe flyer PDF. Extract:
-1. dish_name: The main dish or recipe name prominently displayed (e.g. "Green Juice Shot", "Chicken Tikka Masala")
-2. description: Any tagline, subtitle, or call-to-action text
-IMPORTANT: Do NOT include "8.5x11 sign" or any printing/size specifications in the extracted text. Only extract the actual recipe/dish content.
+1. dish_name: The main dish or recipe name prominently displayed (e.g. "Green Juice Shot", "Chicken Tikka Masala"). This is ONLY the food/recipe name — never include words like "8.5x11", "sign", "flyer", "print", or any paper/size references.
+2. description: A short tagline or call-to-action about the dish. Do NOT include any printing instructions, paper sizes, or document metadata like "8.5x11 sign".
 Return as JSON only.`,
         file_urls: [file_url],
         response_json_schema: {
@@ -44,9 +43,11 @@ Return as JSON only.`,
         }
       }).catch(() => null);
 
+      const cleanText = (str) => str ? str.replace(/8\.5\s*x\s*11\s*(sign)?/gi, '').replace(/\s{2,}/g, ' ').trim() : str;
+
       await base44.entities.MakeItAtHome.create({
-        dish_name: result?.dish_name || file.name.replace(/_/g, ' ').replace(/\.[^.]+$/, ''),
-        description: result?.description || 'Make this dish at home!',
+        dish_name: cleanText(result?.dish_name) || file.name.replace(/_/g, ' ').replace(/\.[^.]+$/, ''),
+        description: cleanText(result?.description) || 'Make this dish at home!',
         recipe_link: RECIPE_LINK,
         image_url: file_url,
         active: true

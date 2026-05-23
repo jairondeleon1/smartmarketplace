@@ -55,6 +55,8 @@ import AdminGate from "../components/AdminGate";
 import CoreMenusSection from "../components/CoreMenusSection";
 import CoreMenusSync from "../components/admin/CoreMenusSync";
 import MakeItAtHomeSection, { MakeItAtHomeAdmin } from "../components/MakeItAtHomeSection";
+import DietitianCornerSection from "../components/DietitianCornerSection";
+import DietitianCornerAdmin from "../components/admin/DietitianCornerAdmin";
 import ScanLabel from "../components/ScanLabel.jsx";
 import FeatureFlags from "../components/admin/FeatureFlags";
 import { useAppSettings } from "@/hooks/useAppSettings";
@@ -585,6 +587,9 @@ function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addTo
 
       {/* Make It At Home — only shown under Lunch tab */}
       {effectiveTab === 'Lunch' && <MakeItAtHomeSection />}
+
+      {/* Dietitian's Wellness Corner — only shown under Lunch tab */}
+      {effectiveTab === 'Lunch' && <DietitianCornerSection />}
     </div>
   );
 }
@@ -1247,6 +1252,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         <button onClick={() => setActiveTab('manage')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'manage' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Manage Items ({menuItems.length})</button>
         <button onClick={() => setActiveTab('users')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'users' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Users</button>
         <button onClick={() => setActiveTab('features')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'features' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Features</button>
+        <button onClick={() => setActiveTab('dietitian')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'dietitian' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Wellness</button>
       </div>
 
       {activeTab === 'upload' && (
@@ -1369,6 +1375,12 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       {activeTab === 'features' && (
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
           <FeatureFlags />
+        </div>
+      )}
+
+      {activeTab === 'dietitian' && (
+        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+          <DietitianCornerAdmin />
         </div>
       )}
 

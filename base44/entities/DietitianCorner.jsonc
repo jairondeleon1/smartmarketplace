@@ -1,0 +1,99 @@
+{
+  "name": "DietitianCorner",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Section title e.g. Dietitian's Wellness Corner"
+    },
+    "subtitle": {
+      "type": "string",
+      "description": "Optional subtitle or tagline"
+    },
+    "dietitian_name": {
+      "type": "string",
+      "description": "Dietitian's full name"
+    },
+    "dietitian_bio": {
+      "type": "string",
+      "description": "Short bio of the dietitian"
+    },
+    "dietitian_photo_url": {
+      "type": "string",
+      "description": "URL to dietitian headshot"
+    },
+    "hero_image_url": {
+      "type": "string",
+      "description": "Hero/banner image URL"
+    },
+    "links": {
+      "type": "array",
+      "description": "List of resource links/buttons",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "pdf",
+              "website",
+              "signup"
+            ]
+          }
+        }
+      },
+      "default": []
+    },
+    "featured_tiles": {
+      "type": "array",
+      "description": "Clickable image tiles at the bottom",
+      "items": {
+        "type": "object",
+        "properties": {
+          "image_url": {
+            "type": "string"
+          },
+          "link_url": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string"
+          }
+        }
+      },
+      "default": []
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to display this section to users"
+    }
+  },
+  "required": [
+    "title"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {},
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

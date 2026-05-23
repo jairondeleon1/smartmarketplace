@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Upload, Loader2, ExternalLink, ChefHat, Trash2, QrCode } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import * as pdfjsLib from 'pdfjs-dist';
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 async function renderPdfToImageFile(file) {
   const arrayBuffer = await file.arrayBuffer();

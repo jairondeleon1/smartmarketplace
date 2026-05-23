@@ -43,10 +43,24 @@ Return as JSON only.`,
         }
       }).catch(() => null);
 
-      const cleanText = (str) => str ? str.replace(/8\.5\s*x\s*11\s*(sign)?/gi, '').replace(/\s{2,}/g, ' ').trim() : str;
+      const cleanText = (str) => str
+        ? str
+            .replace(/8\.5\s*[xX×]\s*11/gi, '')
+            .replace(/\b(sign|flyer|poster|print|printed?|8\.5|11in|8\.5in)\b/gi, '')
+            .replace(/\s{2,}/g, ' ')
+            .trim()
+        : str;
+
+      const fallbackName = file.name
+        .replace(/\.[^.]+$/, '')       // remove extension
+        .replace(/_/g, ' ')
+        .replace(/85x11|8\.5x11/gi, '')
+        .replace(/\b(sign|flyer|poster|print)\b/gi, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
 
       await base44.entities.MakeItAtHome.create({
-        dish_name: cleanText(result?.dish_name) || file.name.replace(/_/g, ' ').replace(/\.[^.]+$/, ''),
+        dish_name: cleanText(result?.dish_name) || fallbackName,
         description: cleanText(result?.description) || 'Make this dish at home!',
         recipe_link: RECIPE_LINK,
         image_url: file_url,

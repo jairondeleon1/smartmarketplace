@@ -648,6 +648,8 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
           <button onClick={() => toggleFilter('vegetarian')} aria-pressed={activeFilters.vegetarian} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-1 ${activeFilters.vegetarian ? 'bg-green-50 border-green-500 text-green-900' : 'bg-white border-gray-100 text-gray-400'}`}><VegProgramIcon url={customVegUrl} className="w-4 h-4" /> Veg</button>
           <button onClick={() => toggleFilter('vegan')} aria-pressed={activeFilters.vegan} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-1 ${activeFilters.vegan ? 'bg-green-50 border-green-500 text-green-900' : 'bg-white border-gray-100 text-gray-400'}`}><VeganProgramIcon url={customVeganUrl} className="w-4 h-4" /> Vegan</button>
           <button onClick={() => toggleFilter('fit')} aria-pressed={activeFilters.fit} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 ${activeFilters.fit ? 'bg-blue-50 border-blue-500 text-blue-900' : 'bg-white border-gray-100 text-gray-400'}`}><FitIcon className="w-4 h-4" /> Fit</button>
+          <button onClick={() => toggleFilter('lowCarb')} aria-pressed={activeFilters.lowCarb} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1 ${activeFilters.lowCarb ? 'bg-amber-50 border-amber-500 text-amber-900' : 'bg-white border-gray-100 text-gray-400'}`}><Zap className="w-4 h-4" /> Low Carb</button>
+          <button onClick={() => toggleFilter('heartHealthy')} aria-pressed={activeFilters.heartHealthy} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase border-2 transition flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-1 ${activeFilters.heartHealthy ? 'bg-rose-50 border-rose-500 text-rose-900' : 'bg-white border-gray-100 text-gray-400'}`}><Heart className="w-4 h-4" /> Heart Healthy</button>
           {Object.values(activeFilters).some(Boolean) && <button onClick={clearFilters} aria-label="Clear all filters" className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition focus-visible:ring-2 focus-visible:ring-red-400"><XCircle className="w-5 h-5" aria-hidden="true" /></button>}
         </div>
       </div>
@@ -1470,7 +1472,7 @@ export default function Home() {
   const [userQuery, setUserQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', day: 'Monday', station: "Chef's Table", ingredients: '', calories: '', protein: '', carbs: '', fat: '', isVeg: false, isVegan: false });
-  const [activeFilters, setActiveFilters] = useState({ vegetarian: false, vegan: false, fit: false });
+  const [activeFilters, setActiveFilters] = useState({ vegetarian: false, vegan: false, fit: false, lowCarb: false, heartHealthy: false });
   const dayScrollRef = useRef(null);
 
   const changeView = (v) => {
@@ -1552,7 +1554,7 @@ export default function Home() {
   };
 
   const toggleFilter = (filter) => setActiveFilters(prev => ({ ...prev, [filter]: !prev[filter] }));
-  const clearFilters = () => setActiveFilters({ vegetarian: false, vegan: false, fit: false });
+  const clearFilters = () => setActiveFilters({ vegetarian: false, vegan: false, fit: false, lowCarb: false, heartHealthy: false });
 
   const checkItemSuitability = (item) => {
     if (!effectiveUser) return { suitable: true, reasons: [] };
@@ -1582,6 +1584,8 @@ export default function Home() {
     if (activeFilters.vegetarian && !item.tags?.includes('Vegetarian') && !item.tags?.includes('Vegan')) return false;
     if (activeFilters.vegan && !item.tags?.includes('Vegan')) return false;
     if (activeFilters.fit) { const isFit = (item.calories||0) <= 250 && (item.saturated_fat||0) <= 3 && (item.sugar||0) <= 20 && (item.sodium||0) <= 230; if (!isFit) return false; }
+    if (activeFilters.lowCarb) { const isLowCarb = (item.carbs||0) >= 10 && (item.carbs||0) <= 40; if (!isLowCarb) return false; }
+    if (activeFilters.heartHealthy) { const isHeartHealthy = (item.saturated_fat||0) <= 5 && (item.sodium||0) <= 600 && (item.sugar||0) <= 10; if (!isHeartHealthy) return false; }
     const { suitable } = checkItemSuitability(item);
     if (!suitable) return false;
     return true;
@@ -1592,6 +1596,10 @@ export default function Home() {
     if ((item.name?.toLowerCase().includes('spicy') || item.description?.toLowerCase().includes('spicy') || item.description?.toLowerCase().includes('cajun') || item.name?.toLowerCase().includes('cajun')) && !autoTags.includes('Spicy')) autoTags.push('Spicy');
     const isFit = (item.calories||0) <= 250 && (item.saturated_fat||0) <= 3 && (item.sugar||0) <= 20 && (item.sodium||0) <= 230;
     if (isFit && !autoTags.includes('Fit')) autoTags.push('Fit');
+    const carbs = item.carbs || 0;
+    if (carbs >= 10 && carbs <= 40 && !autoTags.includes('Low Carb')) autoTags.push('Low Carb');
+    const isHeartHealthy = (item.saturated_fat||0) <= 5 && (item.sodium||0) <= 600 && (item.sugar||0) <= 10;
+    if (isHeartHealthy && !autoTags.includes('Heart Healthy')) autoTags.push('Heart Healthy');
     const suitability = checkItemSuitability({ ...item, tags: autoTags });
     return { ...item, tags: autoTags, ...suitability };
   }).sort((a, b) => {

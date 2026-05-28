@@ -120,6 +120,9 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
                 <span className="text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider">Ingredients</span>
               </div>
               <p className="text-sm text-teal-900 dark:text-teal-200 leading-relaxed">{item.ingredients}</p>
+              {item.ingredients.includes('^') && (
+                <p className="text-[10px] text-teal-700 dark:text-teal-400 mt-2 italic">^ These items contain additional ingredients. If you have questions, please ask a manager.</p>
+              )}
             </div>
           )}
           <NutritionDetailView item={item} />

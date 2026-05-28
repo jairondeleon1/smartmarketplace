@@ -7,7 +7,7 @@ const SUGGESTIONS = [
   { text: "What is for lunch on Thursday?", icon: Calendar, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/30" },
   { text: "Which items are low in sodium?", icon: Heart, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-900/30" },
   { text: "Show me high protein options", icon: Zap, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-900/30" },
-  { text: "Any shellfish allergens?", icon: AlertTriangle, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-900/30" }
+  { text: "What are today's menu options?", icon: AlertTriangle, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-900/30" }
 ];
 
 function FormattedText({ text }) {
@@ -99,7 +99,18 @@ export default function ChatPage() {
     setIsTyping(true);
     try {
       const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a helpful nutrition assistant for a corporate cafeteria. Context Menu: ${JSON.stringify(menuItems)}. User question: ${textToSend}. Provide helpful, concise answers about the menu items, nutrition, allergens, etc.`
+        prompt: `You are a Marketplace Assistant for a corporate cafeteria. Your role is STRICTLY limited to helping guests with menu information such as what items are available, meal periods, stations, calories, macronutrients (protein, carbs, fat, sodium, fiber, sugar), and general nutrition facts that are explicitly listed in the menu data below.
+
+STRICT GUARDRAILS — you MUST follow these rules without exception:
+1. ALLERGEN QUESTIONS: If the guest asks about allergens, allergy safety, cross-contamination, or whether a food is safe for their allergy — do NOT attempt to answer. Instead respond: "For allergen questions and ingredient details, please speak directly with an Ingredient Ambassador in the Marketplace. They are trained to help ensure your safety."
+2. OFF-MENU QUESTIONS: If the question is not about the current menu items (e.g. general nutrition advice, health conditions, dietary medical guidance, food preparation methods, or anything not in the menu data) — do NOT attempt to answer. Instead respond: "I can only help with questions about today's menu. For other questions, please ask an Ingredient Ambassador in the Marketplace."
+3. NEVER guess, assume, or provide information about ingredients or allergens beyond what is explicitly in the menu data.
+4. NEVER give medical or dietary health advice.
+5. If you are unsure whether something is safe for a guest, always redirect to an Ingredient Ambassador.
+
+Current menu data: ${JSON.stringify(menuItems)}
+
+Guest question: ${textToSend}`
       });
       if (response) setChatHistory(prev => [...prev, { role: 'ai', content: response }]);
     } catch (e) {

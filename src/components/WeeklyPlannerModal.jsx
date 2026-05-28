@@ -19,7 +19,12 @@ export default function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPl
       if (user.health_goals?.length > 0) userContext += `User goals: ${user.health_goals.join(', ')}. `;
     }
 
-    const prompt = `Plan 5-day meal menu for goal: "${goal}". ${userContext}For each weekday (Monday-Friday), select BOTH a breakfast item AND a lunch item from the menu. Menu Data: ${JSON.stringify(menuItems.map(i => ({id: i.id, name: i.name, day: i.day, meal_period: i.meal_period, tags: i.tags, allergens: i.allergens})))}. Return ONLY JSON with structure: {"Monday": {"breakfast": ID, "lunch": ID}, "Tuesday": {"breakfast": ID, "lunch": ID}, ...}`;
+    const goalCriteria = {
+      'Low Carb Plan': 'Low Carb Plan: select items with 10–40g of carbohydrates per serving.',
+      'Heart Healthy': 'Heart Healthy: select items that are low in saturated fat (≤5g), sodium (≤600mg), and added sugar (≤10g). Prioritize lean proteins, vegetables, and whole foods. Avoid items high in saturated fat or heavy sodium.',
+    };
+    const criteriaNote = goalCriteria[goal] ? `IMPORTANT criteria for this goal — ${goalCriteria[goal]} ` : '';
+    const prompt = `Plan 5-day meal menu for goal: "${goal}". ${criteriaNote}${userContext}For each weekday (Monday-Friday), select BOTH a breakfast item AND a lunch item from the menu. Menu Data: ${JSON.stringify(menuItems.map(i => ({id: i.id, name: i.name, day: i.day, meal_period: i.meal_period, calories: i.calories, protein: i.protein, carbs: i.carbs, fat: i.fat, saturated_fat: i.saturated_fat, sodium: i.sodium, sugar: i.sugar, tags: i.tags, allergens: i.allergens})))}. Return ONLY JSON with structure: {"Monday": {"breakfast": ID, "lunch": ID}, "Tuesday": {"breakfast": ID, "lunch": ID}, ...}`;
 
     try {
       const response = await base44.integrations.Core.InvokeLLM({

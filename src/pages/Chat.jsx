@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, ArrowRight, Calendar, Heart, Zap, AlertTriangle, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import { useAppSettings } from '@/hooks/useAppSettings';
 
 const SUGGESTIONS = [
   { text: "What is for lunch on Thursday?", icon: Calendar, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/30" },
@@ -83,10 +84,19 @@ export default function ChatPage() {
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef(null);
 
+  const { settings } = useAppSettings();
+  const allergenEnabled = settings?.allergen_display_enabled === true;
+
   const { data: menuItems = [] } = useQuery({
     queryKey: ['menuItems'],
     queryFn: () => base44.entities.MenuItem.list(),
     initialData: [],
+  });
+
+  // Strip allergen data from menu context if allergen display is disabled
+  const menuContext = menuItems.map(item => {
+    const { allergens, ...rest } = item;
+    return allergenEnabled ? item : rest;
   });
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatHistory, isTyping]);
@@ -108,7 +118,8 @@ STRICT GUARDRAILS — you MUST follow these rules without exception:
 4. NEVER give medical or dietary health advice.
 5. If you are unsure whether something is safe for a guest, always redirect to an Ingredient Ambassador.
 
-Current menu data: ${JSON.stringify(menuItems)}
+Current menu data: ${JSON.stringify(menuContext)}
+${!allergenEnabled ? '\n6. ALLERGEN DATA IS NOT AVAILABLE in this system. Do not reference, speculate about, or provide any allergen information under any circumstances. Always redirect allergen questions to an Ingredient Ambassador in the Marketplace.' : ''}
 
 Guest question: ${textToSend}`
       });

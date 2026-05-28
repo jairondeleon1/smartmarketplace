@@ -121,7 +121,7 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
               </div>
               <p className="text-sm text-teal-900 dark:text-teal-200 leading-relaxed">{item.ingredients}</p>
               {item.ingredients.includes('^') && (
-                <p className="text-[10px] text-teal-700 dark:text-teal-400 mt-2 italic">^ These items contain additional ingredients. If you have questions, please ask a manager.</p>
+                <p className="text-[10px] text-teal-700 dark:text-teal-400 mt-2 italic">^ These items contain additional ingredients. If you have questions, please ask an Ingredient Ambassador.</p>
               )}
             </div>
           )}

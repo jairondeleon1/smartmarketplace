@@ -154,7 +154,7 @@ function CoreMenuModal({ stationId, onClose, onAddToPlate }) {
                           <p className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-1">Contains</p>
                           <p className="text-sm text-gray-700 leading-relaxed">{item.ingredients}</p>
                           {item.ingredients.includes('^') && (
-                            <p className="text-[10px] text-gray-500 mt-1 italic">^ These items contain additional ingredients. If you have questions, please ask a manager.</p>
+                            <p className="text-[10px] text-gray-500 mt-1 italic">^ These items contain additional ingredients. If you have questions, please ask an Ingredient Ambassador.</p>
                           )}
                         </div>
                       </div>

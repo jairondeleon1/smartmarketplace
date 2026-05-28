@@ -430,7 +430,7 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl, allergen
               </div>
               <p className="text-sm text-teal-900 leading-relaxed">{item.ingredients}</p>
               {item.ingredients.includes('^') && (
-                <p className="text-[10px] text-teal-700 mt-2 italic">^ These items contain additional ingredients. If you have questions, please ask a manager.</p>
+                <p className="text-[10px] text-teal-700 mt-2 italic">^ These items contain additional ingredients. If you have questions, please ask an Ingredient Ambassador.</p>
               )}
             </div>
           )}

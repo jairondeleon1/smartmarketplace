@@ -241,8 +241,7 @@ Anonymization: We strip direct identifiers from your profile before a prompt is 
 
 No Training on Your Data: We contractually request (where possible) that our providers do not use SmartMenuIQ user prompts to train their future public models.
 
-**D. Session Persistence**
-To protect your privacy, SmartMenuIQ does not maintain a permanent, searchable database of your chat history on our cloud servers. Once you clear your cache or end your session, the conversational context is purged from our active memory.`
+`
   }
 };
 

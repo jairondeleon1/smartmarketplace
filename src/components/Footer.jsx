@@ -288,9 +288,52 @@ function OneTrustNotice({ onClose }) {
   );
 }
 
+function OneTrustPrivacy({ onClose }) {
+  useEffect(() => {
+    // Inject the OneTrust script dynamically
+    const script = document.createElement('script');
+    script.src = 'https://privacyportal-eu-cdn.onetrust.com/privacy-notice-scripts/otnotice-1.0.min.js';
+    script.type = 'text/javascript';
+    script.charset = 'UTF-8';
+    script.id = 'otprivacy-notice-script-privacy';
+    script.setAttribute('settings', 'eyJjYWxsYmFja1VybCI6Imh0dHBzOi8vcHJpdmFjeXBvcnRhbC1ldS5vbmV0cnVzdC5jb20vcmVxdWVzdC92MS9wcml2YWN5Tm90aWNlcy9zdGF0cy92aWV3cyJ9');
+    script.onload = () => {
+      if (window.OneTrust?.NoticeApi?.Initialized) {
+        window.OneTrust.NoticeApi.Initialized.then(() => {
+          window.OneTrust.NoticeApi.LoadNotices([
+            'https://privacyportal-eu-cdn.onetrust.com/8394ad8c-2b46-4837-8771-cbc69779a644/privacy-notices/f32e71bb-5951-4fb2-9d31-522d2260de35.json'
+          ]);
+        });
+      }
+    };
+    document.body.appendChild(script);
+    return () => {
+      const existing = document.getElementById('otprivacy-notice-script-privacy');
+      if (existing) existing.remove();
+    };
+  }, []);
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 shrink-0">
+          <h2 className="font-bold text-lg uppercase tracking-widest text-slate-800">Privacy Policy</h2>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition">
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+        <div className="overflow-y-auto p-6">
+          <div id="otnotice-f32e71bb-5951-4fb2-9d31-522d2260de35" className="otnotice" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function LegalModal({ doc, onClose }) {
   if (!doc) return null;
   if (doc === 'terms') return <OneTrustNotice onClose={onClose} />;
+  if (doc === 'privacy') return <OneTrustPrivacy onClose={onClose} />;
 
   const { title, content } = LEGAL_CONTENT[doc];
 

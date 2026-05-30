@@ -246,30 +246,39 @@ No Training on Your Data: We contractually request (where possible) that our pro
 };
 
 function OneTrustNotice({ onClose }) {
-  useEffect(() => {
-    const noticeUrl = 'https://privacyportal-eu-cdn.onetrust.com/8394ad8c-2b46-4837-8771-cbc69779a644/privacy-notices/460d4e4d-c60e-4740-bd94-30b6dde2e870.json';
+  const [loaded, setLoaded] = useState(false);
 
-    const loadNotice = () => {
-      window.OneTrust.NoticeApi.Initialized.then(() => {
-        window.OneTrust.NoticeApi.LoadNotices([noticeUrl]);
-      });
+  useEffect(() => {
+    const noticeId = '460d4e4d-c60e-4740-bd94-30b6dde2e870';
+    const noticeUrl = `https://privacyportal-eu-cdn.onetrust.com/8394ad8c-2b46-4837-8771-cbc69779a644/privacy-notices/${noticeId}.json`;
+    const scriptId = 'ot-terms-script';
+
+    const runLoad = () => {
+      if (window.OneTrust?.NoticeApi?.Initialized) {
+        window.OneTrust.NoticeApi.Initialized.then(() => {
+          window.OneTrust.NoticeApi.LoadNotices([noticeUrl]);
+          setLoaded(true);
+        });
+      }
     };
 
-    if (window.OneTrust?.NoticeApi) {
-      loadNotice();
-    } else {
-      const existing = document.getElementById('otprivacy-notice-script');
-      if (existing) existing.remove();
+    const existing = document.getElementById(scriptId);
+    if (existing) existing.remove();
+    delete window.OneTrust;
 
-      const script = document.createElement('script');
-      script.src = 'https://privacyportal-eu-cdn.onetrust.com/privacy-notice-scripts/otnotice-1.0.min.js';
-      script.type = 'text/javascript';
-      script.charset = 'UTF-8';
-      script.id = 'otprivacy-notice-script';
-      script.setAttribute('settings', 'eyJjYWxsYmFja1VybCI6Imh0dHBzOi8vcHJpdmFjeXBvcnRhbC1ldS5vbmV0cnVzdC5jb20vcmVxdWVzdC92MS9wcml2YWN5Tm90aWNlcy9zdGF0cy92aWV3cyJ9');
-      script.onload = loadNotice;
-      document.body.appendChild(script);
-    }
+    const script = document.createElement('script');
+    script.src = 'https://privacyportal-eu-cdn.onetrust.com/privacy-notice-scripts/otnotice-1.0.min.js';
+    script.type = 'text/javascript';
+    script.charset = 'UTF-8';
+    script.id = scriptId;
+    script.setAttribute('settings', 'eyJjYWxsYmFja1VybCI6Imh0dHBzOi8vcHJpdmFjeXBvcnRhbC1ldS5vbmV0cnVzdC5jb20vcmVxdWVzdC92MS9wcml2YWN5Tm90aWNlcy9zdGF0cy92aWV3cyJ9');
+    script.onload = () => setTimeout(runLoad, 300);
+    document.body.appendChild(script);
+
+    return () => {
+      const s = document.getElementById(scriptId);
+      if (s) s.remove();
+    };
   }, []);
 
   return (
@@ -281,7 +290,12 @@ function OneTrustNotice({ onClose }) {
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
-        <div className="overflow-y-auto p-6">
+        <div className="overflow-y-auto p-6 min-h-[200px]">
+          {!loaded && (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-6 h-6 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
           <div id="otnotice-460d4e4d-c60e-4740-bd94-30b6dde2e870" className="otnotice" />
         </div>
       </div>
@@ -290,30 +304,41 @@ function OneTrustNotice({ onClose }) {
 }
 
 function OneTrustPrivacy({ onClose }) {
-  useEffect(() => {
-    const noticeUrl = 'https://privacyportal-eu-cdn.onetrust.com/8394ad8c-2b46-4837-8771-cbc69779a644/privacy-notices/f32e71bb-5951-4fb2-9d31-522d2260de35.json';
+  const [loaded, setLoaded] = useState(false);
 
-    const loadNotice = () => {
-      window.OneTrust.NoticeApi.Initialized.then(() => {
-        window.OneTrust.NoticeApi.LoadNotices([noticeUrl]);
-      });
+  useEffect(() => {
+    const noticeId = 'f32e71bb-5951-4fb2-9d31-522d2260de35';
+    const noticeUrl = `https://privacyportal-eu-cdn.onetrust.com/8394ad8c-2b46-4837-8771-cbc69779a644/privacy-notices/${noticeId}.json`;
+    const scriptId = 'ot-privacy-script';
+
+    const runLoad = () => {
+      if (window.OneTrust?.NoticeApi?.Initialized) {
+        window.OneTrust.NoticeApi.Initialized.then(() => {
+          window.OneTrust.NoticeApi.LoadNotices([noticeUrl]);
+          setLoaded(true);
+        });
+      }
     };
 
-    if (window.OneTrust?.NoticeApi) {
-      loadNotice();
-    } else {
-      const existing = document.getElementById('otprivacy-notice-script-privacy');
-      if (existing) existing.remove();
+    // Remove any existing OT script to force fresh load
+    const existing = document.getElementById(scriptId);
+    if (existing) existing.remove();
+    // Also clear the OneTrust global so it reinitializes
+    delete window.OneTrust;
 
-      const script = document.createElement('script');
-      script.src = 'https://privacyportal-eu-cdn.onetrust.com/privacy-notice-scripts/otnotice-1.0.min.js';
-      script.type = 'text/javascript';
-      script.charset = 'UTF-8';
-      script.id = 'otprivacy-notice-script-privacy';
-      script.setAttribute('settings', 'eyJjYWxsYmFja1VybCI6Imh0dHBzOi8vcHJpdmFjeXBvcnRhbC1ldS5vbmV0cnVzdC5jb20vcmVxdWVzdC92MS9wcml2YWN5Tm90aWNlcy9zdGF0cy92aWV3cyJ9');
-      script.onload = loadNotice;
-      document.body.appendChild(script);
-    }
+    const script = document.createElement('script');
+    script.src = 'https://privacyportal-eu-cdn.onetrust.com/privacy-notice-scripts/otnotice-1.0.min.js';
+    script.type = 'text/javascript';
+    script.charset = 'UTF-8';
+    script.id = scriptId;
+    script.setAttribute('settings', 'eyJjYWxsYmFja1VybCI6Imh0dHBzOi8vcHJpdmFjeXBvcnRhbC1ldS5vbmV0cnVzdC5jb20vcmVxdWVzdC92MS9wcml2YWN5Tm90aWNlcy9zdGF0cy92aWV3cyJ9');
+    script.onload = () => setTimeout(runLoad, 300);
+    document.body.appendChild(script);
+
+    return () => {
+      const s = document.getElementById(scriptId);
+      if (s) s.remove();
+    };
   }, []);
 
   return (
@@ -325,7 +350,12 @@ function OneTrustPrivacy({ onClose }) {
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
-        <div className="overflow-y-auto p-6">
+        <div className="overflow-y-auto p-6 min-h-[200px]">
+          {!loaded && (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-6 h-6 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
           <div id="otnotice-f32e71bb-5951-4fb2-9d31-522d2260de35" className="otnotice" />
         </div>
       </div>

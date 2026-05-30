@@ -247,27 +247,29 @@ No Training on Your Data: We contractually request (where possible) that our pro
 
 function OneTrustNotice({ onClose }) {
   useEffect(() => {
-    // Inject the OneTrust script dynamically
-    const script = document.createElement('script');
-    script.src = 'https://privacyportal-eu-cdn.onetrust.com/privacy-notice-scripts/otnotice-1.0.min.js';
-    script.type = 'text/javascript';
-    script.charset = 'UTF-8';
-    script.id = 'otprivacy-notice-script';
-    script.setAttribute('settings', 'eyJjYWxsYmFja1VybCI6Imh0dHBzOi8vcHJpdmFjeXBvcnRhbC1ldS5vbmV0cnVzdC5jb20vcmVxdWVzdC92MS9wcml2YWN5Tm90aWNlcy9zdGF0cy92aWV3cyJ9');
-    script.onload = () => {
-      if (window.OneTrust?.NoticeApi?.Initialized) {
-        window.OneTrust.NoticeApi.Initialized.then(() => {
-          window.OneTrust.NoticeApi.LoadNotices([
-            'https://privacyportal-eu-cdn.onetrust.com/8394ad8c-2b46-4837-8771-cbc69779a644/privacy-notices/460d4e4d-c60e-4740-bd94-30b6dde2e870.json'
-          ]);
-        });
-      }
+    const noticeUrl = 'https://privacyportal-eu-cdn.onetrust.com/8394ad8c-2b46-4837-8771-cbc69779a644/privacy-notices/460d4e4d-c60e-4740-bd94-30b6dde2e870.json';
+
+    const loadNotice = () => {
+      window.OneTrust.NoticeApi.Initialized.then(() => {
+        window.OneTrust.NoticeApi.LoadNotices([noticeUrl]);
+      });
     };
-    document.body.appendChild(script);
-    return () => {
+
+    if (window.OneTrust?.NoticeApi) {
+      loadNotice();
+    } else {
       const existing = document.getElementById('otprivacy-notice-script');
       if (existing) existing.remove();
-    };
+
+      const script = document.createElement('script');
+      script.src = 'https://privacyportal-eu-cdn.onetrust.com/privacy-notice-scripts/otnotice-1.0.min.js';
+      script.type = 'text/javascript';
+      script.charset = 'UTF-8';
+      script.id = 'otprivacy-notice-script';
+      script.setAttribute('settings', 'eyJjYWxsYmFja1VybCI6Imh0dHBzOi8vcHJpdmFjeXBvcnRhbC1ldS5vbmV0cnVzdC5jb20vcmVxdWVzdC92MS9wcml2YWN5Tm90aWNlcy9zdGF0cy92aWV3cyJ9');
+      script.onload = loadNotice;
+      document.body.appendChild(script);
+    }
   }, []);
 
   return (
@@ -289,27 +291,29 @@ function OneTrustNotice({ onClose }) {
 
 function OneTrustPrivacy({ onClose }) {
   useEffect(() => {
-    // Inject the OneTrust script dynamically
-    const script = document.createElement('script');
-    script.src = 'https://privacyportal-eu-cdn.onetrust.com/privacy-notice-scripts/otnotice-1.0.min.js';
-    script.type = 'text/javascript';
-    script.charset = 'UTF-8';
-    script.id = 'otprivacy-notice-script-privacy';
-    script.setAttribute('settings', 'eyJjYWxsYmFja1VybCI6Imh0dHBzOi8vcHJpdmFjeXBvcnRhbC1ldS5vbmV0cnVzdC5jb20vcmVxdWVzdC92MS9wcml2YWN5Tm90aWNlcy9zdGF0cy92aWV3cyJ9');
-    script.onload = () => {
-      if (window.OneTrust?.NoticeApi?.Initialized) {
-        window.OneTrust.NoticeApi.Initialized.then(() => {
-          window.OneTrust.NoticeApi.LoadNotices([
-            'https://privacyportal-eu-cdn.onetrust.com/8394ad8c-2b46-4837-8771-cbc69779a644/privacy-notices/f32e71bb-5951-4fb2-9d31-522d2260de35.json'
-          ]);
-        });
-      }
+    const noticeUrl = 'https://privacyportal-eu-cdn.onetrust.com/8394ad8c-2b46-4837-8771-cbc69779a644/privacy-notices/f32e71bb-5951-4fb2-9d31-522d2260de35.json';
+
+    const loadNotice = () => {
+      window.OneTrust.NoticeApi.Initialized.then(() => {
+        window.OneTrust.NoticeApi.LoadNotices([noticeUrl]);
+      });
     };
-    document.body.appendChild(script);
-    return () => {
+
+    if (window.OneTrust?.NoticeApi) {
+      loadNotice();
+    } else {
       const existing = document.getElementById('otprivacy-notice-script-privacy');
       if (existing) existing.remove();
-    };
+
+      const script = document.createElement('script');
+      script.src = 'https://privacyportal-eu-cdn.onetrust.com/privacy-notice-scripts/otnotice-1.0.min.js';
+      script.type = 'text/javascript';
+      script.charset = 'UTF-8';
+      script.id = 'otprivacy-notice-script-privacy';
+      script.setAttribute('settings', 'eyJjYWxsYmFja1VybCI6Imh0dHBzOi8vcHJpdmFjeXBvcnRhbC1ldS5vbmV0cnVzdC5jb20vcmVxdWVzdC92MS9wcml2YWN5Tm90aWNlcy9zdGF0cy92aWV3cyJ9');
+      script.onload = loadNotice;
+      document.body.appendChild(script);
+    }
   }, []);
 
   return (

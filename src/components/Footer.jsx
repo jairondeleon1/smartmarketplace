@@ -245,117 +245,55 @@ No Training on Your Data: We contractually request (where possible) that our pro
   }
 };
 
-function OneTrustNotice({ onClose }) {
-  const [loaded, setLoaded] = useState(false);
+function OneTrustModal({ onClose, noticeId, title }) {
+  const [html, setHtml] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    const noticeId = '460d4e4d-c60e-4740-bd94-30b6dde2e870';
-    const noticeUrl = `https://privacyportal-eu-cdn.onetrust.com/8394ad8c-2b46-4837-8771-cbc69779a644/privacy-notices/${noticeId}.json`;
-    const scriptId = 'ot-terms-script';
-
-    const runLoad = () => {
-      if (window.OneTrust?.NoticeApi?.Initialized) {
-        window.OneTrust.NoticeApi.Initialized.then(() => {
-          window.OneTrust.NoticeApi.LoadNotices([noticeUrl]);
-          setLoaded(true);
-        });
-      }
-    };
-
-    const existing = document.getElementById(scriptId);
-    if (existing) existing.remove();
-    try { window.OneTrust = null; } catch(e) {}
-
-    const script = document.createElement('script');
-    script.src = 'https://privacyportal-eu-cdn.onetrust.com/privacy-notice-scripts/otnotice-1.0.min.js';
-    script.type = 'text/javascript';
-    script.charset = 'UTF-8';
-    script.id = scriptId;
-    script.setAttribute('settings', 'eyJjYWxsYmFja1VybCI6Imh0dHBzOi8vcHJpdmFjeXBvcnRhbC1ldS5vbmV0cnVzdC5jb20vcmVxdWVzdC92MS9wcml2YWN5Tm90aWNlcy9zdGF0cy92aWV3cyJ9');
-    script.onload = () => setTimeout(runLoad, 500);
-    document.body.appendChild(script);
-
-    return () => {
-      const s = document.getElementById(scriptId);
-      if (s) s.remove();
-    };
-  }, []);
+    const url = `https://privacyportal-eu-cdn.onetrust.com/8394ad8c-2b46-4837-8771-cbc69779a644/privacy-notices/${noticeId}.json`;
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        // The notice HTML is nested inside the JSON
+        const body = data?.notice?.body || data?.body || '';
+        if (body) {
+          setHtml(body);
+        } else {
+          setError(true);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setError(true);
+        setLoading(false);
+      });
+  }, [noticeId]);
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-gray-100 shrink-0">
-          <h2 className="font-bold text-lg uppercase tracking-widest text-slate-800">Terms of Use</h2>
+          <h2 className="font-bold text-lg uppercase tracking-widest text-slate-800">{title}</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition">
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
         <div className="overflow-y-auto p-6 min-h-[200px]">
-          {!loaded && (
+          {loading && (
             <div className="flex items-center justify-center py-12">
               <div className="w-6 h-6 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
             </div>
           )}
-          <div id="otnotice-460d4e4d-c60e-4740-bd94-30b6dde2e870" className="otnotice" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function OneTrustPrivacy({ onClose }) {
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    const noticeId = 'f32e71bb-5951-4fb2-9d31-522d2260de35';
-    const noticeUrl = `https://privacyportal-eu-cdn.onetrust.com/8394ad8c-2b46-4837-8771-cbc69779a644/privacy-notices/${noticeId}.json`;
-    const scriptId = 'ot-privacy-script';
-
-    const runLoad = () => {
-      if (window.OneTrust?.NoticeApi?.Initialized) {
-        window.OneTrust.NoticeApi.Initialized.then(() => {
-          window.OneTrust.NoticeApi.LoadNotices([noticeUrl]);
-          setLoaded(true);
-        });
-      }
-    };
-
-    // Remove any existing OT script to force fresh load
-    const existing = document.getElementById(scriptId);
-    if (existing) existing.remove();
-    try { window.OneTrust = null; } catch(e) {}
-
-    const script = document.createElement('script');
-    script.src = 'https://privacyportal-eu-cdn.onetrust.com/privacy-notice-scripts/otnotice-1.0.min.js';
-    script.type = 'text/javascript';
-    script.charset = 'UTF-8';
-    script.id = scriptId;
-    script.setAttribute('settings', 'eyJjYWxsYmFja1VybCI6Imh0dHBzOi8vcHJpdmFjeXBvcnRhbC1ldS5vbmV0cnVzdC5jb20vcmVxdWVzdC92MS9wcml2YWN5Tm90aWNlcy9zdGF0cy92aWV3cyJ9');
-    script.onload = () => setTimeout(runLoad, 500);
-    document.body.appendChild(script);
-
-    return () => {
-      const s = document.getElementById(scriptId);
-      if (s) s.remove();
-    };
-  }, []);
-
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 shrink-0">
-          <h2 className="font-bold text-lg uppercase tracking-widest text-slate-800">Privacy Policy</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition">
-            <X className="w-5 h-5 text-gray-500" />
-          </button>
-        </div>
-        <div className="overflow-y-auto p-6 min-h-[200px]">
-          {!loaded && (
-            <div className="flex items-center justify-center py-12">
-              <div className="w-6 h-6 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
-            </div>
+          {error && (
+            <p className="text-gray-500 text-sm text-center py-8">Unable to load content. Please try again later.</p>
           )}
-          <div id="otnotice-f32e71bb-5951-4fb2-9d31-522d2260de35" className="otnotice" />
+          {html && (
+            <div
+              className="prose prose-sm max-w-none text-gray-700"
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -364,8 +302,8 @@ function OneTrustPrivacy({ onClose }) {
 
 function LegalModal({ doc, onClose }) {
   if (!doc) return null;
-  if (doc === 'terms') return <OneTrustNotice onClose={onClose} />;
-  if (doc === 'privacy') return <OneTrustPrivacy onClose={onClose} />;
+  if (doc === 'terms') return <OneTrustModal onClose={onClose} noticeId="460d4e4d-c60e-4740-bd94-30b6dde2e870" title="Terms of Use" />;
+  if (doc === 'privacy') return <OneTrustModal onClose={onClose} noticeId="f32e71bb-5951-4fb2-9d31-522d2260de35" title="Privacy Policy" />;
 
   const { title, content } = LEGAL_CONTENT[doc];
 

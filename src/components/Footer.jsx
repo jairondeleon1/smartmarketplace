@@ -251,14 +251,24 @@ function OneTrustModal({ onClose, noticeId, title }) {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    const url = `https://privacyportal-eu-cdn.onetrust.com/8394ad8c-2b46-4837-8771-cbc69779a644/privacy-notices/${noticeId}.json`;
-    fetch(url)
+    const baseUrl = 'https://privacyportal-eu-cdn.onetrust.com/8394ad8c-2b46-4837-8771-cbc69779a644/privacy-notices';
+    // Step 1: fetch index to get policyUrl
+    fetch(`${baseUrl}/${noticeId}.json`)
+      .then(r => r.json())
+      .then(index => {
+        // Get the default language's policyUrl
+        const langEntry = Object.values(index.languages || {})[0];
+        if (!langEntry?.policyUrl) throw new Error('no policyUrl');
+        return fetch(langEntry.policyUrl);
+      })
       .then(r => r.json())
       .then(data => {
-        // The notice HTML is nested inside the JSON
-        const body = data?.notice?.body || data?.body || '';
-        if (body) {
-          setHtml(body);
+        // Content is inside notices[languageId].content as plain text
+        const noticesObj = data?.notices || {};
+        const firstNotice = Object.values(noticesObj)[0];
+        const text = firstNotice?.content || '';
+        if (text) {
+          setHtml(text);
         } else {
           setError(true);
         }
@@ -289,10 +299,9 @@ function OneTrustModal({ onClose, noticeId, title }) {
             <p className="text-gray-500 text-sm text-center py-8">Unable to load content. Please try again later.</p>
           )}
           {html && (
-            <div
-              className="prose prose-sm max-w-none text-gray-700"
-              dangerouslySetInnerHTML={{ __html: html }}
-            />
+            <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+              {html}
+            </div>
           )}
         </div>
       </div>

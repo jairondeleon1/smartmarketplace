@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Download } from 'lucide-react';
+import { X, Download, Apple } from 'lucide-react';
 
 export default function AppInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -43,6 +43,14 @@ export default function AppInstallBanner() {
     }
   };
 
+  const handleAppStore = () => {
+    window.location.href = 'https://apps.apple.com/us/app/smartmenuiq/id6759359011';
+  };
+
+  const handlePlayStore = () => {
+    window.location.href = 'https://play.google.com/store/apps/details?id=com.smartmenuiq';
+  };
+
   const dismiss = () => {
     localStorage.setItem('appInstallBannerDismissed', 'true');
     setShow(false);
@@ -57,23 +65,30 @@ export default function AppInstallBanner() {
           <Download className="w-5 h-5 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-sm uppercase tracking-widest text-white leading-tight">Add to Home Screen</p>
+          <p className="font-bold text-sm uppercase tracking-widest text-white leading-tight">Get the App</p>
           {isIOS ? (
-            <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">
-              Tap <span className="font-bold text-teal-400">Share</span> then <span className="font-bold text-teal-400">Add to Home Screen</span>
-            </p>
+            <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">Download from App Store</p>
           ) : (
-            <p className="text-[10px] text-slate-400 mt-0.5">Get the full app experience</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">Download from Play Store</p>
           )}
         </div>
-        {!isIOS && (
-          <button
-            onClick={handleInstall}
-            className="bg-teal-600 hover:bg-teal-500 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-2 rounded-xl transition shrink-0"
-          >
-            Install
-          </button>
-        )}
+        <div className="flex gap-2 shrink-0">
+          {isIOS ? (
+            <button
+              onClick={handleAppStore}
+              className="bg-teal-600 hover:bg-teal-500 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-2 rounded-xl transition flex items-center gap-1"
+            >
+              <Apple className="w-3.5 h-3.5" /> App Store
+            </button>
+          ) : (
+            <button
+              onClick={handlePlayStore}
+              className="bg-teal-600 hover:bg-teal-500 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-2 rounded-xl transition"
+            >
+              Play Store
+            </button>
+          )}
+        </div>
         <button onClick={dismiss} className="p-1.5 hover:bg-white/10 rounded-lg transition shrink-0">
           <X className="w-4 h-4 text-slate-400" />
         </button>

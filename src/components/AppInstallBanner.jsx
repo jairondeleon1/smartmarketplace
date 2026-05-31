@@ -14,8 +14,14 @@ export default function AppInstallBanner() {
     const isMobile = /Mobi|Android|iPhone|iPad/i.test(ua);
     if (!isMobile) return;
 
-    // Check if already installed (standalone mode)
-    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) return;
+    // Check if already installed (standalone mode) — covers iOS, Android PWA, and TWA
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      window.matchMedia('(display-mode: minimal-ui)').matches ||
+      window.navigator.standalone === true ||
+      document.referrer.includes('android-app://');
+    if (isStandalone) return;
 
     // iOS detection (Safari)
     const ios = /iPhone|iPad|iPod/i.test(ua) && !window.MSStream;

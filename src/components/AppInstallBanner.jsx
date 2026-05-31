@@ -59,31 +59,34 @@ export default function AppInstallBanner() {
   if (!show) return null;
 
   return (
-    <div className="fixed bottom-20 left-3 z-[60]" style={{ maxWidth: '200px' }}>
-      <div className="bg-slate-900 text-white rounded-2xl shadow-2xl p-3 flex flex-col gap-2 border border-teal-500/30">
-        <div className="flex items-center justify-between">
-          <p className="font-bold text-xs uppercase tracking-widest text-white leading-tight">Get the App</p>
-          <button onClick={dismiss} className="p-0.5 hover:bg-white/10 rounded-lg transition">
-            <X className="w-3.5 h-3.5 text-slate-400" />
-          </button>
+    <div className="fixed top-0 left-0 right-0 z-[60]" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="bg-slate-900 text-white px-4 py-2.5 flex items-center gap-3 border-b border-teal-500/30">
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-sm uppercase tracking-widest text-white leading-tight">Get the App</p>
+          <p className="text-[10px] text-slate-400 leading-tight">Download SmartMenu IQ on your device</p>
         </div>
-        {isIOS ? (
-          <button onClick={handleAppStore} className="transition hover:opacity-80 active:scale-95">
-            <img 
-              src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" 
-              alt="Download on the App Store"
-              className="h-9 w-full object-contain"
-            />
-          </button>
-        ) : (
-          <button onClick={handlePlayStore} className="transition hover:opacity-80 active:scale-95">
-            <img 
-              src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" 
-              alt="Get it on Google Play"
-              className="h-9 w-full object-contain"
-            />
-          </button>
-        )}
+        <div className="shrink-0">
+          {isIOS ? (
+            <button onClick={handleAppStore} className="transition hover:opacity-80 active:scale-95">
+              <img 
+                src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" 
+                alt="Download on the App Store"
+                className="h-9"
+              />
+            </button>
+          ) : (
+            <button onClick={handlePlayStore} className="transition hover:opacity-80 active:scale-95">
+              <img 
+                src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" 
+                alt="Get it on Google Play"
+                className="h-9"
+              />
+            </button>
+          )}
+        </div>
+        <button onClick={dismiss} className="p-1.5 hover:bg-white/10 rounded-lg transition shrink-0">
+          <X className="w-4 h-4 text-slate-400" />
+        </button>
       </div>
     </div>
   );

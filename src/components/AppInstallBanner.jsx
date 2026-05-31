@@ -59,7 +59,7 @@ export default function AppInstallBanner() {
   if (!show) return null;
 
   return (
-    <div className="fixed bottom-16 left-0 right-0 z-[60] px-3 pb-2" style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}>
+    <div className="fixed bottom-16 left-0 z-[60] px-3 pb-2 max-w-xs" style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}>
       <div className="bg-slate-900 text-white rounded-2xl shadow-2xl p-4 flex items-center gap-4 border border-teal-500/30">
         <div className="flex-1 min-w-0">
           <p className="font-bold text-sm uppercase tracking-widest text-white leading-tight">Get the App</p>

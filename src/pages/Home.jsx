@@ -64,6 +64,7 @@ import { AccessibilityProvider } from "@/lib/AccessibilityContext";
 import useOnlineStatus, { saveMenuToCache, loadMenuFromCache, getCacheAge } from "@/hooks/useOfflineMenu";
 import OfflineBanner from "@/components/OfflineBanner";
 import VoiceAssistant from "@/components/VoiceAssistant";
+import AppInstallBanner from "@/components/AppInstallBanner";
 import jsPDF from 'jspdf';
 
 
@@ -1646,6 +1647,7 @@ export default function Home() {
         <NutritionCharts isOpen={isChartsOpen} onClose={() => setIsChartsOpen(false)} menuItems={menuItems} />
         <ProfileSettingsModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} user={effectiveUser} allergenEnabled={allergenEnabled} onProfileUpdate={(profile) => { setLocalProfile(profile); localStorage.setItem('userProfile', JSON.stringify(profile)); }} />
         <AITransparencyModal isOpen={showAINotice} onAccept={handleAINoticeAccept} />
+        <AppInstallBanner />
         <VoiceAssistant menuItems={menuItems} />
         <Footer onAdminClick={() => changeView('admin')} />
       </div>

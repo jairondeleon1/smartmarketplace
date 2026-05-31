@@ -14,13 +14,18 @@ export default function AppInstallBanner() {
     const isMobile = /Mobi|Android|iPhone|iPad/i.test(ua);
     if (!isMobile) return;
 
-    // Check if already installed (standalone mode) — covers iOS, Android PWA, and TWA
+    // Check if already installed or running inside a native app wrapper
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
       window.matchMedia('(display-mode: fullscreen)').matches ||
       window.matchMedia('(display-mode: minimal-ui)').matches ||
       window.navigator.standalone === true ||
-      document.referrer.includes('android-app://');
+      document.referrer.includes('android-app://') ||
+      // Android WebView (TWA / native app wrapper)
+      /wv|WebView/.test(ua) ||
+      // iOS WKWebView inside native app
+      (ua.includes('iPhone') && !ua.includes('Safari')) ||
+      (ua.includes('iPad') && !ua.includes('Safari'));
     if (isStandalone) return;
 
     // iOS detection (Safari)

@@ -72,7 +72,7 @@ export default function AppInstallBanner() {
               className="transition hover:opacity-80 active:scale-95"
             >
               <img 
-                src="https://tools.applepple.com/app-store/badges/download-on-the-app-store-badge-en-us.svg" 
+                src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" 
                 alt="Download on the App Store"
                 className="h-10"
               />

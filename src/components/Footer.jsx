@@ -299,9 +299,10 @@ function OneTrustModal({ onClose, noticeId, title }) {
             <p className="text-gray-500 text-sm text-center py-8">Unable to load content. Please try again later.</p>
           )}
           {html && (
-            <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-              {html}
-            </div>
+            <div
+              className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
           )}
         </div>
       </div>

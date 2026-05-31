@@ -60,31 +60,32 @@ export default function AppInstallBanner() {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-[60]" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-      <div className="bg-slate-900 text-white px-4 py-2.5 flex items-center gap-3 border-b border-teal-500/30">
-        <div className="flex-1 min-w-0">
-          <p className="font-bold text-sm uppercase tracking-widest text-white leading-tight">Get the App</p>
-          <p className="text-[10px] text-slate-400 leading-tight">Download SmartMenu IQ on your device</p>
-        </div>
-        <div className="shrink-0">
-          {isIOS ? (
-            <button onClick={handleAppStore} className="transition hover:opacity-80 active:scale-95">
+      <div className="bg-slate-900 text-white border-b border-teal-500/30 flex items-center">
+        <button
+          onClick={isIOS ? handleAppStore : handlePlayStore}
+          className="flex-1 flex items-center gap-3 px-4 py-3 active:bg-white/5 transition text-left"
+        >
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-sm uppercase tracking-widest text-white leading-tight">Get the App</p>
+            <p className="text-[10px] text-slate-400 leading-tight">Tap to download SmartMenu IQ</p>
+          </div>
+          <div className="shrink-0">
+            {isIOS ? (
               <img 
                 src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" 
                 alt="Download on the App Store"
                 className="h-9"
               />
-            </button>
-          ) : (
-            <button onClick={handlePlayStore} className="transition hover:opacity-80 active:scale-95">
+            ) : (
               <img 
                 src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" 
                 alt="Get it on Google Play"
                 className="h-9"
               />
-            </button>
-          )}
-        </div>
-        <button onClick={dismiss} className="p-1.5 hover:bg-white/10 rounded-lg transition shrink-0">
+            )}
+          </div>
+        </button>
+        <button onClick={dismiss} className="p-3 hover:bg-white/10 transition shrink-0">
           <X className="w-4 h-4 text-slate-400" />
         </button>
       </div>

@@ -60,32 +60,33 @@ export default function AppInstallBanner() {
 
   return (
     <div className="fixed bottom-16 left-0 right-0 z-[60] px-3 pb-2" style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}>
-      <div className="bg-slate-900 text-white rounded-2xl shadow-2xl p-4 flex items-center gap-3 border border-teal-500/30">
-        <div className="bg-teal-600 p-2.5 rounded-xl shrink-0">
-          <Download className="w-5 h-5 text-white" />
-        </div>
+      <div className="bg-slate-900 text-white rounded-2xl shadow-2xl p-4 flex items-center gap-4 border border-teal-500/30">
         <div className="flex-1 min-w-0">
           <p className="font-bold text-sm uppercase tracking-widest text-white leading-tight">Get the App</p>
-          {isIOS ? (
-            <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">Download from App Store</p>
-          ) : (
-            <p className="text-[10px] text-slate-400 mt-0.5">Download from Play Store</p>
-          )}
+          <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">Download on your mobile device</p>
         </div>
         <div className="flex gap-2 shrink-0">
           {isIOS ? (
             <button
               onClick={handleAppStore}
-              className="bg-teal-600 hover:bg-teal-500 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-2 rounded-xl transition flex items-center gap-1"
+              className="transition hover:opacity-80 active:scale-95"
             >
-              <Apple className="w-3.5 h-3.5" /> App Store
+              <img 
+                src="https://tools.applepple.com/app-store/badges/download-on-the-app-store-badge-en-us.svg" 
+                alt="Download on the App Store"
+                className="h-10"
+              />
             </button>
           ) : (
             <button
               onClick={handlePlayStore}
-              className="bg-teal-600 hover:bg-teal-500 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-2 rounded-xl transition"
+              className="transition hover:opacity-80 active:scale-95"
             >
-              Play Store
+              <img 
+                src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" 
+                alt="Get it on Google Play"
+                className="h-10"
+              />
             </button>
           )}
         </div>

@@ -264,7 +264,7 @@ function OneTrustNotice({ onClose }) {
 
     const existing = document.getElementById(scriptId);
     if (existing) existing.remove();
-    delete window.OneTrust;
+    try { window.OneTrust = null; } catch(e) {}
 
     const script = document.createElement('script');
     script.src = 'https://privacyportal-eu-cdn.onetrust.com/privacy-notice-scripts/otnotice-1.0.min.js';
@@ -272,7 +272,7 @@ function OneTrustNotice({ onClose }) {
     script.charset = 'UTF-8';
     script.id = scriptId;
     script.setAttribute('settings', 'eyJjYWxsYmFja1VybCI6Imh0dHBzOi8vcHJpdmFjeXBvcnRhbC1ldS5vbmV0cnVzdC5jb20vcmVxdWVzdC92MS9wcml2YWN5Tm90aWNlcy9zdGF0cy92aWV3cyJ9');
-    script.onload = () => setTimeout(runLoad, 300);
+    script.onload = () => setTimeout(runLoad, 500);
     document.body.appendChild(script);
 
     return () => {
@@ -323,8 +323,7 @@ function OneTrustPrivacy({ onClose }) {
     // Remove any existing OT script to force fresh load
     const existing = document.getElementById(scriptId);
     if (existing) existing.remove();
-    // Also clear the OneTrust global so it reinitializes
-    delete window.OneTrust;
+    try { window.OneTrust = null; } catch(e) {}
 
     const script = document.createElement('script');
     script.src = 'https://privacyportal-eu-cdn.onetrust.com/privacy-notice-scripts/otnotice-1.0.min.js';
@@ -332,7 +331,7 @@ function OneTrustPrivacy({ onClose }) {
     script.charset = 'UTF-8';
     script.id = scriptId;
     script.setAttribute('settings', 'eyJjYWxsYmFja1VybCI6Imh0dHBzOi8vcHJpdmFjeXBvcnRhbC1ldS5vbmV0cnVzdC5jb20vcmVxdWVzdC92MS9wcml2YWN5Tm90aWNlcy9zdGF0cy92aWV3cyJ9');
-    script.onload = () => setTimeout(runLoad, 300);
+    script.onload = () => setTimeout(runLoad, 500);
     document.body.appendChild(script);
 
     return () => {

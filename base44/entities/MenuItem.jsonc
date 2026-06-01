@@ -1,0 +1,150 @@
+{
+  "name": "MenuItem",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Menu item name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Item description"
+    },
+    "meal_period": {
+      "type": "string",
+      "enum": [
+        "Breakfast",
+        "Lunch",
+        "Dinner",
+        "All Day"
+      ],
+      "default": "Lunch",
+      "description": "Meal period"
+    },
+    "station": {
+      "type": "string",
+      "description": "Station name"
+    },
+    "day": {
+      "type": "string",
+      "description": "Day of the week"
+    },
+    "recipe_number": {
+      "type": "string",
+      "description": "Recipe number"
+    },
+    "ingredients": {
+      "type": "string",
+      "description": "Ingredients list"
+    },
+    "calories": {
+      "type": "number",
+      "default": 0
+    },
+    "protein": {
+      "type": "number",
+      "default": 0
+    },
+    "carbs": {
+      "type": "number",
+      "default": 0
+    },
+    "fat": {
+      "type": "number",
+      "default": 0
+    },
+    "saturated_fat": {
+      "type": "number",
+      "default": 0,
+      "description": "Saturated fat in grams"
+    },
+    "unsaturated_fat": {
+      "type": "number",
+      "default": 0,
+      "description": "Unsaturated fat in grams"
+    },
+    "sodium": {
+      "type": "number",
+      "default": 0
+    },
+    "fiber": {
+      "type": "number",
+      "default": 0
+    },
+    "sugar": {
+      "type": "number",
+      "default": 0
+    },
+    "cholesterol": {
+      "type": "number",
+      "default": 0,
+      "description": "Cholesterol in mg"
+    },
+    "vitamin_a": {
+      "type": "number",
+      "default": 0,
+      "description": "Vitamin A in mcg"
+    },
+    "vitamin_c": {
+      "type": "number",
+      "default": 0,
+      "description": "Vitamin C in mg"
+    },
+    "vitamin_d": {
+      "type": "number",
+      "default": 0,
+      "description": "Vitamin D in mcg"
+    },
+    "calcium": {
+      "type": "number",
+      "default": 0,
+      "description": "Calcium in mg"
+    },
+    "iron": {
+      "type": "number",
+      "default": 0,
+      "description": "Iron in mg"
+    },
+    "potassium": {
+      "type": "number",
+      "default": 0,
+      "description": "Potassium in mg"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "allergens": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  },
+  "required": [
+    "name",
+    "day"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {},
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

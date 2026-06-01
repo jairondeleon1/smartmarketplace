@@ -24,7 +24,7 @@ export default function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPl
       'Heart Healthy': 'Heart Healthy: select items that are low in saturated fat (≤5g), sodium (≤600mg), and added sugar (≤10g). Prioritize lean proteins, vegetables, and whole foods. Avoid items high in saturated fat or heavy sodium.',
     };
     const criteriaNote = goalCriteria[goal] ? `IMPORTANT criteria for this goal — ${goalCriteria[goal]} ` : '';
-    const prompt = `Plan 5-day meal menu for goal: "${goal}". ${criteriaNote}${userContext}For each weekday (Monday-Friday), select BOTH a breakfast item AND a lunch item from the menu. Menu Data: ${JSON.stringify(menuItems.map(i => ({id: i.id, name: i.name, day: i.day, meal_period: i.meal_period, calories: i.calories, protein: i.protein, carbs: i.carbs, fat: i.fat, saturated_fat: i.saturated_fat, sodium: i.sodium, sugar: i.sugar, tags: i.tags, allergens: i.allergens})))}. Return ONLY JSON with structure: {"Monday": {"breakfast": ID, "lunch": ID}, "Tuesday": {"breakfast": ID, "lunch": ID}, ...}`;
+    const prompt = `Plan 5-day meal menu for goal: "${goal}". ${criteriaNote}${userContext}For each weekday (Monday-Friday), select BOTH a breakfast item AND a lunch item from the menu. Use ONLY the exact string IDs provided. Menu Data: ${JSON.stringify(menuItems.map(i => ({id: i.id, name: i.name, day: i.day, meal_period: i.meal_period, calories: i.calories, protein: i.protein, carbs: i.carbs, fat: i.fat, saturated_fat: i.saturated_fat, sodium: i.sodium, sugar: i.sugar, tags: i.tags, allergens: i.allergens})))}. Return ONLY JSON with structure: {"Monday": {"breakfast": "ITEM_ID", "lunch": "ITEM_ID"}, "Tuesday": {"breakfast": "ITEM_ID", "lunch": "ITEM_ID"}, ...}`;
 
     try {
       const response = await base44.integrations.Core.InvokeLLM({
@@ -32,21 +32,21 @@ export default function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPl
         response_json_schema: {
           type: "object",
           properties: {
-            Monday: { type: "object", properties: { breakfast: { type: "number" }, lunch: { type: "number" } } },
-            Tuesday: { type: "object", properties: { breakfast: { type: "number" }, lunch: { type: "number" } } },
-            Wednesday: { type: "object", properties: { breakfast: { type: "number" }, lunch: { type: "number" } } },
-            Thursday: { type: "object", properties: { breakfast: { type: "number" }, lunch: { type: "number" } } },
-            Friday: { type: "object", properties: { breakfast: { type: "number" }, lunch: { type: "number" } } }
+            Monday: { type: "object", properties: { breakfast: { type: "string" }, lunch: { type: "string" } } },
+            Tuesday: { type: "object", properties: { breakfast: { type: "string" }, lunch: { type: "string" } } },
+            Wednesday: { type: "object", properties: { breakfast: { type: "string" }, lunch: { type: "string" } } },
+            Thursday: { type: "object", properties: { breakfast: { type: "string" }, lunch: { type: "string" } } },
+            Friday: { type: "object", properties: { breakfast: { type: "string" }, lunch: { type: "string" } } }
           }
         }
       });
       if (response) {
         const planData = [];
         Object.entries(response).forEach(([day, meals]) => {
-          if (meals.breakfast) { const item = menuItems.find(i => i.id === meals.breakfast); if (item) planData.push({ day, mealType: 'Breakfast', item }); }
-          if (meals.lunch) { const item = menuItems.find(i => i.id === meals.lunch); if (item) planData.push({ day, mealType: 'Lunch', item }); }
+          if (meals.breakfast) { const item = menuItems.find(i => i.id === meals.breakfast || i.id === String(meals.breakfast)); if (item) planData.push({ day, mealType: 'Breakfast', item }); }
+          if (meals.lunch) { const item = menuItems.find(i => i.id === meals.lunch || i.id === String(meals.lunch)); if (item) planData.push({ day, mealType: 'Lunch', item }); }
         });
-        setPlan(planData);
+        setPlan(planData.length > 0 ? planData : []);
       }
     } catch (e) { setPlan(null); } finally { setIsLoading(false); }
   };
@@ -61,9 +61,9 @@ export default function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPl
     }
     const prompt = `Select a different ${currentEntry.mealType} item for ${currentEntry.day} that matches goal "${goal}". ${userContext}Avoid ID ${currentEntry.item.id}. Menu Data: ${JSON.stringify(menuItems.filter(i => (i.day === currentEntry.day || i.day === 'Daily Special')).map(i => ({id: i.id, name: i.name, tags: i.tags, allergens: i.allergens})))}. Return ONLY JSON with {"item_id": NUMBER}`;
     try {
-      const response = await base44.integrations.Core.InvokeLLM({ prompt, response_json_schema: { type: "object", properties: { item_id: { type: "number" } } } });
+      const response = await base44.integrations.Core.InvokeLLM({ prompt, response_json_schema: { type: "object", properties: { item_id: { type: "string" } } } });
       if (response?.item_id) {
-        const newItem = menuItems.find(i => i.id === response.item_id);
+        const newItem = menuItems.find(i => i.id === response.item_id || i.id === String(response.item_id));
         if (newItem) { const updated = [...plan]; updated[dayIndex] = { ...currentEntry, item: newItem }; setPlan(updated); }
       }
     } catch (e) {} finally { setRegeneratingMeal(null); }

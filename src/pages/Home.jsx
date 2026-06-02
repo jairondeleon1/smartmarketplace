@@ -1077,8 +1077,20 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     const file = e.target.files[0]; if (!file) return;
     setIsSyncing("fda");
     try {
-      if (file.size > 10 * 1024 * 1024) throw new Error('File too large (max 10MB). Your file is ' + Math.round(file.size / 1024 / 1024) + 'MB');
-      const fileUrl = await uploadFile(file);
+      if (file.size > 20 * 1024 * 1024) throw new Error('File too large (max 20MB). Your file is ' + Math.round(file.size / 1024 / 1024) + 'MB');
+      // Retry with longer delays for large files
+      let fileUrl = null;
+      for (let attempt = 1; attempt <= 4; attempt++) {
+        try {
+          const result = await base44.integrations.Core.UploadFile({ file });
+          if (!result?.file_url) throw new Error('No URL returned');
+          fileUrl = result.file_url;
+          break;
+        } catch (err) {
+          if (attempt === 4) throw new Error('Upload failed after 4 attempts. Please try again in a moment.');
+          await new Promise(r => setTimeout(r, 2000 * attempt));
+        }
+      }
       setUploadedFiles(prev => ({ ...prev, fda: { url: fileUrl, type: file.name.match(/\.(xlsx?|pdf)$/i)?.[1] || 'pdf' } }));
     } catch (error) { alert('FDA upload failed: ' + (error?.message || error?.toString() || 'Network error')); }
     finally { setIsSyncing(null); e.target.value = ''; }

@@ -591,7 +591,7 @@ function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addTo
             <div className="flex items-center gap-3">
               <div className="h-px flex-1 bg-gray-100" />
               <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${labelColor}`}>
-                {effectiveTab} {station}
+                {station.toLowerCase().startsWith(effectiveTab.toLowerCase()) ? station : `${effectiveTab} ${station}`}
               </span>
               <div className="h-px flex-1 bg-gray-100" />
             </div>

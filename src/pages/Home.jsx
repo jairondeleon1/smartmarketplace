@@ -497,10 +497,36 @@ function getMealPeriodFromStation(item) {
 }
 
 // Side station keywords (these are sides/extras, not mains)
-const SIDE_STATION_KEYWORDS = ['soup', 'dessert', 'bakery', 'fruit', 'salad bar', 'beverage'];
-function isSideItem(item) {
-  const station = (item.station || '').toLowerCase();
-  return SIDE_STATION_KEYWORDS.some(k => station.includes(k));
+const SIDE_STATION_KEYWORDS = ['soup', 'dessert', 'bakery', 'fruit', 'salad bar', 'beverage', 'side'];
+
+// Station display config: order and labeling
+const STATION_ORDER = ['grill', 'deli', 'entree', 'main', 'comfort', 'pizza', 'soup', 'salad bar', 'dessert', 'bakery', 'beverage'];
+
+function getStationLabel(station) {
+  return (station || 'Other').trim();
+}
+
+function isStationSide(station) {
+  const s = (station || '').toLowerCase();
+  return SIDE_STATION_KEYWORDS.some(k => s.includes(k));
+}
+
+function stationSortKey(station) {
+  const s = (station || '').toLowerCase();
+  const idx = STATION_ORDER.findIndex(k => s.includes(k));
+  return idx === -1 ? 99 : idx;
+}
+
+// Group items by their station, then split each station into mains and sides
+function groupByStation(items) {
+  const map = {};
+  items.forEach(item => {
+    const label = getStationLabel(item.station);
+    if (!map[label]) map[label] = [];
+    map[label].push(item);
+  });
+  // Sort stations by STATION_ORDER
+  return Object.entries(map).sort((a, b) => stationSortKey(a[0]) - stationSortKey(b[0]));
 }
 
 function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addToPlate, customVegUrl, customVeganUrl, selectedDay, setSelectedDay, clearFilters, allergenEnabled, wellnessEnabled }) {
@@ -514,20 +540,19 @@ function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addTo
   const effectiveTab = tabsWithItems.includes(activeMealTab) ? activeMealTab : (tabsWithItems[0] || 'Lunch');
   const tabItems = effectiveTab === 'Breakfast' ? breakfastItems : lunchItems;
 
-  const mains = tabItems.filter(i => !isSideItem(i));
-  const sides = tabItems.filter(i => isSideItem(i));
-
   if (tabsWithItems.length === 0) {
     return (
       <div className="py-20 text-center space-y-3">
-      <div className="text-gray-400 font-bold uppercase tracking-widest text-sm">No menu items match your filters</div>
-      <button onClick={() => { setSelectedDay('All Days'); clearFilters(); }} className="px-4 py-2 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700">Show All Items</button>
+        <div className="text-gray-400 font-bold uppercase tracking-widest text-sm">No menu items match your filters</div>
+        <button onClick={() => { setSelectedDay('All Days'); clearFilters(); }} className="px-4 py-2 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700">Show All Items</button>
       </div>
     );
   }
 
+  const stationGroups = groupByStation(tabItems);
+
   return (
-    <div className="space-y-6 px-2">
+    <div className="space-y-8 px-2">
       {/* Meal Tabs */}
       {tabsWithItems.length > 1 && (
         <div className="flex gap-2 bg-white border border-gray-100 rounded-2xl p-1.5 shadow-sm">
@@ -545,49 +570,39 @@ function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addTo
         </div>
       )}
 
-      {/* Main Items */}
-      {mains.length > 0 && (
-        <div className="space-y-3">
-          {sides.length > 0 && (
-            <div className="flex items-center gap-3">
-              <div className="h-px flex-1 bg-gray-100" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-teal-700 bg-teal-50 px-3 py-1 rounded-full border border-teal-100">
-                {effectiveTab} Entrees
-              </span>
-              <div className="h-px flex-1 bg-gray-100" />
-            </div>
-          )}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mains.map(item => (
-              <MenuItemCard key={item.id} item={item} addToPlate={addToPlate} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} allergenEnabled={allergenEnabled} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Sides */}
-      {sides.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-gray-100" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
-              {effectiveTab} Sides & Extras
-            </span>
-            <div className="h-px flex-1 bg-gray-100" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sides.map(item => (
-              <MenuItemCard key={item.id} item={item} addToPlate={addToPlate} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} allergenEnabled={allergenEnabled} />
-            ))}
-          </div>
-        </div>
-      )}
-
       {tabItems.length === 0 && (
         <div className="py-12 text-center text-gray-400 font-bold uppercase tracking-widest text-sm">
           No {effectiveTab} items for this day
         </div>
       )}
+
+      {/* Station Groups */}
+      {stationGroups.map(([station, items]) => {
+        const mains = items.filter(i => !isStationSide(i.station));
+        const sides = items.filter(i => isStationSide(i.station));
+        const isSideStation = isStationSide(station);
+        const labelColor = isSideStation
+          ? 'text-amber-700 bg-amber-50 border-amber-100'
+          : 'text-teal-700 bg-teal-50 border-teal-100';
+
+        return (
+          <div key={station} className="space-y-3">
+            {/* Station header */}
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-gray-100" />
+              <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${labelColor}`}>
+                {effectiveTab} {station}
+              </span>
+              <div className="h-px flex-1 bg-gray-100" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {items.map(item => (
+                <MenuItemCard key={item.id} item={item} addToPlate={addToPlate} customVegUrl={customVegUrl} customVeganUrl={customVeganUrl} allergenEnabled={allergenEnabled} />
+              ))}
+            </div>
+          </div>
+        );
+      })}
 
       {/* Make It At Home — only shown under Lunch tab */}
       {effectiveTab === 'Lunch' && <MakeItAtHomeSection />}

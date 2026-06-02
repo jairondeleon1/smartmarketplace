@@ -1073,14 +1073,16 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     finally { setIsSyncing(null); }
   };
 
+  const fdaUploadingRef = useRef(false);
   const handleFDAUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file || file.size === 0) return;
+    if (fdaUploadingRef.current) return; // prevent double-fire
+    fdaUploadingRef.current = true;
     e.target.value = '';
-    if (file.size > 20 * 1024 * 1024) { alert('File too large (max 20MB).'); return; }
+    if (file.size > 20 * 1024 * 1024) { fdaUploadingRef.current = false; alert('File too large (max 20MB).'); return; }
     setIsSyncing("fda");
     try {
-      // Upload now and store the URL — retry up to 3 times with backoff
       let fileUrl = null;
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
@@ -1096,7 +1098,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       alert('✅ FDA file ready! Now click "Process & Publish Menu" to apply nutrition data.');
     } catch (error) {
       alert('FDA upload failed: ' + (error?.message || 'Please try again in a moment.'));
-    } finally { setIsSyncing(null); }
+    } finally { setIsSyncing(null); fdaUploadingRef.current = false; }
   };
 
   const handleAllergenUpload = async (e) => {

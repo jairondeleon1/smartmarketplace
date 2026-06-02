@@ -1074,21 +1074,23 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   };
 
   const handleFDAUpload = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
+    const file = e.target.files?.[0];
+    if (!file || file.size === 0) return;
+    // Prevent double-fire
+    e.target.value = '';
     setIsSyncing("fda");
     try {
       if (file.size > 20 * 1024 * 1024) throw new Error('File too large (max 20MB).');
-      // Read file as base64 data URL to avoid upload rate limits
       const dataUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = e => resolve(e.target.result);
+        reader.onload = ev => resolve(ev.target.result);
         reader.onerror = () => reject(new Error('Failed to read file'));
         reader.readAsDataURL(file);
       });
       setUploadedFiles(prev => ({ ...prev, fda: { dataUrl, type: file.name.match(/\.(xlsx?|pdf)$/i)?.[1] || 'pdf', name: file.name } }));
       alert('✅ FDA file ready! Now click "Process & Publish Menu" to apply nutrition data.');
     } catch (error) { alert('FDA upload failed: ' + (error?.message || 'Please try again.')); }
-    finally { setIsSyncing(null); e.target.value = ''; }
+    finally { setIsSyncing(null); }
   };
 
   const handleAllergenUpload = async (e) => {

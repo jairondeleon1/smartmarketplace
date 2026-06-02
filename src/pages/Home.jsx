@@ -1077,30 +1077,17 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     const file = e.target.files[0]; if (!file) return;
     setIsSyncing("fda");
     try {
-      if (file.size > 20 * 1024 * 1024) throw new Error('File too large (max 20MB). Your file is ' + Math.round(file.size / 1024 / 1024) + 'MB');
-      let fileUrl = null;
-      let lastErr = null;
-      for (let attempt = 1; attempt <= 5; attempt++) {
-        try {
-          const result = await base44.integrations.Core.UploadFile({ file });
-          if (result?.file_url) { fileUrl = result.file_url; break; }
-          throw new Error('No URL returned from upload');
-        } catch (err) {
-          lastErr = err;
-          const isRateLimit = err?.message?.toLowerCase().includes('rate limit');
-          // Wait longer if rate limited
-          if (attempt < 5) await new Promise(r => setTimeout(r, isRateLimit ? 8000 : 2000 * attempt));
-        }
-      }
-      if (!fileUrl) {
-        const isRateLimit = lastErr?.message?.toLowerCase().includes('rate limit');
-        throw new Error(isRateLimit
-          ? 'Too many requests — please wait 30 seconds and try again.'
-          : 'Upload failed after multiple attempts: ' + (lastErr?.message || 'Network error'));
-      }
-      setUploadedFiles(prev => ({ ...prev, fda: { url: fileUrl, type: file.name.match(/\.(xlsx?|pdf)$/i)?.[1] || 'pdf' } }));
-      alert('✅ FDA file uploaded! Now click "Process & Publish Menu" to apply nutrition data.');
-    } catch (error) { alert('FDA upload failed: ' + (error?.message || 'Network error. Please try again.')); }
+      if (file.size > 20 * 1024 * 1024) throw new Error('File too large (max 20MB).');
+      // Read file as base64 data URL to avoid upload rate limits
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+      });
+      setUploadedFiles(prev => ({ ...prev, fda: { dataUrl, type: file.name.match(/\.(xlsx?|pdf)$/i)?.[1] || 'pdf', name: file.name } }));
+      alert('✅ FDA file ready! Now click "Process & Publish Menu" to apply nutrition data.');
+    } catch (error) { alert('FDA upload failed: ' + (error?.message || 'Please try again.')); }
     finally { setIsSyncing(null); e.target.value = ''; }
   };
 
@@ -1155,9 +1142,11 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       if (uploadedFiles.fda) {
         setProcessingStep('Step 2: FDA Data...'); setProcessingProgress(40);
         try {
+          // Support both dataUrl (new) and url (legacy)
+          const fdaFileUrls = uploadedFiles.fda.dataUrl ? [uploadedFiles.fda.dataUrl] : [uploadedFiles.fda.url];
           const fdaResult = await base44.integrations.Core.InvokeLLM({
             prompt: `Extract: name, recipe_number, calories, protein, carbs, fat, saturated_fat, sodium, fiber, sugar, cholesterol, vitamin_a, vitamin_c, vitamin_d, calcium, iron, potassium. JSON.`,
-            file_urls: [uploadedFiles.fda.url],
+            file_urls: fdaFileUrls,
             response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { name: { type: "string" }, recipe_number: { type: "string" }, calories: { type: "number" }, protein: { type: "number" }, carbs: { type: "number" }, fat: { type: "number" }, saturated_fat: { type: "number" }, sodium: { type: "number" }, fiber: { type: "number" }, sugar: { type: "number" }, cholesterol: { type: "number" }, vitamin_a: { type: "number" }, vitamin_c: { type: "number" }, vitamin_d: { type: "number" }, calcium: { type: "number" }, iron: { type: "number" }, potassium: { type: "number" } } } } } }
           });
           if (fdaResult?.items) {
@@ -1343,8 +1332,8 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
               <div className="font-bold mb-2 flex items-center gap-2"><Info className="w-4 h-4" />Files Uploaded</div>
               <div className="space-y-1 text-blue-700 mb-3">
                 {[['weekMenu', 'Week Menu'], ['fda', 'FDA Nutrition'], ['allergen', 'Allergen Data'], ['ingredients', 'Ingredients']].map(([key, label]) => (
-                  <div key={key} className="flex items-center gap-2">
-                    {uploadedFiles[key] ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-300" />}
+                <div key={key} className="flex items-center gap-2">
+                  {(uploadedFiles[key]?.dataUrl || uploadedFiles[key]?.url || (typeof uploadedFiles[key] === 'string' && uploadedFiles[key])) ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-300" />}
                     <span>{label}</span>
                   </div>
                 ))}

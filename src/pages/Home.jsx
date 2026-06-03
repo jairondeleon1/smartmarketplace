@@ -1440,7 +1440,10 @@ export default function Home() {
   const scanLabelEnabled = appSettings?.scan_label_enabled ?? false;
   const wellnessEnabled = appSettings?.wellness_corner_enabled ?? true;
 
-  const [view, setView] = useState('customer');
+  const [view, setView] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('view') || 'customer';
+  });
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
 
   const { data: user } = useQuery({

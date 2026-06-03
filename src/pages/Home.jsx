@@ -1360,7 +1360,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
             </div>
             <button onClick={() => console.log('Current Menu Data:', menuItems)} className="w-full p-3 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-200 transition">Debug: Log Menu to Console</button>
           </div>
-          <div className="space-y-8 font-medium">
+          {isAdmin && <div className="space-y-8 font-medium">
             <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
               <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2"><Plus className="w-4 h-4 text-teal-600"/> Manual Entry</h3>
               <form onSubmit={handleAddItem} className="space-y-4">
@@ -1375,7 +1375,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
                 <button type="submit" className="w-full bg-slate-900 text-white p-4 rounded-xl font-bold uppercase text-xs hover:bg-black transition-all shadow-xl active:scale-95 tracking-widest">Publish Dish</button>
               </form>
             </div>
-          </div>
+          </div>}
         </div>
         <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-gray-200" />

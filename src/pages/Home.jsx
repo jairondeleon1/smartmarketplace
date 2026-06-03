@@ -59,6 +59,7 @@ import DietitianCornerSection from "../components/DietitianCornerSection";
 import DietitianCornerAdmin from "../components/admin/DietitianCornerAdmin";
 import ScanLabel from "../components/ScanLabel.jsx";
 import FeatureFlags from "../components/admin/FeatureFlags";
+import AnalyticsDashboard from "../components/admin/AnalyticsDashboard";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import { AccessibilityProvider } from "@/lib/AccessibilityContext";
 import useOnlineStatus, { saveMenuToCache, loadMenuFromCache, getCacheAge } from "@/hooks/useOfflineMenu";
@@ -1295,6 +1296,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         {isAdmin && <button onClick={() => setActiveTab('users')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'users' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Users</button>}
         {isAdmin && <button onClick={() => setActiveTab('features')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'features' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Features</button>}
         {(isAdmin || isDietitian) && <button onClick={() => setActiveTab('dietitian')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'dietitian' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Wellness</button>}
+        <button onClick={() => setActiveTab('analytics')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'analytics' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Analytics</button>
       </div>
 
       {activeTab === 'upload' && (
@@ -1423,6 +1425,12 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       {activeTab === 'dietitian' && (
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
           <DietitianCornerAdmin />
+        </div>
+      )}
+
+      {activeTab === 'analytics' && (
+        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+          <AnalyticsDashboard />
         </div>
       )}
 

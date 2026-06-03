@@ -31,7 +31,8 @@ export default function UserManagement() {
       base44.auth.me(),
     ]);
     setUsers(data);
-    setCurrentUser(me);
+    // normalize role from _app_role if available
+    setCurrentUser(me ? { ...me, role: me._app_role || me.role } : me);
     setLoading(false);
   };
 

@@ -994,8 +994,9 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
   );
 }
 
-function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomVegUrl, customVeganUrl, setCustomVeganUrl, newItem, setNewItem, handleAddItem, handleDeleteItem, queryClient }) {
+function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomVegUrl, customVeganUrl, setCustomVeganUrl, newItem, setNewItem, handleAddItem, handleDeleteItem, queryClient, currentUserRole }) {
   const [activeTab, setActiveTab] = useState('upload');
+  const isAdmin = currentUserRole === 'admin';
   const [editingItem, setEditingItem] = useState(null);
   const doRefresh = useCallback(async () => { if (queryClient) await queryClient.invalidateQueries({ queryKey: ['menuItems'] }); }, [queryClient]);
   const { scrollRef, pullDistance, isPulling, isRefreshing, onTouchStart, onTouchMove, onTouchEnd } = usePullToRefresh(doRefresh);
@@ -1291,8 +1292,8 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         <button onClick={() => setActiveTab('upload')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'upload' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Upload Files</button>
         <button onClick={() => setActiveTab('manage')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'manage' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Manage Items ({menuItems.length})</button>
         <button onClick={() => setActiveTab('users')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'users' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Users</button>
-        <button onClick={() => setActiveTab('features')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'features' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Features</button>
-        <button onClick={() => setActiveTab('dietitian')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'dietitian' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Wellness</button>
+        {isAdmin && <button onClick={() => setActiveTab('features')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'features' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Features</button>}
+        {isAdmin && <button onClick={() => setActiveTab('dietitian')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'dietitian' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Wellness</button>}
       </div>
 
       {activeTab === 'upload' && (
@@ -1670,7 +1671,7 @@ export default function Home() {
             )}
             {view === 'admin' && isAdminLoggedIn && (
               <motion.div key="admin" variants={slideVariants} initial={direction > 0 ? 'enterFromRight' : 'enterFromLeft'} animate="center" exit={direction > 0 ? 'exitToLeft' : 'exitToRight'} transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}>
-                <AdminView menuItems={menuItems} setMenuItems={setMenuItems} onLogout={() => setIsAdminLoggedIn(false)} customVegUrl={customVegUrl} setCustomVegUrl={setCustomVegUrl} customVeganUrl={customVeganUrl} setCustomVeganUrl={setCustomVeganUrl} newItem={newItem} setNewItem={setNewItem} handleAddItem={handleAddItem} handleDeleteItem={(id) => setMenuItems(menuItems.filter(i => i.id !== id))} queryClient={queryClient} />
+                <AdminView menuItems={menuItems} setMenuItems={setMenuItems} onLogout={() => setIsAdminLoggedIn(false)} customVegUrl={customVegUrl} setCustomVegUrl={setCustomVegUrl} customVeganUrl={customVeganUrl} setCustomVeganUrl={setCustomVeganUrl} newItem={newItem} setNewItem={setNewItem} handleAddItem={handleAddItem} handleDeleteItem={(id) => setMenuItems(menuItems.filter(i => i.id !== id))} queryClient={queryClient} currentUserRole={user?._app_role || user?.role} />
               </motion.div>
             )}
           </AnimatePresence>

@@ -15,7 +15,7 @@ export default function AdminGate({ onGranted }) {
     try {
       const me = await base44.auth.me();
       setUser(me);
-      if (me?.role === 'admin') {
+      if (me?.role === 'admin' || me?.role === 'manager') {
         setStep('verified');
         onGranted();
       } else {

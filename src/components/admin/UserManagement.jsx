@@ -3,12 +3,13 @@ import { base44 } from '@/api/base44Client';
 import { Loader2, Shield, ShieldCheck, User, Trash2, UserPlus } from 'lucide-react';
 
 const ROLE_CONFIG = {
-  admin:   { label: 'Admin',   color: 'bg-teal-100 text-teal-800',   icon: ShieldCheck },
-  manager: { label: 'Manager', color: 'bg-purple-100 text-purple-800', icon: Shield },
-  user:    { label: 'User',    color: 'bg-gray-200 text-gray-600',    icon: User },
+  admin:     { label: 'Admin',     color: 'bg-teal-100 text-teal-800',   icon: ShieldCheck },
+  manager:   { label: 'Manager',   color: 'bg-purple-100 text-purple-800', icon: Shield },
+  dietitian: { label: 'Dietitian', color: 'bg-green-100 text-green-800',  icon: User },
+  user:      { label: 'User',      color: 'bg-gray-200 text-gray-600',    icon: User },
 };
 
-const ROLES = ['admin', 'manager', 'user'];
+const ROLES = ['admin', 'manager', 'dietitian', 'user'];
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -193,6 +194,7 @@ export default function UserManagement() {
           >
             <option value="user">User</option>
             <option value="manager">Manager</option>
+            <option value="dietitian">Dietitian</option>
             {currentUser?.role === 'admin' && <option value="admin">Admin</option>}
           </select>
           <button
@@ -212,7 +214,8 @@ export default function UserManagement() {
 
       <div className="mt-4 p-4 bg-amber-50 border border-amber-100 rounded-xl text-[10px] text-amber-800 font-bold uppercase tracking-widest space-y-1">
         <p>• <span className="text-teal-700">Admin</span> — Full access: change any role, delete any user</p>
-        <p>• <span className="text-purple-700">Manager</span> — Can change roles of non-admins, cannot delete users</p>
+        <p>• <span className="text-purple-700">Manager</span> — Upload files only, can change roles of non-admins</p>
+        <p>• <span className="text-green-700">Dietitian</span> — Upload, manage items, wellness — no users/features</p>
         <p>• <span className="text-gray-600">User</span> — Standard access only</p>
       </div>
     </div>

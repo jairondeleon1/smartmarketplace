@@ -998,7 +998,6 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   const [activeTab, setActiveTab] = useState('upload');
   const isAdmin = currentUserRole === 'admin';
   const isDietitian = currentUserRole === 'dietitian';
-  const isManager = currentUserRole === 'manager';
   const [editingItem, setEditingItem] = useState(null);
   const doRefresh = useCallback(async () => { if (queryClient) await queryClient.invalidateQueries({ queryKey: ['menuItems'] }); }, [queryClient]);
   const { scrollRef, pullDistance, isPulling, isRefreshing, onTouchStart, onTouchMove, onTouchEnd } = usePullToRefresh(doRefresh);
@@ -1292,7 +1291,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
 
       <div className="flex gap-2 bg-white p-2 rounded-xl border border-gray-100">
         <button onClick={() => setActiveTab('upload')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'upload' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Upload Files</button>
-        {(isAdmin || isDietitian || isManager) && <button onClick={() => setActiveTab('manage')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'manage' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Manage Items ({menuItems.length})</button>}
+        {(isAdmin || isDietitian) && <button onClick={() => setActiveTab('manage')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'manage' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Manage Items ({menuItems.length})</button>}
         {isAdmin && <button onClick={() => setActiveTab('users')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'users' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Users</button>}
         {isAdmin && <button onClick={() => setActiveTab('features')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'features' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Features</button>}
         {(isAdmin || isDietitian) && <button onClick={() => setActiveTab('dietitian')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'dietitian' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Wellness</button>}
@@ -1362,7 +1361,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
             </div>
             <button onClick={() => console.log('Current Menu Data:', menuItems)} className="w-full p-3 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-200 transition">Debug: Log Menu to Console</button>
           </div>
-          {(isAdmin || isDietitian || isManager) && <div className="space-y-8 font-medium">
+          {(isAdmin || isDietitian) && <div className="space-y-8 font-medium">
             <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
               <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2"><Plus className="w-4 h-4 text-teal-600"/> Manual Entry</h3>
               <form onSubmit={handleAddItem} className="space-y-4">
@@ -1441,10 +1440,7 @@ export default function Home() {
   const scanLabelEnabled = appSettings?.scan_label_enabled ?? false;
   const wellnessEnabled = appSettings?.wellness_corner_enabled ?? true;
 
-  const [view, setView] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('view') || 'customer';
-  });
+  const [view, setView] = useState('customer');
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
 
   const { data: user } = useQuery({

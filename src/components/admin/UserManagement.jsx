@@ -214,7 +214,7 @@ export default function UserManagement() {
 
       <div className="mt-4 p-4 bg-amber-50 border border-amber-100 rounded-xl text-[10px] text-amber-800 font-bold uppercase tracking-widest space-y-1">
         <p>• <span className="text-teal-700">Admin</span> — Full access: change any role, delete any user</p>
-        <p>• <span className="text-purple-700">Manager</span> — Upload, manage items, manual entry — no users/features/wellness</p>
+        <p>• <span className="text-purple-700">Manager</span> — Upload files only, can change roles of non-admins</p>
         <p>• <span className="text-green-700">Dietitian</span> — Upload, manage items, wellness — no users/features</p>
         <p>• <span className="text-gray-600">User</span> — Standard access only</p>
       </div>

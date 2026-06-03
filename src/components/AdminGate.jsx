@@ -48,11 +48,7 @@ export default function AdminGate({ onGranted }) {
             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest tracking-[0.2em]">Sign in to continue</p>
           </div>
           <button
-            onClick={() => {
-              const url = new URL(window.location.href);
-              url.searchParams.set('view', 'admin');
-              base44.auth.redirectToLogin(url.toString());
-            }}
+            onClick={() => base44.auth.redirectToLogin(window.location.href)}
             className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all"
           >
             Sign In

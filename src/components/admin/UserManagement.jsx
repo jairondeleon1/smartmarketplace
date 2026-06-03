@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Loader2, Shield, ShieldCheck, User, Trash2 } from 'lucide-react';
+import { Loader2, Shield, ShieldCheck, User, Trash2, UserPlus } from 'lucide-react';
 
 const ROLE_CONFIG = {
   admin:   { label: 'Admin',   color: 'bg-teal-100 text-teal-800',   icon: ShieldCheck },
@@ -15,6 +15,10 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('user');
+  const [inviting, setInviting] = useState(false);
+  const [inviteMsg, setInviteMsg] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -66,6 +70,24 @@ export default function UserManagement() {
     if (currentUser?.role === 'admin') return ROLES.filter(r => r !== target.role);
     if (currentUser?.role === 'manager') return ROLES.filter(r => r !== target.role && r !== 'admin');
     return [];
+  };
+
+  const handleInvite = async (e) => {
+    e.preventDefault();
+    if (!inviteEmail.trim()) return;
+    setInviting(true);
+    setInviteMsg(null);
+    try {
+      await base44.users.inviteUser(inviteEmail.trim(), inviteRole);
+      setInviteMsg({ type: 'success', text: `Invite sent to ${inviteEmail.trim()}! They must accept the email to activate their account.` });
+      setInviteEmail('');
+      setInviteRole('user');
+      await loadData();
+    } catch (err) {
+      setInviteMsg({ type: 'error', text: err?.message || 'Failed to send invite.' });
+    } finally {
+      setInviting(false);
+    }
   };
 
   if (loading) return (
@@ -148,6 +170,44 @@ export default function UserManagement() {
           );
         })}
       </div>
+
+      {/* Invite new user */}
+      <form onSubmit={handleInvite} className="mt-4 p-4 bg-white border border-gray-100 rounded-2xl space-y-3">
+        <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-700 flex items-center gap-2">
+          <UserPlus className="w-4 h-4 text-teal-600" /> Invite New User
+        </h4>
+        <div className="flex gap-2">
+          <input
+            type="email"
+            placeholder="Email address"
+            value={inviteEmail}
+            onChange={e => setInviteEmail(e.target.value)}
+            className="flex-1 p-3 border border-gray-200 rounded-xl text-sm font-medium outline-none focus:border-teal-400"
+            required
+          />
+          <select
+            value={inviteRole}
+            onChange={e => setInviteRole(e.target.value)}
+            className="p-3 border border-gray-200 rounded-xl text-sm font-bold bg-white outline-none focus:border-teal-400"
+          >
+            <option value="user">User</option>
+            <option value="manager">Manager</option>
+            {currentUser?.role === 'admin' && <option value="admin">Admin</option>}
+          </select>
+          <button
+            type="submit"
+            disabled={inviting}
+            className="px-4 py-3 bg-teal-600 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-teal-700 disabled:opacity-50 transition flex items-center gap-2"
+          >
+            {inviting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Invite'}
+          </button>
+        </div>
+        {inviteMsg && (
+          <p className={`text-xs font-bold ${inviteMsg.type === 'success' ? 'text-teal-700' : 'text-red-600'}`}>
+            {inviteMsg.text}
+          </p>
+        )}
+      </form>
 
       <div className="mt-4 p-4 bg-amber-50 border border-amber-100 rounded-xl text-[10px] text-amber-800 font-bold uppercase tracking-widest space-y-1">
         <p>• <span className="text-teal-700">Admin</span> — Full access: change any role, delete any user</p>

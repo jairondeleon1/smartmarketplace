@@ -1290,8 +1290,8 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
 
       <div className="flex gap-2 bg-white p-2 rounded-xl border border-gray-100">
         <button onClick={() => setActiveTab('upload')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'upload' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Upload Files</button>
-        <button onClick={() => setActiveTab('manage')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'manage' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Manage Items ({menuItems.length})</button>
-        <button onClick={() => setActiveTab('users')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'users' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Users</button>
+        {isAdmin && <button onClick={() => setActiveTab('manage')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'manage' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Manage Items ({menuItems.length})</button>}
+        {isAdmin && <button onClick={() => setActiveTab('users')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'users' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Users</button>}
         {isAdmin && <button onClick={() => setActiveTab('features')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'features' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Features</button>}
         {isAdmin && <button onClick={() => setActiveTab('dietitian')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'dietitian' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Wellness</button>}
       </div>

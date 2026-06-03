@@ -15,10 +15,12 @@ export default function AdminGate({ onGranted }) {
     try {
       const me = await base44.auth.me();
       setUser(me);
-      if (me?.role === 'admin' || me?.role === 'manager') {
+      const role = me?._app_role || me?.role;
+      if (role === 'admin' || role === 'manager') {
         setStep('verified');
         onGranted();
       } else {
+        console.log('AdminGate denied. role:', me?.role, '_app_role:', me?._app_role);
         setStep('not-admin');
       }
     } catch {

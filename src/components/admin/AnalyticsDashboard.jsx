@@ -86,7 +86,7 @@ export default function AnalyticsDashboard() {
       {/* Notice */}
       <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3 text-xs text-blue-800">
         <Info className="w-4 h-4 shrink-0 mt-0.5 text-blue-500" />
-        <span>This dashboard shows menu and scan activity. For detailed visitor traffic analytics, contact your administrator to access the Base44 Analytics dashboard.</span>
+        <span>This dashboard shows menu and scan activity. For detailed visitor traffic analytics, contact your administrator to access the SmartMenuIQ Analytics dashboard.</span>
       </div>
 
       {/* KPI Cards */}

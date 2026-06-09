@@ -38,6 +38,7 @@ import {
   User
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { appParams } from '@/lib/app-params';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import NutritionCharts from "../components/NutritionCharts";
 import ProfileSettingsModal from "../components/ProfileSettingsModal";
@@ -1009,27 +1010,22 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [bulkEditItems, setBulkEditItems] = useState([]);
 
-  const uploadFile = (file) => new Promise((resolve, reject) => {
-    if (!file) return reject(new Error('No file provided'));
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const base64 = e.target.result.split(',')[1];
-        const response = await base44.functions.invoke('uploadMenuFile', {
-          fileBase64: base64,
-          fileName: file.name,
-          mimeType: file.type || 'application/octet-stream'
-        });
-        if (response.data?.error) throw new Error(response.data.error);
-        if (!response.data?.file_url) throw new Error('Upload returned no URL');
-        resolve(response.data.file_url);
-      } catch (err) {
-        reject(err);
-      }
-    };
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsDataURL(file);
-  });
+  const uploadFile = async (file) => {
+    if (!file) throw new Error('No file provided');
+    const { appId, token, functionsVersion } = appParams;
+    const version = functionsVersion || 'v1';
+    const url = `/api/functions/${appId}/${version}/uploadMenuFile`;
+    const formData = new FormData();
+    formData.append('file', file);
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(url, { method: 'POST', headers, body: formData });
+    if (!res.ok) throw new Error(`Upload failed with status ${res.status}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    if (!data.file_url) throw new Error('Upload returned no URL');
+    return data.file_url;
+  };
 
   const readFileAsText = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();

@@ -1104,6 +1104,14 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     finally { setIsSyncing(null); }
   };
 
+  const callBackend = async (fnName, payload) => {
+    const appId = window.__base44AppId || document.querySelector('meta[name="app-id"]')?.content || window.location.hostname.split('--')[1]?.split('.')[0];
+    // Use base44 SDK but with a raw fetch to avoid timeout issues
+    const res = await base44.functions.invoke(fnName, payload);
+    if (res.data?.error) throw new Error(res.data.error);
+    return res.data;
+  };
+
   const handleProcessAndPublish = async () => {
     if (!uploadedFiles.weekMenu && !uploadedFiles.fda && !uploadedFiles.allergen && !uploadedFiles.ingredients) {
       alert('Please upload at least one file to process'); return;
@@ -1112,18 +1120,45 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     setProcessingProgress(20);
     setProcessingStep('Processing files...');
     try {
-      const res = await base44.functions.invoke('publishMenu', {
+      // FDA-only: use the dedicated fast processFdaFile function
+      if (uploadedFiles.fda && !uploadedFiles.weekMenu && !uploadedFiles.allergen && !uploadedFiles.ingredients) {
+        setProcessingStep('Extracting FDA Nutrition Data...');
+        const fdaData = await callBackend('processFdaFile', { fdaUrl: uploadedFiles.fda.url });
+        if (fdaData?.items?.length > 0) {
+          const nr = (num) => String(num).trim().replace(/^0+/, '').toLowerCase();
+          const updatedItems = menuItems.map(item => {
+            const match = fdaData.items.find(fda => nr(fda.recipe_number || '') === nr(item.recipe_number || ''));
+            if (match) {
+              const saturatedFat = match.saturated_fat || 0;
+              const totalFat = match.fat || 0;
+              return { ...item, calories: match.calories||0, protein: match.protein||0, carbs: match.carbs||0, fat: totalFat, saturated_fat: saturatedFat, unsaturated_fat: totalFat > saturatedFat ? totalFat - saturatedFat : 0, sodium: match.sodium||0, fiber: match.fiber||0, sugar: match.sugar||0, cholesterol: match.cholesterol||0, vitamin_a: match.vitamin_a||0, vitamin_c: match.vitamin_c||0, vitamin_d: match.vitamin_d||0, calcium: match.calcium||0, iron: match.iron||0, potassium: match.potassium||0 };
+            }
+            return item;
+          });
+          setProcessingStep('Saving nutrition data...');
+          setProcessingProgress(80);
+          await setMenuItems(updatedItems);
+          setUploadedFiles({ weekMenu: null, fda: null, allergen: null, ingredients: null });
+          queryClient.invalidateQueries({ queryKey: ['menuItems'] });
+          alert(`✅ FDA nutrition data applied to ${updatedItems.length} menu items!`);
+        } else {
+          alert('⚠️ FDA file processed but no matching items found. Check recipe numbers match.');
+        }
+        return;
+      }
+
+      // Full pipeline via publishMenu
+      const data = await callBackend('publishMenu', {
         weekMenuUrl: uploadedFiles.weekMenu || null,
         fdaUrl: uploadedFiles.fda?.url || null,
         allergenUrl: uploadedFiles.allergen || null,
         ingredientsCsv: uploadedFiles.ingredients || null,
         existingItems: menuItems,
       });
-      if (res.data?.error) throw new Error(res.data.error);
       setProcessingProgress(100);
       setUploadedFiles({ weekMenu: null, fda: null, allergen: null, ingredients: null });
       queryClient.invalidateQueries({ queryKey: ['menuItems'] });
-      alert(`✅ Published ${res.data.count} menu items!`);
+      alert(`✅ Published ${data.count} menu items!`);
     } catch (error) {
       alert(`Processing failed: ${error?.message || 'Unknown error'}`);
     } finally {

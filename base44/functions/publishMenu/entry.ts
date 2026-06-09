@@ -104,8 +104,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Step 3: Generate descriptions for items missing them
-    const needingDescriptions = finalItems.filter(item => !item.description || item.description.length < 15);
+    // Step 3: Generate descriptions for items missing them (only when we parsed a week menu)
+    const needingDescriptions = weekMenuUrl ? finalItems.filter(item => !item.description || item.description.length < 15) : [];
     if (needingDescriptions.length > 0) {
       const descResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
         prompt: `Generate brief, appetizing 1-sentence descriptions (15-25 words each) for these menu items. Return as JSON.\n\nItems:\n${needingDescriptions.map(i => `- ${i.name}`).join('\n')}`,
@@ -213,8 +213,8 @@ Deno.serve(async (req) => {
       return item;
     });
 
-    // Step 6: Generate missing ingredients
-    const needingIngredients = finalItems.filter(item => !item.ingredients || item.ingredients.length < 5);
+    // Step 6: Generate missing ingredients (only when we parsed a week menu)
+    const needingIngredients = weekMenuUrl ? finalItems.filter(item => !item.ingredients || item.ingredients.length < 5) : [];
     if (needingIngredients.length > 0) {
       const genResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
         prompt: `Generate realistic ingredient lists for these menu items. Return as JSON.\n\nItems:\n${needingIngredients.map(i => `- ${i.name}`).join('\n')}`,

@@ -6,12 +6,12 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { fileUrl } = await req.json();
-    if (!fileUrl) return Response.json({ error: 'No file URL provided' }, { status: 400 });
+    const { fdaUrl } = await req.json();
+    if (!fdaUrl) return Response.json({ error: 'No fdaUrl provided' }, { status: 400 });
 
     const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: `Extract ALL menu items from this FDA nutrition report. For each item extract: name, recipe_number, calories, protein, carbs (total carb), fat (total fat), saturated_fat, sodium, fiber (dietary fiber), sugar (total sugars), cholesterol, vitamin_a, vitamin_c, vitamin_d, calcium, iron, potassium. Treat "less than 1 gram" as 0.5 and "less than 5 milligrams" as 2. Return as JSON.`,
-      file_urls: [fileUrl],
+      prompt: `Extract ALL menu items from this FDA nutrition report. For each item extract: name, recipe_number, calories, protein, carbs (total carbohydrate), fat (total fat), saturated_fat, sodium, fiber (dietary fiber), sugar (total sugars), cholesterol, vitamin_a, vitamin_c, vitamin_d, calcium, iron, potassium. Treat "less than 1 gram" as 0.5 and "less than 5 milligrams" as 2. Return as JSON array of all items found.`,
+      file_urls: [fdaUrl],
       response_json_schema: {
         type: "object",
         properties: {

@@ -1119,137 +1119,33 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     finally { setIsSyncing(null); }
   };
 
-  const callStep = async (step, payload) => {
-    const res = await base44.functions.invoke('processMenuFiles', { step, payload });
-    if (res.data?.error) throw new Error(res.data.error);
-    return res.data;
-  };
-
-  const normalizeRecipe = (num) => String(num).trim().replace(/^0+/, '').toLowerCase();
-  const normalizeName = (a, b) => { const an = a.toLowerCase().trim(); const bn = b.toLowerCase().trim(); return an.includes(bn) || bn.includes(an) || an.slice(0,15) === bn.slice(0,15); };
-
   const handleProcessAndPublish = async () => {
     if (!uploadedFiles.weekMenu && !uploadedFiles.fda && !uploadedFiles.allergen && !uploadedFiles.ingredients) {
       alert('Please upload at least one file to process'); return;
     }
-    setIsSyncing("publish"); setProcessingProgress(0);
-    let finalItems = [];
+    setIsSyncing("publish");
+    setProcessingProgress(20);
+    setProcessingStep('Processing files...');
     try {
-      // Step 1: Week Menu
-      if (uploadedFiles.weekMenu) {
-        setProcessingStep('Step 1: Extracting Week Menu...'); setProcessingProgress(15);
-        const weekResult = await callStep('weekMenu', { fileUrl: uploadedFiles.weekMenu });
-        if (weekResult?.items) finalItems = weekResult.items.map((item, idx) => ({ ...item, id: Date.now() + idx }));
-      } else {
-        finalItems = menuItems.map(item => ({ ...item }));
-      }
-
-      const normalizeStation = (station) => {
-        const s = (station || '').toLowerCase().trim();
-        if (s.includes('main') || s.includes('comfort') || s.includes('entree')) return 'Entree';
-        return station;
-      };
-      finalItems = finalItems.map(item => ({ ...item, station: normalizeStation(item.station) }));
-      setProcessingProgress(30);
-
-      // Step 2: FDA Nutrition
-      if (uploadedFiles.fda) {
-        setProcessingStep('Step 2: FDA Nutrition Data...'); setProcessingProgress(40);
-        const fdaResult = await callStep('fda', { fileUrl: uploadedFiles.fda.url });
-        if (fdaResult?.items) {
-          finalItems = finalItems.map(item => {
-            const match = fdaResult.items.find(fda => normalizeRecipe(fda.recipe_number || '') === normalizeRecipe(item.recipe_number || ''));
-            if (match) {
-              const saturatedFat = match.saturated_fat || 0; const totalFat = match.fat || 0;
-              return { ...item, calories: match.calories||0, protein: match.protein||0, carbs: match.carbs||0, fat: totalFat, saturated_fat: saturatedFat, unsaturated_fat: totalFat > saturatedFat ? totalFat - saturatedFat : 0, sodium: match.sodium||0, fiber: match.fiber||0, sugar: match.sugar||0, cholesterol: match.cholesterol||0, vitamin_a: match.vitamin_a||0, vitamin_c: match.vitamin_c||0, vitamin_d: match.vitamin_d||0, calcium: match.calcium||0, iron: match.iron||0, potassium: match.potassium||0 };
-            }
-            return item;
-          });
-        }
-      }
-      setProcessingProgress(55);
-
-      // Step 3: Descriptions
-      const needingDescriptions = finalItems.filter(item => !item.description || item.description.length < 15);
-      if (needingDescriptions.length > 0) {
-        setProcessingStep('Generating Descriptions...'); setProcessingProgress(60);
-        const descResult = await callStep('descriptions', { itemNames: needingDescriptions.map(i => i.name) });
-        if (descResult?.items) {
-          finalItems = finalItems.map(item => {
-            if (!item.description || item.description.length < 15) {
-              const match = descResult.items.find(d => normalizeName(d.name, item.name));
-              if (match?.description) return { ...item, description: match.description };
-            }
-            return item;
-          });
-        }
-      }
-      setProcessingProgress(70);
-
-      // Step 4: Allergens
-      if (uploadedFiles.allergen) {
-        setProcessingStep('Step 4: Allergen Data...'); setProcessingProgress(75);
-        const allergenResult = await callStep('allergens', { fileUrl: uploadedFiles.allergen });
-        if (allergenResult?.items) {
-          finalItems = finalItems.map(item => {
-            const match = allergenResult.items.find(al => normalizeRecipe(al.recipe_number || '') === normalizeRecipe(item.recipe_number || ''));
-            if (match) return { ...item, allergens: match.allergens, tags: match.tags };
-            return item;
-          });
-        }
-      }
-
-      // Step 5: Ingredients CSV
-      if (uploadedFiles.ingredients) {
-        setProcessingStep('Processing Ingredients...'); setProcessingProgress(80);
-        const ingResult = await callStep('ingredients', { csvText: uploadedFiles.ingredients.slice(0, 8000) });
-        if (ingResult?.items?.length > 0) {
-          const nr = (num) => String(num).trim().replace(/^0+/, '');
-          finalItems = finalItems.map(item => {
-            const match = ingResult.items.find(ing => nr(ing.recipe_number || '') === nr(item.recipe_number || ''));
-            if (match?.ingredients?.length > 5) {
-              const csvTags = [];
-              if (match.is_vegan) csvTags.push('Vegan');
-              if (match.is_vegetarian) csvTags.push('Vegetarian');
-              if (match.is_fit) csvTags.push('Fit');
-              return { ...item, ingredients: match.ingredients.trim(), tags: [...new Set([...(item.tags || []), ...csvTags])] };
-            }
-            return item;
-          });
-        }
-      }
-
-      // Fix: remove Vegan tag from fried items
-      finalItems = finalItems.map(item => {
-        if ((item.name?.toLowerCase().includes('fried') || item.description?.toLowerCase().includes('fried')) && item.tags?.includes('Vegan')) {
-          return { ...item, tags: item.tags.filter(tag => tag !== 'Vegan') };
-        }
-        return item;
+      const res = await base44.functions.invoke('publishMenu', {
+        weekMenuUrl: uploadedFiles.weekMenu || null,
+        fdaUrl: uploadedFiles.fda?.url || null,
+        allergenUrl: uploadedFiles.allergen || null,
+        ingredientsCsv: uploadedFiles.ingredients || null,
+        existingItems: menuItems,
       });
-
-      // Step 6: Generate missing ingredients
-      const needingIngredients = finalItems.filter(item => !item.ingredients || item.ingredients.length < 5);
-      if (needingIngredients.length > 0) {
-        setProcessingStep('Generating Missing Ingredients...'); setProcessingProgress(90);
-        const genResult = await callStep('genIngredients', { itemNames: needingIngredients.map(i => i.name) });
-        if (genResult?.items) {
-          finalItems = finalItems.map(item => {
-            if (!item.ingredients || item.ingredients.length < 5) {
-              const match = genResult.items.find(i => normalizeName(i.name, item.name));
-              if (match?.ingredients) return { ...item, ingredients: match.ingredients };
-            }
-            return item;
-          });
-        }
-      }
-
-      setProcessingStep('Publishing Menu...'); setProcessingProgress(100);
-      await setMenuItems(finalItems);
+      if (res.data?.error) throw new Error(res.data.error);
+      setProcessingProgress(100);
       setUploadedFiles({ weekMenu: null, fda: null, allergen: null, ingredients: null });
-      setTimeout(() => { alert(`✅ Published ${finalItems.length} menu items!`); setProcessingStep(''); setProcessingProgress(0); }, 500);
+      queryClient.invalidateQueries({ queryKey: ['menuItems'] });
+      alert(`✅ Published ${res.data.count} menu items!`);
     } catch (error) {
       alert(`Processing failed: ${error?.message || 'Unknown error'}`);
-    } finally { setProcessingStep(''); setProcessingProgress(0); setIsSyncing(null); }
+    } finally {
+      setProcessingStep('');
+      setProcessingProgress(0);
+      setIsSyncing(null);
+    }
   };
 
   const syncOptions = [

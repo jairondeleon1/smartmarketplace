@@ -1009,19 +1009,11 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [bulkEditItems, setBulkEditItems] = useState([]);
 
-  const uploadFile = async (file, retries = 3) => {
+  const uploadFile = async (file) => {
     if (!file) throw new Error('No file provided');
-    if (file.size > 5 * 1024 * 1024) throw new Error(`File too large (max 5MB). Your file is ${Math.round(file.size / 1024 / 1024)}MB.`);
-    for (let attempt = 1; attempt <= retries; attempt++) {
-      try {
-        const result = await base44.integrations.Core.UploadFile({ file });
-        if (!result?.file_url) throw new Error('Upload failed - no URL returned');
-        return result.file_url;
-      } catch (error) {
-        if (attempt === retries) throw new Error(`Upload failed after ${retries} attempts: ${error?.message || 'Network error'}.`);
-        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-      }
-    }
+    const result = await base44.integrations.Core.UploadFile({ file });
+    if (!result?.file_url) throw new Error('Upload failed - no URL returned');
+    return result.file_url;
   };
 
   const readFileAsText = (file) => new Promise((resolve, reject) => {
@@ -1070,50 +1062,39 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
 
   const handleWeekMenuUpload = async (e) => {
     const file = e.target.files[0]; if (!file) return;
+    e.target.value = '';
     setIsSyncing("week-menu");
     try { const fileUrl = await uploadFile(file); setUploadedFiles(prev => ({ ...prev, weekMenu: fileUrl })); }
-    catch (error) { alert('Week Menu upload failed: ' + (error?.message || 'Network error')); }
+    catch (error) { alert('Week Menu upload failed: ' + (error?.message || 'Please try again.')); }
     finally { setIsSyncing(null); }
   };
 
-  const fdaUploadingRef = useRef(false);
   const handleFDAUpload = async (e) => {
     const file = e.target.files?.[0];
-    if (!file || file.size === 0) return;
-    if (fdaUploadingRef.current) return; // prevent double-fire
-    fdaUploadingRef.current = true;
+    if (!file) return;
     e.target.value = '';
-    if (file.size > 20 * 1024 * 1024) { fdaUploadingRef.current = false; alert('File too large (max 20MB).'); return; }
     setIsSyncing("fda");
     try {
-      let fileUrl = null;
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          const result = await base44.integrations.Core.UploadFile({ file });
-          if (result?.file_url) { fileUrl = result.file_url; break; }
-        } catch (err) {
-          if (attempt < 3) await new Promise(r => setTimeout(r, 3000 * attempt));
-          else throw err;
-        }
-      }
-      if (!fileUrl) throw new Error('Upload returned no URL');
+      const fileUrl = await uploadFile(file);
       setUploadedFiles(prev => ({ ...prev, fda: { url: fileUrl, name: file.name } }));
       alert('✅ FDA file ready! Now click "Process & Publish Menu" to apply nutrition data.');
     } catch (error) {
-      alert('FDA upload failed: ' + (error?.message || 'Please try again in a moment.'));
-    } finally { setIsSyncing(null); fdaUploadingRef.current = false; }
+      alert('FDA upload failed: ' + (error?.message || 'Please try again.'));
+    } finally { setIsSyncing(null); }
   };
 
   const handleAllergenUpload = async (e) => {
     const file = e.target.files[0]; if (!file) return;
+    e.target.value = '';
     setIsSyncing("allergen");
     try { const fileUrl = await uploadFile(file); setUploadedFiles(prev => ({ ...prev, allergen: fileUrl })); }
-    catch (error) { alert('Allergen upload failed: ' + (error?.message || 'Network error')); }
+    catch (error) { alert('Allergen upload failed: ' + (error?.message || 'Please try again.')); }
     finally { setIsSyncing(null); }
   };
 
   const handleIngredientsUpload = async (e) => {
     const file = e.target.files[0]; if (!file) return;
+    e.target.value = '';
     setIsSyncing("ingredients");
     try {
       const text = await readFileAsText(file);

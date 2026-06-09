@@ -1105,17 +1105,9 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   };
 
   const callBackend = async (fnName, payload) => {
-    // Use raw fetch with no SDK timeout — needed for long-running LLM pipelines
-    const origin = window.location.origin;
-    const res = await fetch(`${origin}/functions/${fnName}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      credentials: 'include'
-    });
-    const data = await res.json();
-    if (!res.ok || data?.error) throw new Error(data?.error || `HTTP ${res.status}`);
-    return data;
+    const res = await base44.functions.invoke(fnName, payload);
+    if (res.data?.error) throw new Error(res.data.error);
+    return res.data;
   };
 
   const handleProcessAndPublish = async () => {

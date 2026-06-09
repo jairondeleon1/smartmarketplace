@@ -1091,8 +1091,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     setIsSyncing("fda");
     try {
       const fileUrl = await uploadFile(file);
-      setUploadedFiles(prev => ({ ...prev, fda: { url: fileUrl, name: file.name } }));
-      alert('✅ FDA file ready! Now click "Process & Publish Menu" to apply nutrition data.');
+      setUploadedFiles(prev => ({ ...prev, fda: fileUrl }));
     } catch (error) {
       alert('FDA upload failed: ' + (error?.message || 'Please try again.'));
     } finally { setIsSyncing(null); }
@@ -1153,7 +1152,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         try {
           const fdaResult = await base44.integrations.Core.InvokeLLM({
             prompt: `Extract ALL menu items from this FDA nutrition report. For each item extract: name, recipe_number, calories, protein, carbs (total carb), fat (total fat), saturated_fat, sodium, fiber (dietary fiber), sugar (total sugars), cholesterol. Treat "less than 1 gram" as 0.5 and "less than 5 milligrams" as 2. Return as JSON.`,
-            file_urls: [uploadedFiles.fda.url],
+            file_urls: [uploadedFiles.fda],
             response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { name: { type: "string" }, recipe_number: { type: "string" }, calories: { type: "number" }, protein: { type: "number" }, carbs: { type: "number" }, fat: { type: "number" }, saturated_fat: { type: "number" }, sodium: { type: "number" }, fiber: { type: "number" }, sugar: { type: "number" }, cholesterol: { type: "number" }, vitamin_a: { type: "number" }, vitamin_c: { type: "number" }, vitamin_d: { type: "number" }, calcium: { type: "number" }, iron: { type: "number" }, potassium: { type: "number" } } } } } }
           });
           if (fdaResult?.items) {

@@ -1485,13 +1485,21 @@ export default function Home() {
   
   const setMenuItems = async (newItems) => {
     const existing = await base44.entities.MenuItem.list();
-    const batchSize = 10;
+    // Delete sequentially in small batches with delay to avoid rate limits
+    const batchSize = 5;
     for (let i = 0; i < existing.length; i += batchSize) {
       const batch = existing.slice(i, i + batchSize);
-      await Promise.all(batch.map(item => base44.entities.MenuItem.delete(item.id)));
-      if (i + batchSize < existing.length) await new Promise(resolve => setTimeout(resolve, 500));
+      for (const item of batch) {
+        await base44.entities.MenuItem.delete(item.id);
+      }
+      if (i + batchSize < existing.length) await new Promise(resolve => setTimeout(resolve, 800));
     }
-    await base44.entities.MenuItem.bulkCreate(newItems);
+    // BulkCreate in chunks to avoid rate limits
+    const createBatchSize = 20;
+    for (let i = 0; i < newItems.length; i += createBatchSize) {
+      await base44.entities.MenuItem.bulkCreate(newItems.slice(i, i + createBatchSize));
+      if (i + createBatchSize < newItems.length) await new Promise(resolve => setTimeout(resolve, 500));
+    }
     queryClient.invalidateQueries({ queryKey: ['menuItems'] });
   };
 

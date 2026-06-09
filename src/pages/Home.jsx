@@ -1009,12 +1009,27 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [bulkEditItems, setBulkEditItems] = useState([]);
 
-  const uploadFile = async (file) => {
-    if (!file) throw new Error('No file provided');
-    const result = await base44.integrations.Core.UploadFile({ file });
-    if (!result?.file_url) throw new Error('Upload failed - no URL returned');
-    return result.file_url;
-  };
+  const uploadFile = (file) => new Promise((resolve, reject) => {
+    if (!file) return reject(new Error('No file provided'));
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const base64 = e.target.result.split(',')[1];
+        const response = await base44.functions.invoke('uploadMenuFile', {
+          fileBase64: base64,
+          fileName: file.name,
+          mimeType: file.type || 'application/octet-stream'
+        });
+        if (response.data?.error) throw new Error(response.data.error);
+        if (!response.data?.file_url) throw new Error('Upload returned no URL');
+        resolve(response.data.file_url);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
 
   const readFileAsText = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();

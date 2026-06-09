@@ -1105,9 +1105,20 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   };
 
   const callBackend = async (fnName, payload) => {
-    const res = await base44.functions.invoke(fnName, payload);
-    if (res.data?.error) throw new Error(res.data.error);
-    return res.data;
+    const { appParams } = await import('@/lib/app-params');
+    const baseUrl = appParams.appBaseUrl || window.location.origin;
+    const token = appParams.token;
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${baseUrl}/functions/${fnName}`, {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok || data?.error) throw new Error(data?.error || `HTTP ${res.status}`);
+    return data;
   };
 
   const handleProcessAndPublish = async () => {

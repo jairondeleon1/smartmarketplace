@@ -6,16 +6,27 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { fileBase64, fileName, mimeType } = await req.json();
-    if (!fileBase64) return Response.json({ error: 'No file data provided' }, { status: 400 });
+    const contentType = req.headers.get('content-type') || '';
 
-    // Convert base64 to File object
-    const binaryStr = atob(fileBase64);
-    const bytes = new Uint8Array(binaryStr.length);
-    for (let i = 0; i < binaryStr.length; i++) {
-      bytes[i] = binaryStr.charCodeAt(i);
+    let file;
+    if (contentType.includes('multipart/form-data')) {
+      // Handle FormData upload (preferred)
+      const form = await req.formData();
+      file = form.get('file');
+      if (!file || typeof file === 'string') {
+        return Response.json({ error: 'No file in form data' }, { status: 400 });
+      }
+    } else {
+      // Handle base64 JSON upload (fallback)
+      const { fileBase64, fileName, mimeType } = await req.json();
+      if (!fileBase64) return Response.json({ error: 'No file data provided' }, { status: 400 });
+      const binaryStr = atob(fileBase64);
+      const bytes = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) {
+        bytes[i] = binaryStr.charCodeAt(i);
+      }
+      file = new File([bytes], fileName || 'upload', { type: mimeType || 'application/octet-stream' });
     }
-    const file = new File([bytes], fileName || 'upload', { type: mimeType || 'application/octet-stream' });
 
     const result = await base44.asServiceRole.integrations.Core.UploadFile({ file });
     if (!result?.file_url) throw new Error('Upload returned no URL');

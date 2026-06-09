@@ -1091,7 +1091,8 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     setIsSyncing("fda");
     try {
       const fileUrl = await uploadFile(file);
-      setUploadedFiles(prev => ({ ...prev, fda: fileUrl }));
+      setUploadedFiles(prev => ({ ...prev, fda: { url: fileUrl, name: file.name } }));
+      alert('✅ FDA file ready! Now click "Process & Publish Menu" to apply nutrition data.');
     } catch (error) {
       alert('FDA upload failed: ' + (error?.message || 'Please try again.'));
     } finally { setIsSyncing(null); }
@@ -1152,7 +1153,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         try {
           const fdaResult = await base44.integrations.Core.InvokeLLM({
             prompt: `Extract ALL menu items from this FDA nutrition report. For each item extract: name, recipe_number, calories, protein, carbs (total carb), fat (total fat), saturated_fat, sodium, fiber (dietary fiber), sugar (total sugars), cholesterol. Treat "less than 1 gram" as 0.5 and "less than 5 milligrams" as 2. Return as JSON.`,
-            file_urls: [uploadedFiles.fda],
+            file_urls: [uploadedFiles.fda.url],
             response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { name: { type: "string" }, recipe_number: { type: "string" }, calories: { type: "number" }, protein: { type: "number" }, carbs: { type: "number" }, fat: { type: "number" }, saturated_fat: { type: "number" }, sodium: { type: "number" }, fiber: { type: "number" }, sugar: { type: "number" }, cholesterol: { type: "number" }, vitamin_a: { type: "number" }, vitamin_c: { type: "number" }, vitamin_d: { type: "number" }, calcium: { type: "number" }, iron: { type: "number" }, potassium: { type: "number" } } } } } }
           });
           if (fdaResult?.items) {
@@ -1484,21 +1485,13 @@ export default function Home() {
   
   const setMenuItems = async (newItems) => {
     const existing = await base44.entities.MenuItem.list();
-    // Delete sequentially in small batches with delay to avoid rate limits
-    const batchSize = 5;
+    const batchSize = 10;
     for (let i = 0; i < existing.length; i += batchSize) {
       const batch = existing.slice(i, i + batchSize);
-      for (const item of batch) {
-        await base44.entities.MenuItem.delete(item.id);
-      }
-      if (i + batchSize < existing.length) await new Promise(resolve => setTimeout(resolve, 800));
+      await Promise.all(batch.map(item => base44.entities.MenuItem.delete(item.id)));
+      if (i + batchSize < existing.length) await new Promise(resolve => setTimeout(resolve, 500));
     }
-    // BulkCreate in chunks to avoid rate limits
-    const createBatchSize = 20;
-    for (let i = 0; i < newItems.length; i += createBatchSize) {
-      await base44.entities.MenuItem.bulkCreate(newItems.slice(i, i + createBatchSize));
-      if (i + createBatchSize < newItems.length) await new Promise(resolve => setTimeout(resolve, 500));
-    }
+    await base44.entities.MenuItem.bulkCreate(newItems);
     queryClient.invalidateQueries({ queryKey: ['menuItems'] });
   };
 

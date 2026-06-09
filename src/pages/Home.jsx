@@ -1009,12 +1009,27 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [bulkEditItems, setBulkEditItems] = useState([]);
 
-  const uploadFile = async (file) => {
-    if (!file) throw new Error('No file provided');
-    const result = await base44.integrations.Core.UploadFile({ file });
-    if (!result?.file_url) throw new Error('Upload returned no URL');
-    return result.file_url;
-  };
+  const uploadFile = (file) => new Promise((resolve, reject) => {
+    if (!file) return reject(new Error('No file provided'));
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const base64 = e.target.result.split(',')[1];
+        const response = await base44.functions.invoke('uploadMenuFile', {
+          fileBase64: base64,
+          fileName: file.name,
+          mimeType: file.type || 'application/octet-stream'
+        });
+        if (response.data?.error) throw new Error(response.data.error);
+        if (!response.data?.file_url) throw new Error('Upload returned no URL');
+        resolve(response.data.file_url);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
 
   const readFileAsText = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -1104,77 +1119,154 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     finally { setIsSyncing(null); }
   };
 
-  const callBackend = async (fnName, payload) => {
-    const { appParams } = await import('@/lib/app-params');
-    const baseUrl = appParams.appBaseUrl || window.location.origin;
-    const token = appParams.token;
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    const res = await fetch(`${baseUrl}/functions/${fnName}`, {
-      method: 'POST',
-      headers,
-      credentials: 'include',
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-    if (!res.ok || data?.error) throw new Error(data?.error || `HTTP ${res.status}`);
-    return data;
-  };
-
   const handleProcessAndPublish = async () => {
     if (!uploadedFiles.weekMenu && !uploadedFiles.fda && !uploadedFiles.allergen && !uploadedFiles.ingredients) {
       alert('Please upload at least one file to process'); return;
     }
-    setIsSyncing("publish");
-    setProcessingProgress(20);
-    setProcessingStep('Processing files...');
+    setIsSyncing("publish"); setProcessingProgress(0);
+    let finalItems = [];
     try {
-      // FDA-only: use the dedicated fast processFdaFile function
-      if (uploadedFiles.fda && !uploadedFiles.weekMenu && !uploadedFiles.allergen && !uploadedFiles.ingredients) {
-        setProcessingStep('Extracting FDA Nutrition Data...');
-        const fdaData = await callBackend('processFdaFile', { fdaUrl: uploadedFiles.fda.url });
-        if (fdaData?.items?.length > 0) {
-          const nr = (num) => String(num).trim().replace(/^0+/, '').toLowerCase();
-          const updatedItems = menuItems.map(item => {
-            const match = fdaData.items.find(fda => nr(fda.recipe_number || '') === nr(item.recipe_number || ''));
-            if (match) {
-              const saturatedFat = match.saturated_fat || 0;
-              const totalFat = match.fat || 0;
-              return { ...item, calories: match.calories||0, protein: match.protein||0, carbs: match.carbs||0, fat: totalFat, saturated_fat: saturatedFat, unsaturated_fat: totalFat > saturatedFat ? totalFat - saturatedFat : 0, sodium: match.sodium||0, fiber: match.fiber||0, sugar: match.sugar||0, cholesterol: match.cholesterol||0, vitamin_a: match.vitamin_a||0, vitamin_c: match.vitamin_c||0, vitamin_d: match.vitamin_d||0, calcium: match.calcium||0, iron: match.iron||0, potassium: match.potassium||0 };
-            }
-            return item;
-          });
-          setProcessingStep('Saving nutrition data...');
-          setProcessingProgress(80);
-          await setMenuItems(updatedItems);
-          setUploadedFiles({ weekMenu: null, fda: null, allergen: null, ingredients: null });
-          queryClient.invalidateQueries({ queryKey: ['menuItems'] });
-          alert(`✅ FDA nutrition data applied to ${updatedItems.length} menu items!`);
-        } else {
-          alert('⚠️ FDA file processed but no matching items found. Check recipe numbers match.');
-        }
-        return;
+      if (uploadedFiles.weekMenu) {
+        setProcessingStep('Step 1: Week Menu...'); setProcessingProgress(20);
+        const weekResult = await base44.integrations.Core.InvokeLLM({
+          prompt: `Extract ALL menu items from this document. For each item extract: name, recipe_number (the number in parentheses), station name, day (Monday/Tuesday/Wednesday/Thursday/Friday/Daily Special), and any description if available. Return as JSON array.`,
+          file_urls: [uploadedFiles.weekMenu],
+          response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { name: { type: "string" }, recipe_number: { type: "string" }, station: { type: "string" }, day: { type: "string" }, description: { type: "string" } } } } } }
+        });
+        if (weekResult?.items) finalItems = weekResult.items.map((item, idx) => ({ ...item, id: Date.now() + idx }));
+      } else {
+        finalItems = menuItems.map(item => ({ ...item }));
       }
 
-      // Full pipeline via publishMenu
-      const data = await callBackend('publishMenu', {
-        weekMenuUrl: uploadedFiles.weekMenu || null,
-        fdaUrl: uploadedFiles.fda?.url || null,
-        allergenUrl: uploadedFiles.allergen || null,
-        ingredientsCsv: uploadedFiles.ingredients || null,
-        existingItems: menuItems,
+      // Normalize station names
+      const normalizeStation = (station) => {
+        const s = (station || '').toLowerCase().trim();
+        if (s.includes('main') || s.includes('comfort') || s.includes('entree')) return 'Entree';
+        return station;
+      };
+      finalItems = finalItems.map(item => ({ ...item, station: normalizeStation(item.station) }));
+
+      setProcessingProgress(35);
+
+      if (uploadedFiles.fda) {
+        setProcessingStep('Step 2: FDA Data...'); setProcessingProgress(40);
+        try {
+          const fdaResult = await base44.integrations.Core.InvokeLLM({
+            prompt: `Extract ALL menu items from this FDA nutrition report. For each item extract: name, recipe_number, calories, protein, carbs (total carb), fat (total fat), saturated_fat, sodium, fiber (dietary fiber), sugar (total sugars), cholesterol. Treat "less than 1 gram" as 0.5 and "less than 5 milligrams" as 2. Return as JSON.`,
+            file_urls: [uploadedFiles.fda.url],
+            response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { name: { type: "string" }, recipe_number: { type: "string" }, calories: { type: "number" }, protein: { type: "number" }, carbs: { type: "number" }, fat: { type: "number" }, saturated_fat: { type: "number" }, sodium: { type: "number" }, fiber: { type: "number" }, sugar: { type: "number" }, cholesterol: { type: "number" }, vitamin_a: { type: "number" }, vitamin_c: { type: "number" }, vitamin_d: { type: "number" }, calcium: { type: "number" }, iron: { type: "number" }, potassium: { type: "number" } } } } } }
+          });
+          if (fdaResult?.items) {
+            const normalizeRecipe = (num) => String(num).trim().replace(/^0+/, '').toLowerCase();
+            finalItems = finalItems.map(item => {
+              const match = fdaResult.items.find(fda => normalizeRecipe(fda.recipe_number || '') === normalizeRecipe(item.recipe_number || ''));
+              if (match) {
+                const saturatedFat = match.saturated_fat || 0; const totalFat = match.fat || 0;
+                return { ...item, calories: match.calories||0, protein: match.protein||0, carbs: match.carbs||0, fat: totalFat, saturated_fat: saturatedFat, unsaturated_fat: totalFat > saturatedFat ? totalFat - saturatedFat : 0, sodium: match.sodium||0, fiber: match.fiber||0, sugar: match.sugar||0, cholesterol: match.cholesterol||0, vitamin_a: match.vitamin_a||0, vitamin_c: match.vitamin_c||0, vitamin_d: match.vitamin_d||0, calcium: match.calcium||0, iron: match.iron||0, potassium: match.potassium||0 };
+              }
+              return item;
+            });
+          }
+        } catch (error) { alert('FDA failed: ' + error.message); }
+      }
+      setProcessingProgress(60);
+
+      const itemsNeedingDescriptions = finalItems.filter(item => !item.description || item.description.length < 15);
+      if (itemsNeedingDescriptions.length > 0) {
+        setProcessingStep('Generating Menu Descriptions...'); setProcessingProgress(50);
+        try {
+          const descResult = await base44.integrations.Core.InvokeLLM({
+            prompt: `Generate brief, appetizing 1-sentence descriptions (15-25 words each) for these menu items. Return as JSON.\n\nItems:\n${itemsNeedingDescriptions.map(i => `- ${i.name}`).join('\n')}`,
+            response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { name: { type: "string" }, description: { type: "string" } } } } } }
+          });
+          if (descResult?.items) {
+            finalItems = finalItems.map(item => {
+              if (!item.description || item.description.length < 15) {
+                const match = descResult.items.find(d => { const dName = d.name.toLowerCase().trim(); const iName = item.name.toLowerCase().trim(); return dName.includes(iName) || iName.includes(dName) || dName.slice(0,15) === iName.slice(0,15); });
+                if (match?.description) return { ...item, description: match.description };
+              }
+              return item;
+            });
+          }
+        } catch (error) { console.error('Description generation failed:', error); }
+      }
+      setProcessingProgress(65);
+
+      if (uploadedFiles.allergen) {
+        const allergenResult = await base44.integrations.Core.InvokeLLM({
+          prompt: `Extract allergen information from this PDF. For each menu item, extract: recipe_number, allergens (array), and dietary tags (array like Vegetarian, Vegan, Fit, Dairy Free, etc.). Return as structured JSON.`,
+          file_urls: [uploadedFiles.allergen],
+          add_context_from_internet: false,
+          response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { recipe_number: { type: "string" }, allergens: { type: "array", items: { type: "string" } }, tags: { type: "array", items: { type: "string" } } } } } } }
+        });
+        if (allergenResult?.items) {
+          const normalizeRecipe = (num) => String(num).trim().replace(/^0+/, '').toLowerCase();
+          finalItems = finalItems.map(item => {
+            const match = allergenResult.items.find(al => normalizeRecipe(al.recipe_number || '') === normalizeRecipe(item.recipe_number || ''));
+            if (match) return { ...item, allergens: match.allergens, tags: match.tags };
+            return item;
+          });
+        }
+      }
+
+      if (uploadedFiles.ingredients) {
+        setProcessingStep('Processing Ingredients CSV...');
+        try {
+          const csvChunk = uploadedFiles.ingredients.slice(0, 8000);
+          const ingredientsResult = await base44.integrations.Core.InvokeLLM({
+            prompt: `You are parsing a CSV file with menu ingredients. Extract ALL rows. For each row extract: recipe_number, ingredients, is_vegan, is_vegetarian, is_fit. Return ALL rows as JSON.\n\nCSV Data:\n${csvChunk}`,
+            add_context_from_internet: false,
+            response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { recipe_number: { type: "string" }, ingredients: { type: "string" }, is_vegan: { type: "boolean" }, is_vegetarian: { type: "boolean" }, is_fit: { type: "boolean" } } } } } }
+          });
+          if (ingredientsResult?.items?.length > 0) {
+            const normalizeRecipe = (num) => String(num).trim().replace(/^0+/, '');
+            finalItems = finalItems.map(item => {
+              const itemRecipe = normalizeRecipe(item.recipe_number || '');
+              const match = ingredientsResult.items.find(ing => normalizeRecipe(ing.recipe_number || '') === itemRecipe);
+              if (match && match.ingredients && match.ingredients.length > 5) {
+                const csvTags = []; if (match.is_vegan) csvTags.push('Vegan'); if (match.is_vegetarian) csvTags.push('Vegetarian'); if (match.is_fit) csvTags.push('Fit');
+                return { ...item, ingredients: match.ingredients.trim(), tags: [...new Set([...(item.tags || []), ...csvTags])] };
+              }
+              return item;
+            });
+          }
+        } catch (error) { alert('Warning: Ingredients processing failed - ' + error.message); }
+      }
+
+      finalItems = finalItems.map(item => {
+        if ((item.name?.toLowerCase().includes('fried') || item.description?.toLowerCase().includes('fried')) && item.tags?.includes('Vegan')) {
+          return { ...item, tags: item.tags.filter(tag => tag !== 'Vegan') };
+        }
+        return item;
       });
-      setProcessingProgress(100);
+
+      const itemsNeedingIngredients = finalItems.filter(item => !item.ingredients || item.ingredients.length < 5);
+      if (itemsNeedingIngredients.length > 0) {
+        setProcessingStep('Generating Missing Ingredients...'); setProcessingProgress(90);
+        try {
+          const ingredientsResult = await base44.integrations.Core.InvokeLLM({
+            prompt: `Generate realistic ingredient lists for these menu items. Return as JSON.\n\nItems:\n${itemsNeedingIngredients.map(i => `- ${i.name}`).join('\n')}`,
+            response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { name: { type: "string" }, ingredients: { type: "string" } } } } } }
+          });
+          if (ingredientsResult?.items) {
+            finalItems = finalItems.map(item => {
+              if (!item.ingredients || item.ingredients.length < 5) {
+                const match = ingredientsResult.items.find(i => { const iName = i.name.toLowerCase().trim(); const itemName = item.name.toLowerCase().trim(); return iName.includes(itemName) || itemName.includes(iName) || iName.slice(0,15) === itemName.slice(0,15); });
+                if (match?.ingredients) return { ...item, ingredients: match.ingredients };
+              }
+              return item;
+            });
+          }
+        } catch (error) { console.error('Ingredient generation failed:', error); }
+      }
+
+      setProcessingStep('Publishing Menu...'); setProcessingProgress(100);
+      setMenuItems(finalItems);
       setUploadedFiles({ weekMenu: null, fda: null, allergen: null, ingredients: null });
-      queryClient.invalidateQueries({ queryKey: ['menuItems'] });
-      alert(`✅ Published ${data.count} menu items!`);
+      setTimeout(() => { alert(`✅ Published ${finalItems.length} menu items!`); setProcessingStep(''); setProcessingProgress(0); }, 500);
     } catch (error) {
-      alert(`Processing failed: ${error?.message || 'Unknown error'}`);
-    } finally {
-      setProcessingStep('');
-      setProcessingProgress(0);
-      setIsSyncing(null);
-    }
+      alert(`Error: ${error?.message || 'Unknown error'}`);
+    } finally { setProcessingStep(''); setProcessingProgress(0); setIsSyncing(null); }
   };
 
   const syncOptions = [

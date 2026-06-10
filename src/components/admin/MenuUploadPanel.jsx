@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import { appParams } from '@/lib/app-params';
 import {
   Upload, Loader2, CheckCircle, XCircle, Sparkles,
   Calendar, FileText, AlertTriangle, Info
@@ -24,26 +25,26 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
   const [step, setStep] = useState('');
   const [progress, setProgress] = useState(0);
 
-  // Upload a file via the uploadMenuFile backend function using base64
+  // Upload a file via multipart FormData directly to the backend function
   const uploadFile = async (file) => {
-    const base64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        // Strip the data URL prefix (e.g. "data:application/pdf;base64,")
-        const result = e.target.result;
-        resolve(result.split(',')[1]);
-      };
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsDataURL(file);
-    });
-    const response = await base44.functions.invoke('uploadMenuFile', {
-      fileBase64: base64,
-      fileName: file.name,
-      mimeType: file.type,
-    });
-    const url = response?.data?.file_url;
-    if (!url) throw new Error('Upload returned no URL');
-    return url;
+    const { token } = appParams;
+    const origin = window.location.origin;
+    const url = `${origin}/functions/uploadMenuFile`;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(url, { method: 'POST', headers, body: formData });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Upload failed (${res.status})`);
+    }
+    const data = await res.json();
+    if (!data.file_url) throw new Error('Upload returned no URL');
+    return data.file_url;
   };
 
   const handleFileSelect = async (slotKey, file, readAsText = false) => {

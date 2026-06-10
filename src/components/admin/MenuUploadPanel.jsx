@@ -75,7 +75,7 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
     }
   };
 
-  // Helper to call LLM with retry for rate limits
+  // Helper to call LLM with retry for rate limits and network errors
   const callLLMWithRetry = async (prompt, maxRetries = 3) => {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -85,13 +85,17 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
         });
         return result;
       } catch (err) {
-        if (err.message?.includes('rate limit') || err.message?.includes('429')) {
-          if (attempt < maxRetries) {
-            const delay = 8000 * attempt; // 8s, 16s, 24s
-            console.log(`Rate limited, retrying in ${delay/1000}s... (attempt ${attempt}/${maxRetries})`);
-            await new Promise(r => setTimeout(r, delay));
-            continue;
-          }
+        const isRetryable = err.message?.includes('rate limit') || 
+                           err.message?.includes('429') ||
+                           err.message?.includes('network') ||
+                           err.message?.includes('Failed to fetch') ||
+                           err.message?.includes('fetch');
+        
+        if (isRetryable && attempt < maxRetries) {
+          const delay = 8000 * attempt; // 8s, 16s, 24s
+          console.log(`Retryable error (${err.message}), retrying in ${delay/1000}s... (attempt ${attempt}/${maxRetries})`);
+          await new Promise(r => setTimeout(r, delay));
+          continue;
         }
         throw err;
       }

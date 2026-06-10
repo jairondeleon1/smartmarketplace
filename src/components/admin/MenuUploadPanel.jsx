@@ -6,7 +6,7 @@ import {
   Calendar, FileText, AlertTriangle, Info
 } from 'lucide-react';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.js`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs`;
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Daily Special', 'All Days'];
 
@@ -422,7 +422,7 @@ ${csvChunk}`,
                   <CheckCircle className="w-6 h-6 text-green-600 shrink-0" />
                 ) : (
                   <div className="bg-teal-50 p-3 rounded-xl border border-teal-100 shrink-0">
-                    <slot.icon className="w-5 h-5 text-teal-600" />
+                    {React.createElement(slot.icon, { className: "w-5 h-5 text-teal-600" })}
                   </div>
                 )}
                 <div className="flex-1 min-w-0">

@@ -93,9 +93,15 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
           // It's a PDF URL - extract text using ExtractDataFromUploadedFile
           const extractRes = await base44.integrations.Core.ExtractDataFromUploadedFile({
             file_url: weekMenu.text,
-            extraction_type: 'text'
+            json_schema: {
+              type: 'object',
+              properties: {
+                text: { type: 'string' }
+              },
+              required: ['text']
+            }
           });
-          menuText = extractRes?.extracted_data?.text || '';
+          menuText = extractRes?.text || '';
           if (!menuText) throw new Error('Failed to extract text from Week Menu PDF');
         }
         
@@ -155,9 +161,15 @@ ${menuText}`,
         if (fda.text.startsWith('http')) {
           const extractRes = await base44.integrations.Core.ExtractDataFromUploadedFile({
             file_url: fda.text,
-            extraction_type: 'text'
+            json_schema: {
+              type: 'object',
+              properties: {
+                text: { type: 'string' }
+              },
+              required: ['text']
+            }
           });
-          fdaText = extractRes?.extracted_data?.text || '';
+          fdaText = extractRes?.text || '';
           if (!fdaText) throw new Error('Failed to extract text from FDA file');
         }
         

@@ -38,8 +38,19 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
           reader.readAsText(file);
         });
       } else {
-        // PDF — upload to backend then extract text with LLM
-        const uploadRes = await base44.functions.invoke('uploadMenuFile', { file });
+        // PDF — convert to base64 and upload via backend function
+        const fileBase64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result.split(',')[1]);
+          reader.onerror = () => reject(new Error('Failed to read file'));
+          reader.readAsDataURL(file);
+        });
+        
+        const uploadRes = await base44.functions.invoke('uploadMenuFile', {
+          fileBase64,
+          fileName: file.name,
+          mimeType: file.type
+        });
         
         if (!uploadRes?.file_url) {
           throw new Error('Upload failed');

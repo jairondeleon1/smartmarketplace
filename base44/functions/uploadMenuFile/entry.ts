@@ -18,7 +18,10 @@ Deno.serve(async (req) => {
     } else {
       const { fileBase64, fileName, mimeType } = await req.json();
       if (!fileBase64) return Response.json({ error: 'No file data provided' }, { status: 400 });
-      const binaryStr = atob(fileBase64);
+      
+      // Handle both raw base64 and data URL format
+      const base64Data = fileBase64.includes(',') ? fileBase64.split(',')[1] : fileBase64;
+      const binaryStr = atob(base64Data);
       const bytes = new Uint8Array(binaryStr.length);
       for (let i = 0; i < binaryStr.length; i++) {
         bytes[i] = binaryStr.charCodeAt(i);

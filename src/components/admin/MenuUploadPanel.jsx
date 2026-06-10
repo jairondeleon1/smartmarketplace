@@ -14,7 +14,11 @@ function normalizeStation(station) {
 }
 
 function normalizeRecipeNum(num) {
-  return String(num || '').trim().replace(/^0+/, '').toLowerCase();
+  return String(num || '').trim().replace(/^0+/, '').replace(/-.*$/, '').toLowerCase();
+}
+
+function normalizeName(name) {
+  return String(name || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');
 }
 
 export default function MenuUploadPanel({ menuItems, onPublish }) {
@@ -241,11 +245,19 @@ ${fdaText}`,
               id: Date.now() + idx
             }));
           } else {
-            // Merge FDA nutrition into existing items by recipe_number
+            // Merge FDA nutrition into existing items by recipe_number (with name fallback)
             finalItems = finalItems.map(item => {
-              const match = fdaResult.items.find(
+              // Try recipe number match first
+              let match = fdaResult.items.find(
                 fda => normalizeRecipeNum(fda.recipe_number) === normalizeRecipeNum(item.recipe_number)
               );
+              
+              // Fallback: try name match if recipe number didn't match
+              if (!match && item.name) {
+                const normalizedName = normalizeName(item.name);
+                match = fdaResult.items.find(fda => normalizeName(fda.name) === normalizedName);
+              }
+              
               if (match) {
                 const totalFat = match.fat || 0;
                 const satFat = match.saturated_fat || 0;

@@ -75,6 +75,29 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
     }
   };
 
+  // Helper to call LLM with retry for rate limits
+  const callLLMWithRetry = async (prompt, maxRetries = 3) => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const result = await base44.integrations.Core.InvokeLLM({
+          prompt,
+          add_context_from_internet: false
+        });
+        return result;
+      } catch (err) {
+        if (err.message?.includes('rate limit') || err.message?.includes('429')) {
+          if (attempt < maxRetries) {
+            const delay = 8000 * attempt; // 8s, 16s, 24s
+            console.log(`Rate limited, retrying in ${delay/1000}s... (attempt ${attempt}/${maxRetries})`);
+            await new Promise(r => setTimeout(r, delay));
+            continue;
+          }
+        }
+        throw err;
+      }
+    }
+  };
+
   const handleProcessAndPublish = async () => {
     const { weekMenu, fda, ingredients, allergenFile } = uploadedFiles;
     if (!weekMenu && !fda && !ingredients && !allergenFile) {
@@ -92,8 +115,7 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
       if (weekMenu) {
         setStep('Extracting menu items from Week Menu PDF...');
         setProgress(10);
-        const result = await base44.integrations.Core.InvokeLLM({
-          prompt: `Extract ALL menu items from this weekly menu document. For each item extract:
+        const result = await callLLMWithRetry(`Extract ALL menu items from this weekly menu document. For each item extract:
 - name (the dish name)
 - recipe_number (the number shown in parentheses next to the dish name, e.g. "(12345)")
 - station (the station or section it belongs to, e.g. "Entree", "Grill", "Deli", "Pizza", "Soup", "Dessert")
@@ -103,26 +125,7 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
 Return as JSON with an "items" array.
 
 Document text:
-${weekMenu.text.slice(0, 15000)}`,
-          response_json_schema: {
-            type: 'object',
-            properties: {
-              items: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    name: { type: 'string' },
-                    recipe_number: { type: 'string' },
-                    station: { type: 'string' },
-                    day: { type: 'string' },
-                    description: { type: 'string' }
-                  }
-                }
-              }
-            }
-          }
-        });
+${weekMenu.text.slice(0, 15000)}`);
         if (result?.items?.length > 0) {
           finalItems = result.items.map((item, idx) => ({
             ...item,
@@ -144,8 +147,7 @@ ${weekMenu.text.slice(0, 15000)}`,
       if (fda) {
         setStep('Extracting nutrition data from FDA file...');
         setProgress(40);
-        const fdaResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `Extract ALL nutrition data from this FDA nutrition report. For each menu item extract:
+        const fdaResult = await callLLMWithRetry(`Extract ALL nutrition data from this FDA nutrition report. For each menu item extract:
 - name
 - recipe_number (the recipe/item number)
 - calories (kcal)
@@ -168,38 +170,7 @@ For values listed as "less than 1g" use 0.5, for "less than 5mg" use 2.
 Return as JSON with an "items" array. Include ALL items found.
 
 Document text:
-${fda.text.slice(0, 20000)}`,
-          response_json_schema: {
-            type: 'object',
-            properties: {
-              items: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    name: { type: 'string' },
-                    recipe_number: { type: 'string' },
-                    calories: { type: 'number' },
-                    protein: { type: 'number' },
-                    carbs: { type: 'number' },
-                    fat: { type: 'number' },
-                    saturated_fat: { type: 'number' },
-                    sodium: { type: 'number' },
-                    fiber: { type: 'number' },
-                    sugar: { type: 'number' },
-                    cholesterol: { type: 'number' },
-                    vitamin_a: { type: 'number' },
-                    vitamin_c: { type: 'number' },
-                    vitamin_d: { type: 'number' },
-                    calcium: { type: 'number' },
-                    iron: { type: 'number' },
-                    potassium: { type: 'number' }
-                  }
-                }
-              }
-            }
-          }
-        });
+${fda.text.slice(0, 20000)}`);
 
         if (fdaResult?.items?.length > 0) {
           // If we have no week menu items, build list from FDA directly
@@ -253,8 +224,7 @@ ${fda.text.slice(0, 20000)}`,
       if (ingredients) {
         setStep('Processing Ingredients CSV...');
         setProgress(70);
-        const ingResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `Parse this CSV file containing menu ingredients. For each row extract:
+        const ingResult = await callLLMWithRetry(`Parse this CSV file containing menu ingredients. For each row extract:
 - recipe_number
 - ingredients (the full ingredient list as a string)
 - is_vegan (boolean)
@@ -264,27 +234,7 @@ ${fda.text.slice(0, 20000)}`,
 Return ALL rows as JSON with an "items" array.
 
 CSV Data:
-${csvChunk}`,
-          add_context_from_internet: false,
-          response_json_schema: {
-            type: 'object',
-            properties: {
-              items: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    recipe_number: { type: 'string' },
-                    ingredients: { type: 'string' },
-                    is_vegan: { type: 'boolean' },
-                    is_vegetarian: { type: 'boolean' },
-                    is_fit: { type: 'boolean' }
-                  }
-                }
-              }
-            }
-          }
-        });
+${csvChunk}`);
 
         if (ingResult?.items?.length > 0) {
           finalItems = finalItems.map(item => {
@@ -316,35 +266,14 @@ ${csvChunk}`,
           setStep('Extracting allergen information from Allergen file...');
           setProgress(85);
           await new Promise(r => setTimeout(r, 3000)); // avoid rate limit
-          const allergenResult = await base44.integrations.Core.InvokeLLM({
-            prompt: `Extract ALL allergen information from this allergen file. For each item extract:
+          const allergenResult = await callLLMWithRetry(`Extract ALL allergen information from this allergen file. For each item extract:
 - recipe_number (the recipe/item number)
 - allergens (array of allergens from this list: Milk, Eggs, Fish, Crustacean Shellfish, Tree Nuts, Peanuts, Wheat, Soybeans, Sesame)
 
 Return as JSON with an "items" array containing recipe_number and allergens for EVERY item found.
 
 Document text:
-${allergenFileChunk}`,
-            add_context_from_internet: false,
-            response_json_schema: {
-              type: 'object',
-              properties: {
-                items: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      recipe_number: { type: 'string' },
-                      allergens: {
-                        type: 'array',
-                        items: { type: 'string' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          });
+${allergenFileChunk}`);
 
           console.log('Allergen file extraction result:', allergenResult);
           if (allergenResult?.items?.length > 0) {

@@ -76,8 +76,8 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
   };
 
   const handleProcessAndPublish = async () => {
-    const { weekMenu, fda, ingredients } = uploadedFiles;
-    if (!weekMenu && !fda && !ingredients) {
+    const { weekMenu, fda, ingredients, allergenFile } = uploadedFiles;
+    if (!weekMenu && !fda && !ingredients && !allergenFile) {
       alert('Please upload at least one file first.');
       return;
     }
@@ -381,7 +381,12 @@ ${allergenFileChunk}`,
       setStep('');
       alert(`✅ Published ${cleanItems.length} menu items successfully!`);
     } catch (err) {
-      alert(`❌ Error: ${err.message}`);
+      console.error('Upload error details:', err);
+      let errorMsg = err.message;
+      if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('Failed to fetch')) {
+        errorMsg = 'Network error: Please check your internet connection and try again. If the problem persists, try uploading smaller files.';
+      }
+      alert(`❌ Error: ${errorMsg}`);
     } finally {
       setPublishing(false);
       setProgress(0);

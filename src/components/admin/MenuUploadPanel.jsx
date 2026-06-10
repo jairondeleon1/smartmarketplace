@@ -95,16 +95,22 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
         let menuText = weekMenu.text;
         if (weekMenu.text.startsWith('http')) {
           // It's a PDF URL - extract text using ExtractDataFromUploadedFile
-          const extractRes = await base44.integrations.Core.ExtractDataFromUploadedFile({
-            file_url: weekMenu.text,
-            json_schema: {
-              type: 'object',
-              properties: {
-                text: { type: 'string' }
-              },
-              required: ['text']
-            }
-          });
+          let extractRes;
+          try {
+            extractRes = await base44.integrations.Core.ExtractDataFromUploadedFile({
+              file_url: weekMenu.text,
+              json_schema: {
+                type: 'object',
+                properties: {
+                  text: { type: 'string' }
+                },
+                required: ['text']
+              }
+            });
+          } catch (extractErr) {
+            console.error('PDF extraction error:', extractErr);
+            throw new Error('Failed to extract text from Week Menu PDF: ' + extractErr.message);
+          }
           // Handle different response structures
           menuText = extractRes?.text || extractRes?.extracted_text || extractRes?.data?.text || JSON.stringify(extractRes);
           if (!menuText || menuText === '{}') throw new Error('Failed to extract text from Week Menu PDF');
@@ -164,16 +170,22 @@ ${menuText}`,
         setProgress(40);
         let fdaText = fda.text;
         if (fda.text.startsWith('http')) {
-          const extractRes = await base44.integrations.Core.ExtractDataFromUploadedFile({
-            file_url: fda.text,
-            json_schema: {
-              type: 'object',
-              properties: {
-                text: { type: 'string' }
-              },
-              required: ['text']
-            }
-          });
+          let extractRes;
+          try {
+            extractRes = await base44.integrations.Core.ExtractDataFromUploadedFile({
+              file_url: fda.text,
+              json_schema: {
+                type: 'object',
+                properties: {
+                  text: { type: 'string' }
+                },
+                required: ['text']
+              }
+            });
+          } catch (extractErr) {
+            console.error('FDA extraction error:', extractErr);
+            throw new Error('Failed to extract text from FDA file: ' + extractErr.message);
+          }
           fdaText = extractRes?.text || extractRes?.extracted_text || extractRes?.data?.text || JSON.stringify(extractRes);
           if (!fdaText || fdaText === '{}') throw new Error('Failed to extract text from FDA file');
         }
@@ -363,6 +375,7 @@ ${csvChunk}`,
       setStep('');
       alert(`✅ Published ${cleanItems.length} menu items successfully!`);
     } catch (err) {
+      console.error('Publish error:', err);
       alert(`❌ Error: ${err.message}`);
     } finally {
       setPublishing(false);

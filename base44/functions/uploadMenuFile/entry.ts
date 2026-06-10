@@ -32,42 +32,10 @@ Deno.serve(async (req) => {
     const result = await base44.asServiceRole.integrations.Core.UploadFile({ file });
     if (!result?.file_url) throw new Error('Upload returned no URL');
 
-    // Extract text for CSV and PDF files
+    // Extract text for CSV only (PDFs will be extracted by InvokeLLM with vision)
     let extractedText = '';
     if (file.name.endsWith('.csv')) {
       extractedText = await file.text();
-    } else if (file.name.endsWith('.pdf')) {
-      // Extract text from PDF with retry logic
-      let extractRes;
-      let lastError;
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          extractRes = await base44.asServiceRole.integrations.Core.ExtractDataFromUploadedFile({
-            file_url: result.file_url,
-            json_schema: {
-              type: 'object',
-              properties: {
-                text: { type: 'string' }
-              },
-              required: ['text']
-            }
-          });
-          if (extractRes?.status === 'error') {
-            throw new Error(extractRes?.details || 'Unknown error');
-          }
-          break;
-        } catch (err) {
-          lastError = err.message;
-          if (attempt < 3) {
-            await new Promise(r => setTimeout(r, 3000));
-          }
-        }
-      }
-      if (extractRes?.status !== 'error') {
-        extractedText = extractRes?.output?.text || (Array.isArray(extractRes?.output) && extractRes.output[0]?.text) || '';
-      } else {
-        console.error('PDF extraction failed after 3 attempts:', lastError);
-      }
     }
 
     return Response.json({ file_url: result.file_url, text: extractedText });

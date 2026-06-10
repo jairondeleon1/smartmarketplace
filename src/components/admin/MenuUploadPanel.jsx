@@ -92,10 +92,7 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
         setStep('Extracting menu items from Week Menu PDF...');
         setProgress(10);
         
-        const menuText = weekMenu.text;
-        if (!menuText || menuText.length < 10) {
-          throw new Error('No text extracted from Week Menu PDF');
-        }
+        const isUrl = weekMenu.text.startsWith('http');
         
         const result = await base44.integrations.Core.InvokeLLM({
           prompt: `Extract ALL menu items from this weekly menu document. For each item extract:
@@ -105,10 +102,8 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
 - day (exactly one of: Monday, Tuesday, Wednesday, Thursday, Friday, Daily Special)
 - description (any description text if present)
 
-Return as JSON with an "items" array.
-
-Document:
-${menuText}`,
+Return as JSON with an "items" array.`,
+          ...(isUrl ? { document_urls: [weekMenu.text] } : { documents: [weekMenu.text] }),
           response_json_schema: {
             type: 'object',
             properties: {
@@ -150,10 +145,7 @@ ${menuText}`,
         setStep('Extracting nutrition data from FDA file...');
         setProgress(40);
         
-        const fdaText = fda.text;
-        if (!fdaText || fdaText.length < 10) {
-          throw new Error('No text extracted from FDA PDF');
-        }
+        const fdaIsUrl = fda.text.startsWith('http');
         
         const fdaResult = await base44.integrations.Core.InvokeLLM({
           prompt: `Extract ALL nutrition data from this FDA nutrition report. For each menu item extract:
@@ -176,10 +168,8 @@ ${menuText}`,
 - potassium (mg - extract the number only)
 
 For values listed as "less than 1g" use 0.5, for "less than 5mg" use 2.
-Return as JSON with an "items" array. Include ALL items found.
-
-Document:
-${fdaText}`,
+Return as JSON with an "items" array. Include ALL items found.`,
+          ...(fdaIsUrl ? { document_urls: [fda.text] } : { documents: [fda.text] }),
           response_json_schema: {
             type: 'object',
             properties: {

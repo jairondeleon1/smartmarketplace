@@ -130,6 +130,7 @@ ${weekMenu.text.slice(0, 15000)}`,
       }
 
       setProgress(30);
+      await new Promise(r => setTimeout(r, 2000)); // avoid rate limit between LLM calls
 
       // --- STEP 2: FDA Nutrition Data ---
       if (fda) {
@@ -237,6 +238,7 @@ ${fda.text.slice(0, 20000)}`,
       }
 
       setProgress(65);
+      await new Promise(r => setTimeout(r, 2000)); // avoid rate limit between LLM calls
 
       // --- STEP 3: Ingredients CSV ---
       if (ingredients) {
@@ -298,39 +300,6 @@ ${csvChunk}`,
       }
 
       setProgress(80);
-
-      // --- STEP 4: Generate missing descriptions ---
-      const needsDesc = finalItems.filter(i => !i.description || i.description.length < 10);
-      if (needsDesc.length > 0) {
-        setStep('Generating missing descriptions...');
-        const descResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `Write a short appetizing 1-sentence description (15-25 words) for each of these menu items. Return JSON with an "items" array where each has "name" and "description".\n\nItems:\n${needsDesc.map(i => `- ${i.name}`).join('\n')}`,
-          response_json_schema: {
-            type: 'object',
-            properties: {
-              items: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: { name: { type: 'string' }, description: { type: 'string' } }
-                }
-              }
-            }
-          }
-        });
-        if (descResult?.items) {
-          finalItems = finalItems.map(item => {
-            if (!item.description || item.description.length < 10) {
-              const match = descResult.items.find(d =>
-                d.name.toLowerCase().includes(item.name.toLowerCase().slice(0, 12)) ||
-                item.name.toLowerCase().includes(d.name.toLowerCase().slice(0, 12))
-              );
-              if (match?.description) return { ...item, description: match.description };
-            }
-            return item;
-          });
-        }
-      }
 
       setProgress(95);
       setStep('Publishing menu...');

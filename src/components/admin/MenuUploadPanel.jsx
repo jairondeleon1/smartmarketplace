@@ -52,7 +52,8 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
           mimeType: file.type
         });
         
-        if (!uploadRes?.file_url) {
+        const fileUrl = uploadRes?.data?.file_url;
+        if (!fileUrl) {
           throw new Error('Upload failed - no file URL returned');
         }
         
@@ -60,7 +61,7 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
         const extractResult = await base44.integrations.Core.InvokeLLM({
           prompt: `Extract ALL text content from this PDF document. Return the raw text exactly as it appears.
           
-PDF URL: ${uploadRes.file_url}`,
+PDF URL: ${fileUrl}`,
           add_context_from_internet: true
         });
         

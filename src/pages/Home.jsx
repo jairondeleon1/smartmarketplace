@@ -1011,20 +1011,9 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
 
   const uploadFile = async (file) => {
     if (!file) throw new Error('No file provided');
-    const { appId, appBaseUrl } = (await import('@/lib/app-params')).appParams;
-    const token = localStorage.getItem('base44_access_token') || localStorage.getItem('token');
-    const baseUrl = appBaseUrl || window.location.origin;
-    const funcUrl = `${baseUrl}/api/apps/${appId}/functions/uploadMenuFile`;
-    const form = new FormData();
-    form.append('file', file);
-    const headers = {};
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    const res = await fetch(funcUrl, { method: 'POST', headers, body: form });
-    if (!res.ok) throw new Error(`Upload failed: ${res.status} ${res.statusText}`);
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    if (!data.file_url) throw new Error('Upload returned no URL');
-    return data.file_url;
+    const result = await base44.integrations.Core.UploadFile({ file });
+    if (!result?.file_url) throw new Error('Upload returned no URL');
+    return result.file_url;
   };
 
   const readFileAsText = (file) => new Promise((resolve, reject) => {

@@ -24,7 +24,7 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
   const [step, setStep] = useState('');
   const [progress, setProgress] = useState(0);
 
-  // Upload a file via Core UploadFile integration
+  // Upload a file using the Core UploadFile integration (handles multipart internally)
   const uploadFile = async (file) => {
     const result = await base44.integrations.Core.UploadFile({ file });
     if (!result?.file_url) throw new Error('Upload returned no URL');

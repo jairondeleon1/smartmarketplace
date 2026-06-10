@@ -310,7 +310,7 @@ ${csvChunk}`,
       setProgress(80);
 
       // --- STEP 4: Allergen Extraction (Admin/Dietitian only) ---
-      if (canManageAllergens && ingredients) {
+      if (canManageAllergens && ingredients && csvChunk.trim().length > 0) {
         setStep('Extracting allergen information...');
         setProgress(85);
         await new Promise(r => setTimeout(r, 2000)); // avoid rate limit

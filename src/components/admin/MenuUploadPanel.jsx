@@ -103,7 +103,7 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
 - description (any description text if present)
 
 Return as JSON with an "items" array.`,
-          ...(isUrl ? { document_urls: [weekMenu.text] } : { documents: [weekMenu.text] }),
+          ...(isUrl ? { file_urls: [weekMenu.text] } : { file_urls: weekMenu.text ? [weekMenu.text] : [] }),
           response_json_schema: {
             type: 'object',
             properties: {
@@ -169,7 +169,7 @@ Return as JSON with an "items" array.`,
 
 For values listed as "less than 1g" use 0.5, for "less than 5mg" use 2.
 Return as JSON with an "items" array. Include ALL items found.`,
-          ...(fdaIsUrl ? { document_urls: [fda.text] } : { documents: [fda.text] }),
+          ...(fdaIsUrl ? { file_urls: [fda.text] } : { file_urls: fda.text ? [fda.text] : [] }),
           response_json_schema: {
             type: 'object',
             properties: {

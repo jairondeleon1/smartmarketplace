@@ -24,11 +24,24 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
   const [step, setStep] = useState('');
   const [progress, setProgress] = useState(0);
 
-  // Upload a file using the Core UploadFile integration (handles multipart internally)
+  // Upload a file via the uploadMenuFile backend function (base64 encoded)
   const uploadFile = async (file) => {
-    const result = await base44.integrations.Core.UploadFile({ file });
-    if (!result?.file_url) throw new Error('Upload returned no URL');
-    return result.file_url;
+    const arrayBuffer = await file.arrayBuffer();
+    const uint8 = new Uint8Array(arrayBuffer);
+    let binary = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < uint8.length; i += chunkSize) {
+      binary += String.fromCharCode(...uint8.subarray(i, i + chunkSize));
+    }
+    const base64 = btoa(binary);
+    const response = await base44.functions.invoke('uploadMenuFile', {
+      fileBase64: base64,
+      fileName: file.name,
+      mimeType: file.type || 'application/octet-stream',
+    });
+    const url = response?.data?.file_url;
+    if (!url) throw new Error('Upload returned no URL');
+    return url;
   };
 
   const handleFileSelect = async (slotKey, file, readAsText = false) => {

@@ -41,7 +41,7 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
         // PDF — convert to base64 and upload via backend function
         const fileBase64 = await new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = e => resolve(e.target.result.split(',')[1]);
+          reader.onload = e => resolve(e.target.result); // Keep full data URL
           reader.onerror = () => reject(new Error('Failed to read file'));
           reader.readAsDataURL(file);
         });
@@ -53,7 +53,7 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
         });
         
         if (!uploadRes?.file_url) {
-          throw new Error('Upload failed');
+          throw new Error('Upload failed - no file URL returned');
         }
         
         // Use InvokeLLM to extract text from the uploaded PDF
@@ -69,6 +69,7 @@ PDF URL: ${uploadRes.file_url}`,
       if (!text || text.trim().length === 0) throw new Error('File is empty or could not be read');
       setUploadedFiles(prev => ({ ...prev, [slotKey]: { text, name: file.name } }));
     } catch (err) {
+      console.error('Upload error:', err);
       alert(`❌ ${slotKey} upload failed: ${err.message}`);
     } finally {
       setUploading(null);

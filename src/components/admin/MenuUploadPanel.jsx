@@ -157,7 +157,7 @@ ${menuText}`,
       }
 
       setProgress(30);
-      await new Promise(r => setTimeout(r, 2000)); // avoid rate limit between LLM calls
+      await new Promise(r => setTimeout(r, 5000)); // avoid rate limit between LLM calls
 
       // --- STEP 2: FDA Nutrition Data ---
       if (fda) {
@@ -293,7 +293,7 @@ ${fdaText}`,
       }
 
       setProgress(65);
-      await new Promise(r => setTimeout(r, 2000)); // avoid rate limit between LLM calls
+      await new Promise(r => setTimeout(r, 5000)); // avoid rate limit between LLM calls
 
       // --- STEP 3: Ingredients CSV ---
       if (ingredients) {

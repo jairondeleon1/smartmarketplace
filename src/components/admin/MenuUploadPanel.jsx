@@ -256,6 +256,7 @@ ${fda.text.slice(0, 20000)}`,
         const ingResult = await base44.integrations.Core.InvokeLLM({
           prompt: `Parse this CSV file containing menu ingredients. For each row extract:
 - recipe_number
+- description (a short 1-2 sentence description of the dish if present in the CSV, otherwise leave empty)
 - ingredients (the full ingredient list as a string)
 - is_vegan (boolean)
 - is_vegetarian (boolean)
@@ -275,6 +276,7 @@ ${csvChunk}`,
                   type: 'object',
                   properties: {
                     recipe_number: { type: 'string' },
+                    description: { type: 'string' },
                     ingredients: { type: 'string' },
                     is_vegan: { type: 'boolean' },
                     is_vegetarian: { type: 'boolean' },
@@ -299,6 +301,7 @@ ${csvChunk}`,
               return {
                 ...item,
                 ingredients: match.ingredients.trim(),
+                ...(match.description?.trim() ? { description: match.description.trim() } : {}),
                 tags: [...new Set([...(item.tags || []), ...extraTags])]
               };
             }

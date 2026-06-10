@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { appParams } from '@/lib/app-params';
 import {
   Upload, Loader2, CheckCircle, XCircle, Sparkles,
   Calendar, FileText, AlertTriangle, Info
@@ -25,26 +24,11 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
   const [step, setStep] = useState('');
   const [progress, setProgress] = useState(0);
 
-  // Upload a file via multipart FormData directly to the backend function
+  // Upload a file via Core UploadFile integration
   const uploadFile = async (file) => {
-    const { token } = appParams;
-    const origin = window.location.origin;
-    const url = `${origin}/functions/uploadMenuFile`;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const headers = {};
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-
-    const res = await fetch(url, { method: 'POST', headers, body: formData });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || `Upload failed (${res.status})`);
-    }
-    const data = await res.json();
-    if (!data.file_url) throw new Error('Upload returned no URL');
-    return data.file_url;
+    const result = await base44.integrations.Core.UploadFile({ file });
+    if (!result?.file_url) throw new Error('Upload returned no URL');
+    return result.file_url;
   };
 
   const handleFileSelect = async (slotKey, file, readAsText = false) => {

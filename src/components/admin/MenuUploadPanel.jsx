@@ -138,7 +138,7 @@ ${weekMenu.text.slice(0, 15000)}`,
       }
 
       setProgress(30);
-      await new Promise(r => setTimeout(r, 2000)); // avoid rate limit between LLM calls
+      await new Promise(r => setTimeout(r, 3000)); // avoid rate limit between LLM calls
 
       // --- STEP 2: FDA Nutrition Data ---
       if (fda) {
@@ -246,7 +246,7 @@ ${fda.text.slice(0, 20000)}`,
       }
 
       setProgress(65);
-      await new Promise(r => setTimeout(r, 2000)); // avoid rate limit between LLM calls
+      await new Promise(r => setTimeout(r, 3000)); // avoid rate limit between LLM calls
 
       // --- STEP 3: Ingredients CSV ---
       const csvChunk = ingredients ? ingredients.text.slice(0, 10000) : '';
@@ -314,7 +314,7 @@ ${csvChunk}`,
         try {
           setStep('Extracting allergen information...');
           setProgress(85);
-          await new Promise(r => setTimeout(r, 2000)); // avoid rate limit
+          await new Promise(r => setTimeout(r, 3000)); // avoid rate limit
           const allergenResult = await base44.integrations.Core.InvokeLLM({
             prompt: `Extract allergen information from these ingredients. For each recipe_number, identify allergens from this list:
 - Milk

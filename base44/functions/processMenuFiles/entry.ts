@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
 2. An FDA nutrition report with detailed nutrition facts
 ${ingredientsData ? '3. A CSV file with ingredients and dietary tags (data provided below)' : ''}
 
-Your task is to extract ALL menu items and combine the data from all sources into a single structured JSON output.
+CRITICAL: You MUST extract EVERY SINGLE menu item from the documents. Do not skip any items. If there are 50 items, return all 50. If there are 100 items, return all 100.
 
 For each menu item, extract:
 - name (dish name)
@@ -41,8 +41,8 @@ For each menu item, extract:
 
 For values listed as "less than 1g" use 0.5, for "less than 5mg" use 2.
 
-Return as JSON with an "items" array containing ALL menu items found.
-${ingredientsData ? `\n\nCSV DATA:\n${ingredientsData.slice(0, 8000)}` : ''}`;
+Return as JSON with an "items" array containing EVERY menu item found. DO NOT summarize or skip items.
+${ingredientsData ? `\n\nCSV DATA (use this for ingredients and tags):\n${ingredientsData}` : ''}`;
 
     const result = await base44.integrations.Core.InvokeLLM({
       prompt: combinedPrompt,

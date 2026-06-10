@@ -59,6 +59,7 @@ import DietitianCornerSection from "../components/DietitianCornerSection";
 import DietitianCornerAdmin from "../components/admin/DietitianCornerAdmin";
 import ScanLabel from "../components/ScanLabel.jsx";
 import FeatureFlags from "../components/admin/FeatureFlags";
+import MenuUploadPanel from "../components/admin/MenuUploadPanel";
 import AnalyticsDashboard from "../components/admin/AnalyticsDashboard";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import { AccessibilityProvider } from "@/lib/AccessibilityContext";
@@ -1003,25 +1004,8 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
   const doRefresh = useCallback(async () => { if (queryClient) await queryClient.invalidateQueries({ queryKey: ['menuItems'] }); }, [queryClient]);
   const { scrollRef, pullDistance, isPulling, isRefreshing, onTouchStart, onTouchMove, onTouchEnd } = usePullToRefresh(doRefresh);
   const [isSyncing, setIsSyncing] = useState(null);
-  const [processingStep, setProcessingStep] = useState('');
-  const [processingProgress, setProcessingProgress] = useState(0);
-  const [uploadedFiles, setUploadedFiles] = useState({ weekMenu: null, fda: null, allergen: null, ingredients: null });
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [bulkEditItems, setBulkEditItems] = useState([]);
-
-  const uploadFile = async (file) => {
-    if (!file) throw new Error('No file provided');
-    const result = await base44.integrations.Core.UploadFile({ file });
-    if (!result?.file_url) throw new Error('Upload returned no URL');
-    return result.file_url;
-  };
-
-  const readFileAsText = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => resolve(e.target.result);
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsText(file);
-  });
 
   const handleBulkEdit = (selectedItems) => { setBulkEditItems(selectedItems); setShowBulkEdit(true); };
 
@@ -1060,206 +1044,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
     URL.revokeObjectURL(url);
   };
 
-  const handleWeekMenuUpload = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
-    e.target.value = '';
-    setIsSyncing("week-menu");
-    try { const fileUrl = await uploadFile(file); setUploadedFiles(prev => ({ ...prev, weekMenu: fileUrl })); }
-    catch (error) { alert('Week Menu upload failed: ' + (error?.message || 'Please try again.')); }
-    finally { setIsSyncing(null); }
-  };
 
-  const handleFDAUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = '';
-    setIsSyncing("fda");
-    try {
-      const fileUrl = await uploadFile(file);
-      setUploadedFiles(prev => ({ ...prev, fda: { url: fileUrl, name: file.name } }));
-      alert('✅ FDA file ready! Now click "Process & Publish Menu" to apply nutrition data.');
-    } catch (error) {
-      alert('FDA upload failed: ' + (error?.message || 'Please try again.'));
-    } finally { setIsSyncing(null); }
-  };
-
-  const handleAllergenUpload = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
-    e.target.value = '';
-    setIsSyncing("allergen");
-    try { const fileUrl = await uploadFile(file); setUploadedFiles(prev => ({ ...prev, allergen: fileUrl })); }
-    catch (error) { alert('Allergen upload failed: ' + (error?.message || 'Please try again.')); }
-    finally { setIsSyncing(null); }
-  };
-
-  const handleIngredientsUpload = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
-    e.target.value = '';
-    setIsSyncing("ingredients");
-    try {
-      const text = await readFileAsText(file);
-      if (!text || text.length === 0) throw new Error('File is empty');
-      setUploadedFiles(prev => ({ ...prev, ingredients: text }));
-    } catch (error) { alert('Ingredients upload failed: ' + (error?.message || 'Cannot read file')); }
-    finally { setIsSyncing(null); }
-  };
-
-  const handleProcessAndPublish = async () => {
-    if (!uploadedFiles.weekMenu && !uploadedFiles.fda && !uploadedFiles.allergen && !uploadedFiles.ingredients) {
-      alert('Please upload at least one file to process'); return;
-    }
-    setIsSyncing("publish"); setProcessingProgress(0);
-    let finalItems = [];
-    try {
-      if (uploadedFiles.weekMenu) {
-        setProcessingStep('Step 1: Week Menu...'); setProcessingProgress(20);
-        const weekResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `Extract ALL menu items from this document. For each item extract: name, recipe_number (the number in parentheses), station name, day (Monday/Tuesday/Wednesday/Thursday/Friday/Daily Special), and any description if available. Return as JSON array.`,
-          file_urls: [uploadedFiles.weekMenu],
-          response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { name: { type: "string" }, recipe_number: { type: "string" }, station: { type: "string" }, day: { type: "string" }, description: { type: "string" } } } } } }
-        });
-        if (weekResult?.items) finalItems = weekResult.items.map((item, idx) => ({ ...item, id: Date.now() + idx }));
-      } else {
-        finalItems = menuItems.map(item => ({ ...item }));
-      }
-
-      // Normalize station names
-      const normalizeStation = (station) => {
-        const s = (station || '').toLowerCase().trim();
-        if (s.includes('main') || s.includes('comfort') || s.includes('entree')) return 'Entree';
-        return station;
-      };
-      finalItems = finalItems.map(item => ({ ...item, station: normalizeStation(item.station) }));
-
-      setProcessingProgress(35);
-
-      if (uploadedFiles.fda) {
-        setProcessingStep('Step 2: FDA Data...'); setProcessingProgress(40);
-        try {
-          const fdaResult = await base44.integrations.Core.InvokeLLM({
-            prompt: `Extract ALL menu items from this FDA nutrition report. For each item extract: name, recipe_number, calories, protein, carbs (total carb), fat (total fat), saturated_fat, sodium, fiber (dietary fiber), sugar (total sugars), cholesterol. Treat "less than 1 gram" as 0.5 and "less than 5 milligrams" as 2. Return as JSON.`,
-            file_urls: [uploadedFiles.fda.url],
-            response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { name: { type: "string" }, recipe_number: { type: "string" }, calories: { type: "number" }, protein: { type: "number" }, carbs: { type: "number" }, fat: { type: "number" }, saturated_fat: { type: "number" }, sodium: { type: "number" }, fiber: { type: "number" }, sugar: { type: "number" }, cholesterol: { type: "number" }, vitamin_a: { type: "number" }, vitamin_c: { type: "number" }, vitamin_d: { type: "number" }, calcium: { type: "number" }, iron: { type: "number" }, potassium: { type: "number" } } } } } }
-          });
-          if (fdaResult?.items) {
-            const normalizeRecipe = (num) => String(num).trim().replace(/^0+/, '').toLowerCase();
-            finalItems = finalItems.map(item => {
-              const match = fdaResult.items.find(fda => normalizeRecipe(fda.recipe_number || '') === normalizeRecipe(item.recipe_number || ''));
-              if (match) {
-                const saturatedFat = match.saturated_fat || 0; const totalFat = match.fat || 0;
-                return { ...item, calories: match.calories||0, protein: match.protein||0, carbs: match.carbs||0, fat: totalFat, saturated_fat: saturatedFat, unsaturated_fat: totalFat > saturatedFat ? totalFat - saturatedFat : 0, sodium: match.sodium||0, fiber: match.fiber||0, sugar: match.sugar||0, cholesterol: match.cholesterol||0, vitamin_a: match.vitamin_a||0, vitamin_c: match.vitamin_c||0, vitamin_d: match.vitamin_d||0, calcium: match.calcium||0, iron: match.iron||0, potassium: match.potassium||0 };
-              }
-              return item;
-            });
-          }
-        } catch (error) { alert('FDA failed: ' + error.message); }
-      }
-      setProcessingProgress(60);
-
-      const itemsNeedingDescriptions = finalItems.filter(item => !item.description || item.description.length < 15);
-      if (itemsNeedingDescriptions.length > 0) {
-        setProcessingStep('Generating Menu Descriptions...'); setProcessingProgress(50);
-        try {
-          const descResult = await base44.integrations.Core.InvokeLLM({
-            prompt: `Generate brief, appetizing 1-sentence descriptions (15-25 words each) for these menu items. Return as JSON.\n\nItems:\n${itemsNeedingDescriptions.map(i => `- ${i.name}`).join('\n')}`,
-            response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { name: { type: "string" }, description: { type: "string" } } } } } }
-          });
-          if (descResult?.items) {
-            finalItems = finalItems.map(item => {
-              if (!item.description || item.description.length < 15) {
-                const match = descResult.items.find(d => { const dName = d.name.toLowerCase().trim(); const iName = item.name.toLowerCase().trim(); return dName.includes(iName) || iName.includes(dName) || dName.slice(0,15) === iName.slice(0,15); });
-                if (match?.description) return { ...item, description: match.description };
-              }
-              return item;
-            });
-          }
-        } catch (error) { console.error('Description generation failed:', error); }
-      }
-      setProcessingProgress(65);
-
-      if (uploadedFiles.allergen) {
-        const allergenResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `Extract allergen information from this PDF. For each menu item, extract: recipe_number, allergens (array), and dietary tags (array like Vegetarian, Vegan, Fit, Dairy Free, etc.). Return as structured JSON.`,
-          file_urls: [uploadedFiles.allergen],
-          add_context_from_internet: false,
-          response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { recipe_number: { type: "string" }, allergens: { type: "array", items: { type: "string" } }, tags: { type: "array", items: { type: "string" } } } } } } }
-        });
-        if (allergenResult?.items) {
-          const normalizeRecipe = (num) => String(num).trim().replace(/^0+/, '').toLowerCase();
-          finalItems = finalItems.map(item => {
-            const match = allergenResult.items.find(al => normalizeRecipe(al.recipe_number || '') === normalizeRecipe(item.recipe_number || ''));
-            if (match) return { ...item, allergens: match.allergens, tags: match.tags };
-            return item;
-          });
-        }
-      }
-
-      if (uploadedFiles.ingredients) {
-        setProcessingStep('Processing Ingredients CSV...');
-        try {
-          const csvChunk = uploadedFiles.ingredients.slice(0, 8000);
-          const ingredientsResult = await base44.integrations.Core.InvokeLLM({
-            prompt: `You are parsing a CSV file with menu ingredients. Extract ALL rows. For each row extract: recipe_number, ingredients, is_vegan, is_vegetarian, is_fit. Return ALL rows as JSON.\n\nCSV Data:\n${csvChunk}`,
-            add_context_from_internet: false,
-            response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { recipe_number: { type: "string" }, ingredients: { type: "string" }, is_vegan: { type: "boolean" }, is_vegetarian: { type: "boolean" }, is_fit: { type: "boolean" } } } } } }
-          });
-          if (ingredientsResult?.items?.length > 0) {
-            const normalizeRecipe = (num) => String(num).trim().replace(/^0+/, '');
-            finalItems = finalItems.map(item => {
-              const itemRecipe = normalizeRecipe(item.recipe_number || '');
-              const match = ingredientsResult.items.find(ing => normalizeRecipe(ing.recipe_number || '') === itemRecipe);
-              if (match && match.ingredients && match.ingredients.length > 5) {
-                const csvTags = []; if (match.is_vegan) csvTags.push('Vegan'); if (match.is_vegetarian) csvTags.push('Vegetarian'); if (match.is_fit) csvTags.push('Fit');
-                return { ...item, ingredients: match.ingredients.trim(), tags: [...new Set([...(item.tags || []), ...csvTags])] };
-              }
-              return item;
-            });
-          }
-        } catch (error) { alert('Warning: Ingredients processing failed - ' + error.message); }
-      }
-
-      finalItems = finalItems.map(item => {
-        if ((item.name?.toLowerCase().includes('fried') || item.description?.toLowerCase().includes('fried')) && item.tags?.includes('Vegan')) {
-          return { ...item, tags: item.tags.filter(tag => tag !== 'Vegan') };
-        }
-        return item;
-      });
-
-      const itemsNeedingIngredients = finalItems.filter(item => !item.ingredients || item.ingredients.length < 5);
-      if (itemsNeedingIngredients.length > 0) {
-        setProcessingStep('Generating Missing Ingredients...'); setProcessingProgress(90);
-        try {
-          const ingredientsResult = await base44.integrations.Core.InvokeLLM({
-            prompt: `Generate realistic ingredient lists for these menu items. Return as JSON.\n\nItems:\n${itemsNeedingIngredients.map(i => `- ${i.name}`).join('\n')}`,
-            response_json_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: { name: { type: "string" }, ingredients: { type: "string" } } } } } }
-          });
-          if (ingredientsResult?.items) {
-            finalItems = finalItems.map(item => {
-              if (!item.ingredients || item.ingredients.length < 5) {
-                const match = ingredientsResult.items.find(i => { const iName = i.name.toLowerCase().trim(); const itemName = item.name.toLowerCase().trim(); return iName.includes(itemName) || itemName.includes(iName) || iName.slice(0,15) === itemName.slice(0,15); });
-                if (match?.ingredients) return { ...item, ingredients: match.ingredients };
-              }
-              return item;
-            });
-          }
-        } catch (error) { console.error('Ingredient generation failed:', error); }
-      }
-
-      setProcessingStep('Publishing Menu...'); setProcessingProgress(100);
-      setMenuItems(finalItems);
-      setUploadedFiles({ weekMenu: null, fda: null, allergen: null, ingredients: null });
-      setTimeout(() => { alert(`✅ Published ${finalItems.length} menu items!`); setProcessingStep(''); setProcessingProgress(0); }, 500);
-    } catch (error) {
-      alert(`Error: ${error?.message || 'Unknown error'}`);
-    } finally { setProcessingStep(''); setProcessingProgress(0); setIsSyncing(null); }
-  };
-
-  const syncOptions = [
-    { label: "1. Week Menu PDF", type: "week-menu", icon: Calendar, accept: ".pdf", handler: handleWeekMenuUpload, desc: "Menu items with recipe #s" }, 
-    { label: "2. FDA Nutrition File", type: "fda", icon: Sparkles, accept: ".pdf,.xlsx,.xls", handler: handleFDAUpload, desc: "Match by recipe #" }, 
-    { label: "3. Allergen PDF", type: "allergen", icon: AlertTriangle, accept: ".pdf", handler: handleAllergenUpload, desc: "Match by recipe #", comingSoon: true },
-    { label: "4. Ingredients CSV", type: "ingredients", icon: FileText, accept: ".csv", handler: handleIngredientsUpload, desc: "Match by recipe #" }
-  ];
 
   return (
     <div ref={scrollRef} className="max-w-6xl mx-auto p-6 space-y-8 pb-32 font-sans overflow-x-hidden font-medium"
@@ -1282,68 +1067,8 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
 
       {activeTab === 'upload' && (
         <div className="space-y-10">
-        <div className="flex items-center gap-3">
-          <div className="h-px flex-1 bg-gray-200" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Weekly Menu Sync</span>
-          <div className="h-px flex-1 bg-gray-200" />
-        </div>
         <div className="grid lg:grid-cols-2 gap-8">
-
-          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2"><Upload className="w-4 h-4 text-teal-600"/> Matrix Sync</h3>
-              <span className="bg-teal-50 text-teal-700 px-3 py-1 rounded-full text-xs font-bold">{menuItems.length} Items Loaded</span>
-            </div>
-            <div className="space-y-3">
-              {syncOptions.map(opt => (
-                <div key={opt.type} className="relative">
-                  {opt.comingSoon ? (
-                    <div className="w-full p-5 border-2 border-dashed border-gray-200 rounded-2xl flex items-center gap-4 opacity-40 cursor-not-allowed select-none bg-gray-50">
-                      <div className="bg-gray-100 p-3 rounded-xl border border-gray-200"><opt.icon className="w-5 h-5 text-gray-400"/></div>
-                      <div className="flex-1 text-left"><div className="text-xs font-bold uppercase tracking-widest text-gray-400">{opt.label}</div><div className="text-[10px] text-gray-400 mt-0.5">{opt.desc}</div></div>
-                    </div>
-                  ) : (
-                    <>
-                      <input type="file" accept={opt.accept} id={`file-upload-${opt.type}`} className="hidden" onChange={opt.handler} />
-                      <label htmlFor={`file-upload-${opt.type}`} className="w-full p-5 border-2 border-dashed border-teal-100 rounded-2xl flex items-center gap-4 text-teal-800 hover:bg-teal-50 transition active:scale-[0.98] cursor-pointer">
-                        {isSyncing === opt.type ? <Loader2 className="animate-spin w-6 h-6" /> : (
-                          <><div className="bg-teal-50 p-3 rounded-xl border border-teal-100"><opt.icon className="w-5 h-5 text-teal-600"/></div>
-                          <div className="flex-1 text-left"><div className="text-xs font-bold uppercase tracking-widest text-slate-800">{opt.label}</div><div className="text-[10px] text-gray-500 mt-0.5">{opt.desc}</div></div></>
-                        )}
-                      </label>
-                    </>
-                  )}
-                  {opt.comingSoon && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span className="bg-gray-200 text-gray-500 text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-gray-300">Coming Soon</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-800">
-              <div className="font-bold mb-2 flex items-center gap-2"><Info className="w-4 h-4" />Files Uploaded</div>
-              <div className="space-y-1 text-blue-700 mb-3">
-                {[['weekMenu', 'Week Menu'], ['fda', 'FDA Nutrition'], ['allergen', 'Allergen Data'], ['ingredients', 'Ingredients']].map(([key, label]) => (
-                <div key={key} className="flex items-center gap-2">
-                  {(uploadedFiles[key]?.dataUrl || uploadedFiles[key]?.url || (typeof uploadedFiles[key] === 'string' && uploadedFiles[key])) ? <CheckCircle className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-300" />}
-                    <span>{label}</span>
-                  </div>
-                ))}
-              </div>
-              {isSyncing === "publish" ? (
-                <div className="space-y-2">
-                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden"><div className="bg-teal-600 h-full transition-all duration-500 rounded-full" style={{ width: `${processingProgress}%` }} /></div>
-                  <div className="flex items-center justify-center gap-2 text-xs text-teal-700"><Loader2 className="w-3 h-3 animate-spin" /><span className="font-bold">{processingStep}</span></div>
-                </div>
-              ) : (
-                <button onClick={handleProcessAndPublish} disabled={!uploadedFiles.weekMenu && !uploadedFiles.fda && !uploadedFiles.allergen && !uploadedFiles.ingredients} className="w-full py-3 bg-teal-600 text-white rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2">
-                  <Sparkles className="w-4 h-4" /> Process & Publish Menu
-                </button>
-              )}
-            </div>
-            <button onClick={() => console.log('Current Menu Data:', menuItems)} className="w-full p-3 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-200 transition">Debug: Log Menu to Console</button>
-          </div>
+          <MenuUploadPanel menuItems={menuItems} onPublish={setMenuItems} />
           {(isAdmin || isDietitian) && <div className="space-y-8 font-medium">
             <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
               <h3 className="font-bold text-slate-800 uppercase tracking-widest text-xs flex items-center gap-2"><Plus className="w-4 h-4 text-teal-600"/> Manual Entry</h3>

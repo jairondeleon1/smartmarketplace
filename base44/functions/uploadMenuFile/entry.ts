@@ -1,5 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import * as pdfjsLib from 'npm:pdfjs-dist@4.10.38';
 
 Deno.serve(async (req) => {
   try {
@@ -30,18 +29,9 @@ Deno.serve(async (req) => {
     const result = await base44.asServiceRole.integrations.Core.UploadFile({ file });
     if (!result?.file_url) throw new Error('Upload returned no URL');
 
-    // If PDF, extract text server-side
+    // Extract text for CSV only (PDFs will be processed by InvokeLLM directly)
     let extractedText = '';
-    if (file.name.endsWith('.pdf')) {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        const pageText = content.items.map(item => item.str).join(' ');
-        extractedText += pageText + '\n';
-      }
-    } else if (file.name.endsWith('.csv')) {
+    if (file.name.endsWith('.csv')) {
       extractedText = await file.text();
     }
 

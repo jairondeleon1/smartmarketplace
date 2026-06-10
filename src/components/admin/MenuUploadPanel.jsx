@@ -38,21 +38,22 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
           reader.readAsText(file);
         });
       } else {
-        // PDF — upload to backend for text extraction
-        const formData = new FormData();
-        formData.append('file', file);
+        // PDF — upload to backend then extract text with LLM
+        const uploadRes = await base44.functions.invoke('uploadMenuFile', { file });
         
-        const uploadRes = await fetch('/api/functions/uploadMenuFile', {
-          method: 'POST',
-          body: formData,
-        });
-        
-        if (!uploadRes.ok) {
-          const errData = await uploadRes.json();
-          throw new Error(errData.error || 'Upload failed');
+        if (!uploadRes?.file_url) {
+          throw new Error('Upload failed');
         }
         
-        text = (await uploadRes.json()).text;
+        // Use InvokeLLM to extract text from the uploaded PDF
+        const extractResult = await base44.integrations.Core.InvokeLLM({
+          prompt: `Extract ALL text content from this PDF document. Return the raw text exactly as it appears.
+          
+PDF URL: ${uploadRes.file_url}`,
+          add_context_from_internet: true
+        });
+        
+        text = extractResult?.text || '';
       }
       if (!text || text.trim().length === 0) throw new Error('File is empty or could not be read');
       setUploadedFiles(prev => ({ ...prev, [slotKey]: { text, name: file.name } }));

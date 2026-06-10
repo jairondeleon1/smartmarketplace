@@ -101,8 +101,9 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
               required: ['text']
             }
           });
-          menuText = extractRes?.text || '';
-          if (!menuText) throw new Error('Failed to extract text from Week Menu PDF');
+          // Handle different response structures
+          menuText = extractRes?.text || extractRes?.extracted_text || extractRes?.data?.text || JSON.stringify(extractRes);
+          if (!menuText || menuText === '{}') throw new Error('Failed to extract text from Week Menu PDF');
         }
         
         const result = await base44.integrations.Core.InvokeLLM({
@@ -169,8 +170,8 @@ ${menuText}`,
               required: ['text']
             }
           });
-          fdaText = extractRes?.text || '';
-          if (!fdaText) throw new Error('Failed to extract text from FDA file');
+          fdaText = extractRes?.text || extractRes?.extracted_text || extractRes?.data?.text || JSON.stringify(extractRes);
+          if (!fdaText || fdaText === '{}') throw new Error('Failed to extract text from FDA file');
         }
         
         const fdaResult = await base44.integrations.Core.InvokeLLM({

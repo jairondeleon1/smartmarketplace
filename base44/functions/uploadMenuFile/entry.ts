@@ -10,18 +10,17 @@ Deno.serve(async (req) => {
 
     let file;
     if (contentType.includes('multipart/form-data')) {
+      // Handle FormData upload (preferred)
       const form = await req.formData();
       file = form.get('file');
       if (!file || typeof file === 'string') {
         return Response.json({ error: 'No file in form data' }, { status: 400 });
       }
     } else {
+      // Handle base64 JSON upload (fallback)
       const { fileBase64, fileName, mimeType } = await req.json();
       if (!fileBase64) return Response.json({ error: 'No file data provided' }, { status: 400 });
-      
-      // Handle both raw base64 and data URL format
-      const base64Data = fileBase64.includes(',') ? fileBase64.split(',')[1] : fileBase64;
-      const binaryStr = atob(base64Data);
+      const binaryStr = atob(fileBase64);
       const bytes = new Uint8Array(binaryStr.length);
       for (let i = 0; i < binaryStr.length; i++) {
         bytes[i] = binaryStr.charCodeAt(i);
@@ -32,13 +31,7 @@ Deno.serve(async (req) => {
     const result = await base44.asServiceRole.integrations.Core.UploadFile({ file });
     if (!result?.file_url) throw new Error('Upload returned no URL');
 
-    // Extract text for CSV only (PDFs will be extracted by InvokeLLM with vision)
-    let extractedText = '';
-    if (file.name.endsWith('.csv')) {
-      extractedText = await file.text();
-    }
-
-    return Response.json({ file_url: result.file_url, text: extractedText });
+    return Response.json({ file_url: result.file_url });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

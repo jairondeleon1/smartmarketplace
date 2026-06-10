@@ -41,7 +41,7 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
         // PDF — convert to base64 and upload via backend function
         const fileBase64 = await new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = e => resolve(e.target.result); // Keep full data URL
+          reader.onload = e => resolve(e.target.result);
           reader.onerror = () => reject(new Error('Failed to read file'));
           reader.readAsDataURL(file);
         });
@@ -57,17 +57,10 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
           throw new Error('Upload failed - no file URL returned');
         }
         
-        // Use InvokeLLM to extract text from the uploaded PDF
-        const extractResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `Extract ALL text content from this PDF document. Return the raw text exactly as it appears.
-          
-PDF URL: ${fileUrl}`,
-          add_context_from_internet: true
-        });
-        
-        text = extractResult?.text || '';
+        // Store file URL for processing step (text extraction happens later)
+        text = fileUrl;
       }
-      if (!text || text.trim().length === 0) throw new Error('File is empty or could not be read');
+      if (!text || text.trim().length === 0) throw new Error('File upload failed');
       setUploadedFiles(prev => ({ ...prev, [slotKey]: { text, name: file.name } }));
     } catch (err) {
       console.error('Upload error:', err);
@@ -94,6 +87,13 @@ PDF URL: ${fileUrl}`,
       if (weekMenu) {
         setStep('Extracting menu items from Week Menu PDF...');
         setProgress(10);
+        // If text is a URL (PDF), fetch and extract; if it's CSV text, use directly
+        let menuText = weekMenu.text;
+        if (weekMenu.text.startsWith('http')) {
+          // It's a PDF URL - will be extracted via InvokeLLM with internet context
+          menuText = `PDF Document at: ${weekMenu.text}`;
+        }
+        
         const result = await base44.integrations.Core.InvokeLLM({
           prompt: `Extract ALL menu items from this weekly menu document. For each item extract:
 - name (the dish name)
@@ -104,8 +104,9 @@ PDF URL: ${fileUrl}`,
 
 Return as JSON with an "items" array.
 
-Document text:
-${weekMenu.text.slice(0, 15000)}`,
+Document:
+${menuText}`,
+          add_context_from_internet: weekMenu.text.startsWith('http'),
           response_json_schema: {
             type: 'object',
             properties: {
@@ -146,6 +147,11 @@ ${weekMenu.text.slice(0, 15000)}`,
       if (fda) {
         setStep('Extracting nutrition data from FDA file...');
         setProgress(40);
+        let fdaText = fda.text;
+        if (fda.text.startsWith('http')) {
+          fdaText = `FDA Document at: ${fda.text}`;
+        }
+        
         const fdaResult = await base44.integrations.Core.InvokeLLM({
           prompt: `Extract ALL nutrition data from this FDA nutrition report. For each menu item extract:
 - name
@@ -169,8 +175,9 @@ ${weekMenu.text.slice(0, 15000)}`,
 For values listed as "less than 1g" use 0.5, for "less than 5mg" use 2.
 Return as JSON with an "items" array. Include ALL items found.
 
-Document text:
-${fda.text.slice(0, 20000)}`,
+Document:
+${fdaText}`,
+          add_context_from_internet: fda.text.startsWith('http'),
           response_json_schema: {
             type: 'object',
             properties: {

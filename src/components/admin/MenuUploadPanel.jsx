@@ -311,11 +311,12 @@ ${csvChunk}`,
 
       // --- STEP 4: Allergen Extraction (Admin/Dietitian only) ---
       if (canManageAllergens && ingredients && csvChunk.trim().length > 0) {
-        setStep('Extracting allergen information...');
-        setProgress(85);
-        await new Promise(r => setTimeout(r, 2000)); // avoid rate limit
-        const allergenResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `Extract allergen information from these ingredients. For each recipe_number, identify allergens from this list:
+        try {
+          setStep('Extracting allergen information...');
+          setProgress(85);
+          await new Promise(r => setTimeout(r, 2000)); // avoid rate limit
+          const allergenResult = await base44.integrations.Core.InvokeLLM({
+            prompt: `Extract allergen information from these ingredients. For each recipe_number, identify allergens from this list:
 - Milk
 - Eggs
 - Fish
@@ -330,40 +331,43 @@ Return as JSON with an "items" array containing recipe_number and allergens (arr
 
 Ingredients Data:
 ${csvChunk}`,
-          add_context_from_internet: false,
-          response_json_schema: {
-            type: 'object',
-            properties: {
-              items: {
-                type: 'array',
+            add_context_from_internet: false,
+            response_json_schema: {
+              type: 'object',
+              properties: {
                 items: {
-                  type: 'object',
-                  properties: {
-                    recipe_number: { type: 'string' },
-                    allergens: {
-                      type: 'array',
-                      items: { type: 'string' }
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      recipe_number: { type: 'string' },
+                      allergens: {
+                        type: 'array',
+                        items: { type: 'string' }
+                      }
                     }
                   }
                 }
               }
             }
-          }
-        });
-
-        if (allergenResult?.items?.length > 0) {
-          finalItems = finalItems.map(item => {
-            const match = allergenResult.items.find(
-              a => normalizeRecipeNum(a.recipe_number) === normalizeRecipeNum(item.recipe_number)
-            );
-            if (match && match.allergens && match.allergens.length > 0) {
-              return {
-                ...item,
-                allergens: [...new Set([...(item.allergens || []), ...match.allergens])]
-              };
-            }
-            return item;
           });
+
+          if (allergenResult?.items?.length > 0) {
+            finalItems = finalItems.map(item => {
+              const match = allergenResult.items.find(
+                a => normalizeRecipeNum(a.recipe_number) === normalizeRecipeNum(item.recipe_number)
+              );
+              if (match && match.allergens && match.allergens.length > 0) {
+                return {
+                  ...item,
+                  allergens: [...new Set([...(item.allergens || []), ...match.allergens])]
+                };
+              }
+              return item;
+            });
+          }
+        } catch (err) {
+          console.warn('Allergen extraction failed, continuing without allergens:', err.message);
         }
       }
 

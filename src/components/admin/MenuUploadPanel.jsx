@@ -2,24 +2,8 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import {
   Upload, Loader2, CheckCircle, XCircle, Sparkles,
-  Calendar, FileText, AlertTriangle, Info
+  Calendar, FileText, Info
 } from 'lucide-react';
-
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Daily Special', 'All Days'];
-
-function normalizeStation(station) {
-  const s = (station || '').toLowerCase().trim();
-  if (s.includes('main') || s.includes('comfort') || s.includes('entree')) return 'Entree';
-  return station;
-}
-
-function normalizeRecipeNum(num) {
-  return String(num || '').trim().replace(/^0+/, '').replace(/-.*$/, '').toLowerCase();
-}
-
-function normalizeName(name) {
-  return String(name || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');
-}
 
 export default function MenuUploadPanel({ menuItems, onPublish }) {
   const [uploadedFiles, setUploadedFiles] = useState({ weekMenu: null, fda: null, ingredients: null });
@@ -61,7 +45,6 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
           throw new Error('Upload failed - no file URL returned');
         }
         
-        // Store file URL for processing step (text extraction happens later)
         text = fileUrl;
       }
       if (!text || text.trim().length === 0) throw new Error('File upload failed');
@@ -85,250 +68,27 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
     setProgress(0);
 
     try {
-      let finalItems = [];
+      setStep('Processing all files with AI...');
+      setProgress(50);
 
-      // --- STEP 1: Parse Week Menu PDF ---
-      if (weekMenu) {
-        setStep('Extracting menu items from Week Menu PDF...');
-        setProgress(10);
-        
-        const isUrl = weekMenu.text.startsWith('http');
-        
-        const result = await base44.integrations.Core.InvokeLLM({
-          prompt: `Extract ALL menu items from this weekly menu document. For each item extract:
-- name (the dish name)
-- recipe_number (the number shown in parentheses next to the dish name, e.g. "(12345)")
-- station (the station or section it belongs to, e.g. "Entree", "Grill", "Deli", "Pizza", "Soup", "Dessert")
-- day (exactly one of: Monday, Tuesday, Wednesday, Thursday, Friday, Daily Special)
-- description (any description text if present)
+      // Call backend function to process all files with a single LLM call
+      const result = await base44.functions.invoke('processMenuFiles', {
+        weekMenuUrl: weekMenu?.text,
+        fdaUrl: fda?.text,
+        ingredientsData: ingredients?.text
+      });
 
-Return as JSON with an "items" array.`,
-          ...(isUrl ? { file_urls: [weekMenu.text] } : { file_urls: weekMenu.text ? [weekMenu.text] : [] }),
-          response_json_schema: {
-            type: 'object',
-            properties: {
-              items: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    name: { type: 'string' },
-                    recipe_number: { type: 'string' },
-                    station: { type: 'string' },
-                    day: { type: 'string' },
-                    description: { type: 'string' }
-                  }
-                }
-              }
-            }
-          }
-        });
-        if (result?.items?.length > 0) {
-          finalItems = result.items.map((item, idx) => ({
-            ...item,
-            station: normalizeStation(item.station),
-            id: Date.now() + idx
-          }));
-        } else {
-          throw new Error('No menu items found in Week Menu PDF');
-        }
-      } else {
-        // Fall back to existing menu items
-        finalItems = menuItems.map(item => ({ ...item }));
-      }
-
-      setProgress(30);
-      await new Promise(r => setTimeout(r, 5000)); // avoid rate limit between LLM calls
-
-      // --- STEP 2: FDA Nutrition Data ---
-      if (fda) {
-        setStep('Extracting nutrition data from FDA file...');
-        setProgress(40);
-        
-        const fdaIsUrl = fda.text.startsWith('http');
-        
-        const fdaResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `Extract ALL nutrition data from this FDA nutrition report. For each menu item extract:
-- name
-- recipe_number (the recipe/item number)
-- calories (kcal)
-- protein (grams)
-- carbs (total carbohydrates, grams)
-- fat (total fat, grams)
-- saturated_fat (grams)
-- sodium (milligrams)
-- fiber (dietary fiber, grams)
-- sugar (total sugars, grams)
-- cholesterol (milligrams)
-- vitamin_a (mcg or % - extract the number only)
-- vitamin_c (mg or % - extract the number only)
-- vitamin_d (mcg or % - extract the number only)
-- calcium (mg or % - extract the number only)
-- iron (mg or % - extract the number only)
-- potassium (mg - extract the number only)
-
-For values listed as "less than 1g" use 0.5, for "less than 5mg" use 2.
-Return as JSON with an "items" array. Include ALL items found.`,
-          ...(fdaIsUrl ? { file_urls: [fda.text] } : { file_urls: fda.text ? [fda.text] : [] }),
-          response_json_schema: {
-            type: 'object',
-            properties: {
-              items: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    name: { type: 'string' },
-                    recipe_number: { type: 'string' },
-                    calories: { type: 'number' },
-                    protein: { type: 'number' },
-                    carbs: { type: 'number' },
-                    fat: { type: 'number' },
-                    saturated_fat: { type: 'number' },
-                    sodium: { type: 'number' },
-                    fiber: { type: 'number' },
-                    sugar: { type: 'number' },
-                    cholesterol: { type: 'number' },
-                    vitamin_a: { type: 'number' },
-                    vitamin_c: { type: 'number' },
-                    vitamin_d: { type: 'number' },
-                    calcium: { type: 'number' },
-                    iron: { type: 'number' },
-                    potassium: { type: 'number' }
-                  }
-                }
-              }
-            }
-          }
-        });
-
-        if (fdaResult?.items?.length > 0) {
-          // If we have no week menu items, build list from FDA directly
-          if (finalItems.length === 0) {
-            finalItems = fdaResult.items.map((item, idx) => ({
-              ...item,
-              station: 'Entree',
-              day: 'Monday',
-              id: Date.now() + idx
-            }));
-          } else {
-            // Merge FDA nutrition into existing items by recipe_number (with name fallback)
-            finalItems = finalItems.map(item => {
-              // Try recipe number match first
-              let match = fdaResult.items.find(
-                fda => normalizeRecipeNum(fda.recipe_number) === normalizeRecipeNum(item.recipe_number)
-              );
-              
-              // Fallback: try name match if recipe number didn't match
-              if (!match && item.name) {
-                const normalizedName = normalizeName(item.name);
-                match = fdaResult.items.find(fda => normalizeName(fda.name) === normalizedName);
-              }
-              
-              if (match) {
-                const totalFat = match.fat || 0;
-                const satFat = match.saturated_fat || 0;
-                return {
-                  ...item,
-                  calories: match.calories || 0,
-                  protein: match.protein || 0,
-                  carbs: match.carbs || 0,
-                  fat: totalFat,
-                  saturated_fat: satFat,
-                  unsaturated_fat: totalFat > satFat ? totalFat - satFat : 0,
-                  sodium: match.sodium || 0,
-                  fiber: match.fiber || 0,
-                  sugar: match.sugar || 0,
-                  cholesterol: match.cholesterol || 0,
-                  vitamin_a: match.vitamin_a || 0,
-                  vitamin_c: match.vitamin_c || 0,
-                  vitamin_d: match.vitamin_d || 0,
-                  calcium: match.calcium || 0,
-                  iron: match.iron || 0,
-                  potassium: match.potassium || 0,
-                };
-              }
-              return item;
-            });
-          }
-        }
-      }
-
-      setProgress(65);
-      await new Promise(r => setTimeout(r, 5000)); // avoid rate limit between LLM calls
-
-      // --- STEP 3: Ingredients CSV ---
-      if (ingredients) {
-        setStep('Processing Ingredients CSV...');
-        setProgress(70);
-        const csvChunk = ingredients.text.slice(0, 10000);
-        const ingResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `Parse this CSV file containing menu ingredients. For each row extract:
-- recipe_number
-- ingredients (the full ingredient list as a string)
-- is_vegan (boolean)
-- is_vegetarian (boolean)
-- is_fit (boolean)
-
-Return ALL rows as JSON with an "items" array.
-
-CSV Data:
-${csvChunk}`,
-          add_context_from_internet: false,
-          response_json_schema: {
-            type: 'object',
-            properties: {
-              items: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    recipe_number: { type: 'string' },
-                    ingredients: { type: 'string' },
-                    is_vegan: { type: 'boolean' },
-                    is_vegetarian: { type: 'boolean' },
-                    is_fit: { type: 'boolean' }
-                  }
-                }
-              }
-            }
-          }
-        });
-
-        if (ingResult?.items?.length > 0) {
-          finalItems = finalItems.map(item => {
-            const match = ingResult.items.find(
-              ing => normalizeRecipeNum(ing.recipe_number) === normalizeRecipeNum(item.recipe_number)
-            );
-            if (match && match.ingredients?.length > 5) {
-              const extraTags = [];
-              if (match.is_vegan) extraTags.push('Vegan');
-              if (match.is_vegetarian) extraTags.push('Vegetarian');
-              if (match.is_fit) extraTags.push('Fit');
-              return {
-                ...item,
-                ingredients: match.ingredients.trim(),
-                tags: [...new Set([...(item.tags || []), ...extraTags])]
-              };
-            }
-            return item;
-          });
-        }
-      }
-
-      setProgress(80);
+      const finalItems = result.data?.items || [];
 
       setProgress(95);
       setStep('Publishing menu...');
 
-      // Remove temp ids before publishing
-      const cleanItems = finalItems.map(({ id, ...rest }) => rest);
-      await onPublish(cleanItems);
+      await onPublish(finalItems);
 
       setUploadedFiles({ weekMenu: null, fda: null, ingredients: null });
       setProgress(100);
       setStep('');
-      alert(`✅ Published ${cleanItems.length} menu items successfully!`);
+      alert(`✅ Published ${finalItems.length} menu items successfully!`);
     } catch (err) {
       console.error('Publish error:', err);
       alert(`❌ Error: ${err.message}`);
@@ -468,7 +228,7 @@ ${csvChunk}`,
           <li>Week Menu PDF extracts item names, recipe #s, stations, and days</li>
           <li>FDA file matches nutrition data by recipe number</li>
           <li>Ingredients CSV merges ingredient lists and dietary tags</li>
-          <li>Missing descriptions are auto-generated by AI</li>
+          <li>AI combines all data into complete menu items</li>
         </ul>
       </div>
     </div>

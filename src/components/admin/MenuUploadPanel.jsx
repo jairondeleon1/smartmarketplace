@@ -87,11 +87,16 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
       if (weekMenu) {
         setStep('Extracting menu items from Week Menu PDF...');
         setProgress(10);
-        // If text is a URL (PDF), fetch and extract; if it's CSV text, use directly
+        // If text is a URL (PDF), extract text first; if it's CSV text, use directly
         let menuText = weekMenu.text;
         if (weekMenu.text.startsWith('http')) {
-          // It's a PDF URL - will be extracted via InvokeLLM with internet context
-          menuText = `PDF Document at: ${weekMenu.text}`;
+          // It's a PDF URL - extract text using ExtractDataFromUploadedFile
+          const extractRes = await base44.integrations.Core.ExtractDataFromUploadedFile({
+            file_url: weekMenu.text,
+            extraction_type: 'text'
+          });
+          menuText = extractRes?.extracted_data?.text || '';
+          if (!menuText) throw new Error('Failed to extract text from Week Menu PDF');
         }
         
         const result = await base44.integrations.Core.InvokeLLM({
@@ -106,7 +111,6 @@ Return as JSON with an "items" array.
 
 Document:
 ${menuText}`,
-          add_context_from_internet: weekMenu.text.startsWith('http'),
           response_json_schema: {
             type: 'object',
             properties: {
@@ -149,7 +153,12 @@ ${menuText}`,
         setProgress(40);
         let fdaText = fda.text;
         if (fda.text.startsWith('http')) {
-          fdaText = `FDA Document at: ${fda.text}`;
+          const extractRes = await base44.integrations.Core.ExtractDataFromUploadedFile({
+            file_url: fda.text,
+            extraction_type: 'text'
+          });
+          fdaText = extractRes?.extracted_data?.text || '';
+          if (!fdaText) throw new Error('Failed to extract text from FDA file');
         }
         
         const fdaResult = await base44.integrations.Core.InvokeLLM({
@@ -177,7 +186,6 @@ Return as JSON with an "items" array. Include ALL items found.
 
 Document:
 ${fdaText}`,
-          add_context_from_internet: fda.text.startsWith('http'),
           response_json_schema: {
             type: 'object',
             properties: {

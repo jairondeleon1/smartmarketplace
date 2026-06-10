@@ -352,12 +352,15 @@ ${csvChunk}`,
             }
           });
 
+          console.log('Allergen extraction result:', allergenResult);
           if (allergenResult?.items?.length > 0) {
+            let matchCount = 0;
             finalItems = finalItems.map(item => {
               const match = allergenResult.items.find(
                 a => normalizeRecipeNum(a.recipe_number) === normalizeRecipeNum(item.recipe_number)
               );
               if (match && match.allergens && match.allergens.length > 0) {
+                matchCount++;
                 return {
                   ...item,
                   allergens: [...new Set([...(item.allergens || []), ...match.allergens])]
@@ -365,6 +368,7 @@ ${csvChunk}`,
               }
               return item;
             });
+            console.log(`Matched allergens for ${matchCount} out of ${finalItems.length} items`);
           }
         } catch (err) {
           console.warn('Allergen extraction failed, continuing without allergens:', err.message);

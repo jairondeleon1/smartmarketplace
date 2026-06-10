@@ -91,30 +91,6 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
       if (weekMenu) {
         setStep('Extracting menu items from Week Menu PDF...');
         setProgress(10);
-        // If text is a URL (PDF), extract text first; if it's CSV text, use directly
-        let menuText = weekMenu.text;
-        if (weekMenu.text.startsWith('http')) {
-          // It's a PDF URL - extract text using ExtractDataFromUploadedFile
-          let extractRes;
-          try {
-            extractRes = await base44.integrations.Core.ExtractDataFromUploadedFile({
-              file_url: weekMenu.text,
-              json_schema: {
-                type: 'object',
-                properties: {
-                  text: { type: 'string' }
-                },
-                required: ['text']
-              }
-            });
-          } catch (extractErr) {
-            console.error('PDF extraction error:', extractErr);
-            throw new Error('Failed to extract text from Week Menu PDF: ' + extractErr.message);
-          }
-          // Handle different response structures
-          menuText = extractRes?.text || extractRes?.extracted_text || extractRes?.data?.text || JSON.stringify(extractRes);
-          if (!menuText || menuText === '{}') throw new Error('Failed to extract text from Week Menu PDF');
-        }
         
         const result = await base44.integrations.Core.InvokeLLM({
           prompt: `Extract ALL menu items from this weekly menu document. For each item extract:
@@ -126,8 +102,7 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
 
 Return as JSON with an "items" array.
 
-Document:
-${menuText}`,
+Document URL: ${weekMenu.text}`,
           response_json_schema: {
             type: 'object',
             properties: {
@@ -168,27 +143,6 @@ ${menuText}`,
       if (fda) {
         setStep('Extracting nutrition data from FDA file...');
         setProgress(40);
-        let fdaText = fda.text;
-        if (fda.text.startsWith('http')) {
-          let extractRes;
-          try {
-            extractRes = await base44.integrations.Core.ExtractDataFromUploadedFile({
-              file_url: fda.text,
-              json_schema: {
-                type: 'object',
-                properties: {
-                  text: { type: 'string' }
-                },
-                required: ['text']
-              }
-            });
-          } catch (extractErr) {
-            console.error('FDA extraction error:', extractErr);
-            throw new Error('Failed to extract text from FDA file: ' + extractErr.message);
-          }
-          fdaText = extractRes?.text || extractRes?.extracted_text || extractRes?.data?.text || JSON.stringify(extractRes);
-          if (!fdaText || fdaText === '{}') throw new Error('Failed to extract text from FDA file');
-        }
         
         const fdaResult = await base44.integrations.Core.InvokeLLM({
           prompt: `Extract ALL nutrition data from this FDA nutrition report. For each menu item extract:
@@ -213,8 +167,7 @@ ${menuText}`,
 For values listed as "less than 1g" use 0.5, for "less than 5mg" use 2.
 Return as JSON with an "items" array. Include ALL items found.
 
-Document:
-${fdaText}`,
+Document URL: ${fda.text}`,
           response_json_schema: {
             type: 'object',
             properties: {

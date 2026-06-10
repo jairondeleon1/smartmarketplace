@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import * as pdfjsLib from 'npm:pdfjs-dist@4.10.38';
 
 Deno.serve(async (req) => {
   try {
@@ -10,14 +11,12 @@ Deno.serve(async (req) => {
 
     let file;
     if (contentType.includes('multipart/form-data')) {
-      // Handle FormData upload (preferred)
       const form = await req.formData();
       file = form.get('file');
       if (!file || typeof file === 'string') {
         return Response.json({ error: 'No file in form data' }, { status: 400 });
       }
     } else {
-      // Handle base64 JSON upload (fallback)
       const { fileBase64, fileName, mimeType } = await req.json();
       if (!fileBase64) return Response.json({ error: 'No file data provided' }, { status: 400 });
       const binaryStr = atob(fileBase64);
@@ -31,7 +30,22 @@ Deno.serve(async (req) => {
     const result = await base44.asServiceRole.integrations.Core.UploadFile({ file });
     if (!result?.file_url) throw new Error('Upload returned no URL');
 
-    return Response.json({ file_url: result.file_url });
+    // If PDF, extract text server-side
+    let extractedText = '';
+    if (file.name.endsWith('.pdf')) {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const pageText = content.items.map(item => item.str).join(' ');
+        extractedText += pageText + '\n';
+      }
+    } else if (file.name.endsWith('.csv')) {
+      extractedText = await file.text();
+    }
+
+    return Response.json({ file_url: result.file_url, text: extractedText });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

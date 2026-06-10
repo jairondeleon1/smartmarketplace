@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import * as pdfjsLib from 'pdfjs-dist';
 import {
   Upload, Loader2, CheckCircle, XCircle, Sparkles,
   Calendar, FileText, AlertTriangle, Info
 } from 'lucide-react';
-
-// Use the worker from the installed package
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Daily Special', 'All Days'];
 
@@ -23,24 +19,10 @@ function normalizeRecipeNum(num) {
 
 export default function MenuUploadPanel({ menuItems, onPublish }) {
   const [uploadedFiles, setUploadedFiles] = useState({ weekMenu: null, fda: null, ingredients: null });
-  const [uploading, setUploading] = useState(null); // which slot is uploading
+  const [uploading, setUploading] = useState(null);
   const [publishing, setPublishing] = useState(false);
   const [step, setStep] = useState('');
   const [progress, setProgress] = useState(0);
-
-  // Extract text from a PDF file client-side using pdfjs
-  const extractPdfText = async (file) => {
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    let fullText = '';
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      const pageText = content.items.map(item => item.str).join(' ');
-      fullText += pageText + '\n';
-    }
-    return fullText;
-  };
 
   const handleFileSelect = async (slotKey, file) => {
     if (!file) return;
@@ -48,7 +30,7 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
     try {
       let text = '';
       if (file.name.endsWith('.csv')) {
-        // CSV — read as text
+        // CSV — read as text directly
         text = await new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = e => resolve(e.target.result);
@@ -56,8 +38,21 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
           reader.readAsText(file);
         });
       } else {
-        // PDF — extract text client-side, no upload needed
-        text = await extractPdfText(file);
+        // PDF — upload to backend for text extraction
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const uploadRes = await fetch('/api/functions/uploadMenuFile', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (!uploadRes.ok) {
+          const errData = await uploadRes.json();
+          throw new Error(errData.error || 'Upload failed');
+        }
+        
+        text = (await uploadRes.json()).text;
       }
       if (!text || text.trim().length === 0) throw new Error('File is empty or could not be read');
       setUploadedFiles(prev => ({ ...prev, [slotKey]: { text, name: file.name } }));

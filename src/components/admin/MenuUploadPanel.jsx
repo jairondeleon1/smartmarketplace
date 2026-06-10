@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import * as pdfjsLib from 'pdfjs-dist';
 import {
   Upload, Loader2, CheckCircle, XCircle, Sparkles,
   Calendar, FileText, AlertTriangle, Info
 } from 'lucide-react';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.js`;
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Daily Special', 'All Days'];
 
@@ -24,45 +27,39 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
   const [step, setStep] = useState('');
   const [progress, setProgress] = useState(0);
 
-  // Upload a file via the uploadMenuFile backend function (base64 encoded)
-  const uploadFile = async (file) => {
+  // Extract text from a PDF file client-side using pdfjs
+  const extractPdfText = async (file) => {
     const arrayBuffer = await file.arrayBuffer();
-    const uint8 = new Uint8Array(arrayBuffer);
-    let binary = '';
-    const chunkSize = 8192;
-    for (let i = 0; i < uint8.length; i += chunkSize) {
-      binary += String.fromCharCode(...uint8.subarray(i, i + chunkSize));
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let fullText = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items.map(item => item.str).join(' ');
+      fullText += pageText + '\n';
     }
-    const base64 = btoa(binary);
-    const response = await base44.functions.invoke('uploadMenuFile', {
-      fileBase64: base64,
-      fileName: file.name,
-      mimeType: file.type || 'application/octet-stream',
-    });
-    const url = response?.data?.file_url;
-    if (!url) throw new Error('Upload returned no URL');
-    return url;
+    return fullText;
   };
 
-  const handleFileSelect = async (slotKey, file, readAsText = false) => {
+  const handleFileSelect = async (slotKey, file) => {
     if (!file) return;
     setUploading(slotKey);
     try {
-      if (readAsText) {
-        // CSV — read as text locally, no upload needed
-        const text = await new Promise((resolve, reject) => {
+      let text = '';
+      if (file.name.endsWith('.csv')) {
+        // CSV — read as text
+        text = await new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = e => resolve(e.target.result);
           reader.onerror = () => reject(new Error('Failed to read file'));
           reader.readAsText(file);
         });
-        if (!text || text.length === 0) throw new Error('File is empty');
-        setUploadedFiles(prev => ({ ...prev, [slotKey]: { text, name: file.name } }));
       } else {
-        // PDF/Excel — upload to storage
-        const url = await uploadFile(file);
-        setUploadedFiles(prev => ({ ...prev, [slotKey]: { url, name: file.name } }));
+        // PDF — extract text client-side, no upload needed
+        text = await extractPdfText(file);
       }
+      if (!text || text.trim().length === 0) throw new Error('File is empty or could not be read');
+      setUploadedFiles(prev => ({ ...prev, [slotKey]: { text, name: file.name } }));
     } catch (err) {
       alert(`❌ ${slotKey} upload failed: ${err.message}`);
     } finally {
@@ -95,8 +92,10 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
 - day (exactly one of: Monday, Tuesday, Wednesday, Thursday, Friday, Daily Special)
 - description (any description text if present)
 
-Return as JSON with an "items" array.`,
-          file_urls: [weekMenu.url],
+Return as JSON with an "items" array.
+
+Document text:
+${weekMenu.text.slice(0, 15000)}`,
           response_json_schema: {
             type: 'object',
             properties: {
@@ -157,8 +156,10 @@ Return as JSON with an "items" array.`,
 - potassium (mg - extract the number only)
 
 For values listed as "less than 1g" use 0.5, for "less than 5mg" use 2.
-Return as JSON with an "items" array. Include ALL items found.`,
-          file_urls: [fda.url],
+Return as JSON with an "items" array. Include ALL items found.
+
+Document text:
+${fda.text.slice(0, 20000)}`,
           response_json_schema: {
             type: 'object',
             properties: {
@@ -358,15 +359,13 @@ ${csvChunk}`,
       desc: 'Menu items with recipe numbers',
       icon: Calendar,
       accept: '.pdf',
-      readAsText: false,
     },
     {
       key: 'fda',
       label: '2. FDA Nutrition File',
-      desc: 'PDF or Excel with nutrition data',
+      desc: 'PDF with nutrition data',
       icon: Sparkles,
-      accept: '.pdf,.xlsx,.xls',
-      readAsText: false,
+      accept: '.pdf',
     },
     {
       key: 'ingredients',
@@ -374,7 +373,6 @@ ${csvChunk}`,
       desc: 'CSV matched by recipe number',
       icon: FileText,
       accept: '.csv',
-      readAsText: true,
     },
   ];
 
@@ -407,7 +405,7 @@ ${csvChunk}`,
                 onChange={e => {
                   const file = e.target.files?.[0];
                   e.target.value = '';
-                  handleFileSelect(slot.key, file, slot.readAsText);
+                  handleFileSelect(slot.key, file);
                 }}
               />
               <label

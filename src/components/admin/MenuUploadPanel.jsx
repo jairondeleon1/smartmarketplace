@@ -24,11 +24,26 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
   const [step, setStep] = useState('');
   const [progress, setProgress] = useState(0);
 
-  // Upload a file using Core UploadFile integration
+  // Upload a file via the uploadMenuFile backend function using base64
   const uploadFile = async (file) => {
-    const result = await base44.integrations.Core.UploadFile({ file });
-    if (!result?.file_url) throw new Error('Upload returned no URL');
-    return result.file_url;
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        // Strip the data URL prefix (e.g. "data:application/pdf;base64,")
+        const result = e.target.result;
+        resolve(result.split(',')[1]);
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+    const response = await base44.functions.invoke('uploadMenuFile', {
+      fileBase64: base64,
+      fileName: file.name,
+      mimeType: file.type,
+    });
+    const url = response?.data?.file_url;
+    if (!url) throw new Error('Upload returned no URL');
+    return url;
   };
 
   const handleFileSelect = async (slotKey, file, readAsText = false) => {

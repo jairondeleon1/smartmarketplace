@@ -94,18 +94,32 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
         
         let menuText = weekMenu.text;
         if (weekMenu.text.startsWith('http')) {
-          const extractRes = await base44.integrations.Core.ExtractDataFromUploadedFile({
-            file_url: weekMenu.text,
-            json_schema: {
-              type: 'object',
-              properties: {
-                text: { type: 'string' }
-              },
-              required: ['text']
+          let extractRes;
+          let lastError;
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+              extractRes = await base44.integrations.Core.ExtractDataFromUploadedFile({
+                file_url: weekMenu.text,
+                json_schema: {
+                  type: 'object',
+                  properties: {
+                    text: { type: 'string' }
+                  },
+                  required: ['text']
+                }
+              });
+              if (extractRes?.status !== 'error') break;
+              lastError = extractRes?.details || 'Unknown error';
+            } catch (err) {
+              lastError = err.message;
             }
-          });
+            if (attempt < 3) {
+              setStep(`Retrying Week Menu extraction (attempt ${attempt + 1}/3)...`);
+              await new Promise(r => setTimeout(r, 3000));
+            }
+          }
           if (extractRes?.status === 'error') {
-            throw new Error('Failed to extract Week Menu: ' + (extractRes?.details || 'Unknown error'));
+            throw new Error('Failed to extract Week Menu after 3 attempts: ' + lastError);
           }
           menuText = extractRes?.output?.text || (Array.isArray(extractRes?.output) && extractRes.output[0]?.text) || '';
           if (!menuText) throw new Error('No text extracted from Week Menu PDF');
@@ -166,18 +180,31 @@ ${menuText}`,
         
         let fdaText = fda.text;
         if (fda.text.startsWith('http')) {
-          const extractRes = await base44.integrations.Core.ExtractDataFromUploadedFile({
-            file_url: fda.text,
-            json_schema: {
-              type: 'object',
-              properties: {
-                text: { type: 'string' }
-              },
-              required: ['text']
+          let extractRes;
+          let lastError;
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+              extractRes = await base44.integrations.Core.ExtractDataFromUploadedFile({
+                file_url: fda.text,
+                json_schema: {
+                  type: 'object',
+                  properties: {
+                    text: { type: 'string' }
+                  },
+                  required: ['text']
+                }
+              });
+              if (extractRes?.status === 'error') {
+                throw new Error(extractRes?.details || 'Unknown error');
+              }
+              break;
+            } catch (err) {
+              lastError = err.message;
+              if (attempt === 3) {
+                throw new Error('Failed to extract FDA file after 3 attempts: ' + lastError);
+              }
+              await new Promise(r => setTimeout(r, 3000));
             }
-          });
-          if (extractRes?.status === 'error') {
-            throw new Error('Failed to extract FDA file: ' + (extractRes?.details || 'Unknown error'));
           }
           fdaText = extractRes?.output?.text || (Array.isArray(extractRes?.output) && extractRes.output[0]?.text) || '';
           if (!fdaText) throw new Error('No text extracted from FDA PDF');

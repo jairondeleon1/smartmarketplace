@@ -17,7 +17,31 @@ function normalizeStation(station) {
 }
 
 function normalizeRecipeNum(num) {
-  return String(num || '').trim().replace(/^0+/, '').toLowerCase();
+  return String(num || '').trim().replace(/^'/, '').replace(/^0+/, '').toLowerCase();
+}
+
+// Simple but robust CSV parser that handles quoted fields with commas/newlines
+function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"' && text[i + 1] === '"') { field += '"'; i++; }
+      else if (ch === '"') { inQuotes = false; }
+      else { field += ch; }
+    } else {
+      if (ch === '"') { inQuotes = true; }
+      else if (ch === ',') { row.push(field); field = ''; }
+      else if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else if (ch === '\r') { /* skip */ }
+      else { field += ch; }
+    }
+  }
+  if (field || row.length) { row.push(field); rows.push(row); }
+  return rows;
 }
 
 export default function MenuUploadPanel({ menuItems, onPublish }) {
@@ -248,60 +272,50 @@ ${fda.text.slice(0, 20000)}`,
       setProgress(65);
       await new Promise(r => setTimeout(r, 2000)); // avoid rate limit between LLM calls
 
-      // --- STEP 3: Ingredients CSV ---
-      const csvChunk = ingredients ? ingredients.text.slice(0, 10000) : '';
+      // --- STEP 3: Ingredients CSV (direct parse, no AI needed) ---
       if (ingredients) {
         setStep('Processing Ingredients CSV...');
         setProgress(70);
-        const ingResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `Parse this CSV file containing menu ingredients. For each row extract:
-- recipe_number
-- description (a short 1-2 sentence description of the dish if present in the CSV, otherwise leave empty)
-- ingredients (the full ingredient list as a string)
-- is_vegan (boolean)
-- is_vegetarian (boolean)
-- is_fit (boolean)
 
-Return ALL rows as JSON with an "items" array.
+        // Parse CSV directly — no LLM needed
+        const csvRows = parseCSV(ingredients.text);
+        if (csvRows.length > 1) {
+          const headers = csvRows[0].map(h => h.trim());
+          const recipeNumIdx = headers.findIndex(h => h.toLowerCase().includes('recipe number'));
+          const descIdx = headers.findIndex(h => h.toLowerCase().includes('enticing description'));
+          const ingIdx = headers.findIndex(h => h.toLowerCase() === 'ingredients');
+          const veganIdx = headers.findIndex(h => h.toLowerCase().includes('vegan tag'));
+          const vegIdx = headers.findIndex(h => h.toLowerCase().includes('vegetarian tag'));
+          const fitIdx = headers.findIndex(h => h.toLowerCase().includes('compass fit'));
 
-CSV Data:
-${csvChunk}`,
-          add_context_from_internet: false,
-          response_json_schema: {
-            type: 'object',
-            properties: {
-              items: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    recipe_number: { type: 'string' },
-                    description: { type: 'string' },
-                    ingredients: { type: 'string' },
-                    is_vegan: { type: 'boolean' },
-                    is_vegetarian: { type: 'boolean' },
-                    is_fit: { type: 'boolean' }
-                  }
-                }
-              }
-            }
+          const ingMap = {};
+          for (let i = 1; i < csvRows.length; i++) {
+            const row = csvRows[i];
+            if (!row || row.length < 2) continue;
+            const rawNum = recipeNumIdx >= 0 ? (row[recipeNumIdx] || '').replace(/^'/, '').trim() : '';
+            if (!rawNum) continue;
+            const key = normalizeRecipeNum(rawNum);
+            ingMap[key] = {
+              description: descIdx >= 0 ? (row[descIdx] || '').trim() : '',
+              ingredients: ingIdx >= 0 ? (row[ingIdx] || '').trim() : '',
+              is_vegan: veganIdx >= 0 && (row[veganIdx] || '').toLowerCase().includes('vegan'),
+              is_vegetarian: vegIdx >= 0 && (row[vegIdx] || '').toLowerCase().includes('vegetarian'),
+              is_fit: fitIdx >= 0 && (row[fitIdx] || '').toLowerCase().includes('fit'),
+            };
           }
-        });
 
-        if (ingResult?.items?.length > 0) {
           finalItems = finalItems.map(item => {
-            const match = ingResult.items.find(
-              ing => normalizeRecipeNum(ing.recipe_number) === normalizeRecipeNum(item.recipe_number)
-            );
-            if (match && match.ingredients?.length > 5) {
+            const key = normalizeRecipeNum(item.recipe_number);
+            const match = ingMap[key];
+            if (match) {
               const extraTags = [];
               if (match.is_vegan) extraTags.push('Vegan');
               if (match.is_vegetarian) extraTags.push('Vegetarian');
               if (match.is_fit) extraTags.push('Fit');
               return {
                 ...item,
-                ingredients: match.ingredients.trim(),
-                ...(match.description?.trim() ? { description: match.description.trim() } : {}),
+                ...(match.ingredients?.length > 5 ? { ingredients: match.ingredients } : {}),
+                ...(match.description?.length > 3 ? { description: match.description } : {}),
                 tags: [...new Set([...(item.tags || []), ...extraTags])]
               };
             }
@@ -310,67 +324,43 @@ ${csvChunk}`,
         }
       }
 
-      setProgress(80);
+      setProgress(82);
 
-      // --- STEP 4: Allergen Extraction (Admin/Dietitian only) ---
-      if (canManageAllergens && ingredients && csvChunk.trim().length > 0) {
-        try {
-          setStep('Extracting allergen information...');
-          setProgress(85);
-          await new Promise(r => setTimeout(r, 2000)); // avoid rate limit
-          const allergenResult = await base44.integrations.Core.InvokeLLM({
-            prompt: `Extract allergen information from these ingredients. For each recipe_number, identify allergens from this list:
-- Milk
-- Eggs
-- Fish
-- Crustacean Shellfish
-- Tree Nuts
-- Peanuts
-- Wheat
-- Soybeans
-- Sesame
+      // --- STEP 4: Allergen Extraction (Admin/Dietitian only, direct from CSV columns) ---
+      if (canManageAllergens && ingredients) {
+        setStep('Extracting allergen information...');
+        setProgress(85);
+        const ALLERGEN_COLS = ['Egg', 'Fish', 'Milk', 'Peanuts', 'Sesame', 'Shellfish - Crustacean', 'Soy', 'Tree Nuts', 'Wheat'];
+        const csvRows2 = parseCSV(ingredients.text);
+        if (csvRows2.length > 1) {
+          const headers2 = csvRows2[0].map(h => h.trim());
+          const recipeNumIdx2 = headers2.findIndex(h => h.toLowerCase().includes('recipe number'));
+          const allergenColIdxs = ALLERGEN_COLS.map(col => ({
+            name: col,
+            idx: headers2.findIndex(h => h.trim() === col)
+          })).filter(c => c.idx >= 0);
 
-Return as JSON with an "items" array containing recipe_number and allergens (array of strings from the list above, or empty array if none).
-
-Ingredients Data:
-${csvChunk}`,
-            add_context_from_internet: false,
-            response_json_schema: {
-              type: 'object',
-              properties: {
-                items: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      recipe_number: { type: 'string' },
-                      allergens: {
-                        type: 'array',
-                        items: { type: 'string' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          });
-
-          if (allergenResult?.items?.length > 0) {
-            finalItems = finalItems.map(item => {
-              const match = allergenResult.items.find(
-                a => normalizeRecipeNum(a.recipe_number) === normalizeRecipeNum(item.recipe_number)
-              );
-              if (match && match.allergens && match.allergens.length > 0) {
-                return {
-                  ...item,
-                  allergens: [...new Set([...(item.allergens || []), ...match.allergens])]
-                };
-              }
-              return item;
-            });
+          const allergenMap = {};
+          for (let i = 1; i < csvRows2.length; i++) {
+            const row = csvRows2[i];
+            if (!row || row.length < 2) continue;
+            const rawNum = recipeNumIdx2 >= 0 ? (row[recipeNumIdx2] || '').replace(/^'/, '').trim() : '';
+            if (!rawNum) continue;
+            const key = normalizeRecipeNum(rawNum);
+            const found = allergenColIdxs
+              .filter(c => (row[c.idx] || '').toLowerCase() === 'yes')
+              .map(c => c.name);
+            if (found.length > 0) allergenMap[key] = found;
           }
-        } catch (err) {
-          console.warn('Allergen extraction failed, continuing without allergens:', err.message);
+
+          finalItems = finalItems.map(item => {
+            const key = normalizeRecipeNum(item.recipe_number);
+            const found = allergenMap[key];
+            if (found && found.length > 0) {
+              return { ...item, allergens: [...new Set([...(item.allergens || []), ...found])] };
+            }
+            return item;
+          });
         }
       }
 

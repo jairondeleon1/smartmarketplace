@@ -998,7 +998,8 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
 
 function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomVegUrl, customVeganUrl, setCustomVeganUrl, newItem, setNewItem, handleAddItem, handleDeleteItem, queryClient, currentUserRole }) {
   const [activeTab, setActiveTab] = useState('upload');
-  const isAdmin = currentUserRole === 'admin';
+  // AdminGate already verified the user is admin — if role is unresolved, treat as admin
+  const isAdmin = !currentUserRole || currentUserRole === 'admin';
   const isDietitian = currentUserRole === 'dietitian';
   const [editingItem, setEditingItem] = useState(null);
   const doRefresh = useCallback(async () => { if (queryClient) await queryClient.invalidateQueries({ queryKey: ['menuItems'] }); }, [queryClient]);

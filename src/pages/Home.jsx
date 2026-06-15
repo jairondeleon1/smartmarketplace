@@ -609,8 +609,7 @@ function MealTabsSection({ filteredItems, activeMealTab, setActiveMealTab, addTo
       {/* Make It At Home — only shown under Lunch tab */}
       {effectiveTab === 'Lunch' && <MakeItAtHomeSection />}
 
-      {/* Dietitian's Wellness Corner — only shown under Lunch tab */}
-      {effectiveTab === 'Lunch' && wellnessEnabled && <DietitianCornerSection />}
+      {/* Dietitian's Wellness Corner — only shown in Wellness Corner view, not here */}
     </div>
   );
 }

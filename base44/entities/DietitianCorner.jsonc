@@ -81,18 +81,39 @@
   "rls": {
     "create": {
       "user_condition": {
-        "role": "admin"
+        "$or": [
+          {
+            "role": "admin"
+          },
+          {
+            "role": "dietitian"
+          }
+        ]
       }
     },
     "read": {},
     "update": {
       "user_condition": {
-        "role": "admin"
+        "$or": [
+          {
+            "role": "admin"
+          },
+          {
+            "role": "dietitian"
+          }
+        ]
       }
     },
     "delete": {
       "user_condition": {
-        "role": "admin"
+        "$or": [
+          {
+            "role": "admin"
+          },
+          {
+            "role": "dietitian"
+          }
+        ]
       }
     }
   }

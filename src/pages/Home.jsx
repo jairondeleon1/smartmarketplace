@@ -1088,11 +1088,6 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         </div>
         <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-gray-200" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Core Menu Stations</span>
-          <div className="h-px flex-1 bg-gray-200" />
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="h-px flex-1 bg-gray-200" />
           <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Make It At Home Flyers</span>
           <div className="h-px flex-1 bg-gray-200" />
         </div>

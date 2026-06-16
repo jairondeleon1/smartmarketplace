@@ -134,21 +134,7 @@
     "day"
   ],
   "rls": {
-    "create": {
-      "user_condition": {
-        "$or": [
-          {
-            "role": "admin"
-          },
-          {
-            "role": "manager"
-          },
-          {
-            "role": "dietitian"
-          }
-        ]
-      }
-    },
+    "create": {},
     "read": {},
     "update": {
       "user_condition": {

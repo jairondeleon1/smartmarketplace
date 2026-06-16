@@ -8,13 +8,12 @@ const DEFAULTS = {
   wellness_corner_enabled: true,
 };
 
-// Fetch settings for a specific location, falling back to global defaults
 async function fetchSettings(locationId) {
   const results = await base44.entities.AppSettings.filter({ key: locationId });
   if (results[0]) return results[0];
-  // Fall back to global settings
+  // Fall back to global
   const global = await base44.entities.AppSettings.filter({ key: 'global' });
-  return global[0] || DEFAULTS;
+  return global[0] || { ...DEFAULTS, key: locationId };
 }
 
 export function useAppSettings(overrideLocationId) {
@@ -36,7 +35,10 @@ export function useAppSettings(overrideLocationId) {
         return base44.entities.AppSettings.create({ key: locationId, location_id: locationId, ...DEFAULTS, ...updates });
       }
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appSettings', locationId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appSettings', locationId] });
+      queryClient.invalidateQueries({ queryKey: ['appSettings', 'all'] });
+    },
   });
 
   return {
@@ -48,7 +50,6 @@ export function useAppSettings(overrideLocationId) {
   };
 }
 
-// Use this in admin to manage ALL locations
 export function useAllLocationSettings() {
   return useQuery({
     queryKey: ['appSettings', 'all'],

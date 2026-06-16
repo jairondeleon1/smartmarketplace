@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Shield, Loader2, ToggleLeft, ToggleRight, MapPin, Plus, ChevronDown } from 'lucide-react';
+import { Shield, Loader2, ToggleLeft, ToggleRight, MapPin, Plus } from 'lucide-react';
 import { useAppSettings, useAllLocationSettings } from '@/hooks/useAppSettings';
 import { getCurrentLocationId } from '@/utils';
+import { base44 } from '@/api/base44Client';
 
 const FEATURES = [
   {
@@ -21,12 +22,8 @@ const FEATURES = [
   },
 ];
 
-function LocationSettings({ locationId, label }) {
+function LocationSettings({ locationId }) {
   const { settings, isLoading, updateSettings, isSaving } = useAppSettings(locationId);
-
-  const toggle = (key) => {
-    updateSettings({ [key]: !settings[key] });
-  };
 
   if (isLoading) {
     return <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-teal-600" /></div>;
@@ -43,7 +40,7 @@ function LocationSettings({ locationId, label }) {
               <p className="text-xs text-gray-500 mt-0.5">{feature.description}</p>
             </div>
             <button
-              onClick={() => toggle(feature.key)}
+              onClick={() => updateSettings({ [feature.key]: !enabled })}
               disabled={isSaving}
               className="shrink-0 focus:outline-none disabled:opacity-50"
               aria-label={`Toggle ${feature.label}`}
@@ -64,25 +61,32 @@ function LocationSettings({ locationId, label }) {
 
 export default function FeatureFlags() {
   const currentLocationId = getCurrentLocationId();
-  const { data: allSettings = [] } = useAllLocationSettings();
-
-  // Collect all known location IDs (excluding 'global')
-  const existingLocations = [...new Set(
-    allSettings.map(s => s.key).filter(k => k && k !== 'global')
-  )];
-
-  // Always include current location
-  const allLocations = [...new Set([currentLocationId, ...existingLocations])];
-
-  const [activeLocation, setActiveLocation] = useState(currentLocationId);
+  const { data: allSettings = [], refetch } = useAllLocationSettings();
   const [newLocationInput, setNewLocationInput] = useState('');
   const [showAdd, setShowAdd] = useState(false);
+  const [activeLocation, setActiveLocation] = useState(currentLocationId);
 
-  const handleAddLocation = () => {
+  // All known locations from DB + current subdomain always included
+  const knownLocations = [...new Set([
+    currentLocationId,
+    ...allSettings.map(s => s.key).filter(k => k && k !== 'global')
+  ])];
+
+  const handleAddLocation = async () => {
     const loc = newLocationInput.trim().toLowerCase().replace(/\s+/g, '-');
-    if (loc && !allLocations.includes(loc)) {
-      setActiveLocation(loc);
+    if (!loc) return;
+    // Auto-create the settings record for this location
+    if (!knownLocations.includes(loc)) {
+      await base44.entities.AppSettings.create({
+        key: loc,
+        location_id: loc,
+        allergen_display_enabled: false,
+        scan_label_enabled: false,
+        wellness_corner_enabled: true,
+      });
+      await refetch();
     }
+    setActiveLocation(loc);
     setNewLocationInput('');
     setShowAdd(false);
   };
@@ -98,11 +102,11 @@ export default function FeatureFlags() {
           onClick={() => setShowAdd(!showAdd)}
           className="flex items-center gap-1 text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 px-3 py-1.5 rounded-lg hover:bg-teal-100 transition"
         >
-          <Plus className="w-3 h-3" /> Add Location
+          <Plus className="w-3 h-3" /> Add Subdomain
         </button>
       </div>
 
-      <p className="text-xs text-gray-500">Each subdomain/location can have its own feature settings. Admins configure per-location.</p>
+      <p className="text-xs text-gray-500">Each subdomain has its own feature settings. The current subdomain is auto-detected.</p>
 
       {showAdd && (
         <div className="flex gap-2">
@@ -125,7 +129,7 @@ export default function FeatureFlags() {
 
       {/* Location tabs */}
       <div className="flex flex-wrap gap-2">
-        {allLocations.map(loc => (
+        {knownLocations.map(loc => (
           <button
             key={loc}
             onClick={() => setActiveLocation(loc)}
@@ -136,7 +140,7 @@ export default function FeatureFlags() {
             }`}
           >
             <MapPin className="w-3 h-3" />
-            {loc === currentLocationId ? `${loc} (current)` : loc}
+            {loc}{loc === currentLocationId ? ' ★' : ''}
           </button>
         ))}
       </div>
@@ -145,9 +149,11 @@ export default function FeatureFlags() {
       <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
         <div className="flex items-center gap-2 mb-4">
           <MapPin className="w-4 h-4 text-teal-600" />
-          <span className="text-xs font-bold uppercase tracking-widest text-teal-700">{activeLocation}</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-teal-700">
+            {activeLocation}{activeLocation === currentLocationId ? ' (current)' : ''}
+          </span>
         </div>
-        <LocationSettings key={activeLocation} locationId={activeLocation} label={activeLocation} />
+        <LocationSettings key={activeLocation} locationId={activeLocation} />
       </div>
     </div>
   );

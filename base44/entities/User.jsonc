@@ -6,12 +6,12 @@
       "type": "string",
       "enum": [
         "admin",
+        "user",
         "manager",
-        "user"
+        "dietitian"
       ],
       "default": "user",
-      "description": "User role: admin has full access, manager has access to everything except deleting admins"
+      "description": "User role in the app"
     }
-  },
-  "required": []
+  }
 }

@@ -4,7 +4,11 @@
   "properties": {
     "key": {
       "type": "string",
-      "description": "Setting key identifier"
+      "description": "Setting key identifier (location_id or 'global')"
+    },
+    "location_id": {
+      "type": "string",
+      "description": "Subdomain/location this setting applies to. Empty means global."
     },
     "allergen_display_enabled": {
       "type": "boolean",

@@ -6,6 +6,10 @@
       "type": "string",
       "description": "Menu item name"
     },
+    "location_id": {
+      "type": "string",
+      "description": "Subdomain/location identifier, e.g. 'cafe1', 'cafe2'"
+    },
     "description": {
       "type": "string",
       "description": "Item description"

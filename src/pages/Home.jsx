@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getCurrentLocationId } from '@/utils';
 import NutritionCharts from "../components/NutritionCharts";
 import ProfileSettingsModal from "../components/ProfileSettingsModal";
 import WeeklyPlannerModal from "../components/WeeklyPlannerModal";
@@ -1168,19 +1169,22 @@ export default function Home() {
   const isOnline = useOnlineStatus();
   const cacheAge = getCacheAge();
 
+  const locationId = getCurrentLocationId();
+
   const { data: menuItems = [] } = useQuery({
-    queryKey: ['menuItems'],
+    queryKey: ['menuItems', locationId],
     queryFn: async () => {
       if (!navigator.onLine) {
         const cached = loadMenuFromCache();
         if (cached) return cached;
         return DEFAULT_MENU;
       }
-      const items = await base44.entities.MenuItem.list();
+      const items = await base44.entities.MenuItem.filter({ location_id: locationId });
       if (items.length === 0) {
-        await base44.entities.MenuItem.bulkCreate(DEFAULT_MENU);
-        saveMenuToCache(DEFAULT_MENU);
-        return DEFAULT_MENU;
+        const defaultWithLocation = DEFAULT_MENU.map(item => ({ ...item, location_id: locationId }));
+        await base44.entities.MenuItem.bulkCreate(defaultWithLocation);
+        saveMenuToCache(defaultWithLocation);
+        return defaultWithLocation;
       }
       saveMenuToCache(items);
       return items;
@@ -1189,15 +1193,16 @@ export default function Home() {
   });
   
   const setMenuItems = async (newItems) => {
-    const existing = await base44.entities.MenuItem.list();
+    const existing = await base44.entities.MenuItem.filter({ location_id: locationId });
     const batchSize = 10;
     for (let i = 0; i < existing.length; i += batchSize) {
       const batch = existing.slice(i, i + batchSize);
       await Promise.all(batch.map(item => base44.entities.MenuItem.delete(item.id)));
       if (i + batchSize < existing.length) await new Promise(resolve => setTimeout(resolve, 500));
     }
-    await base44.entities.MenuItem.bulkCreate(newItems);
-    queryClient.invalidateQueries({ queryKey: ['menuItems'] });
+    const itemsWithLocation = newItems.map(item => ({ ...item, location_id: locationId }));
+    await base44.entities.MenuItem.bulkCreate(itemsWithLocation);
+    queryClient.invalidateQueries({ queryKey: ['menuItems', locationId] });
   };
 
   const [myPlate, setMyPlate] = useState([]);
@@ -1268,14 +1273,14 @@ export default function Home() {
     const tags = [];
     if (newItem.isVeg) tags.push('Vegetarian');
     if (newItem.isVegan) tags.push('Vegan');
-    await base44.entities.MenuItem.create({ ...newItem, calories: Number(newItem.calories), protein: Number(newItem.protein), tags });
-    queryClient.invalidateQueries({ queryKey: ['menuItems'] });
+    await base44.entities.MenuItem.create({ ...newItem, location_id: locationId, calories: Number(newItem.calories), protein: Number(newItem.protein), tags });
+    queryClient.invalidateQueries({ queryKey: ['menuItems', locationId] });
     setNewItem({ name: '', day: 'Monday', station: "Chef's Table", ingredients: '', calories: '', protein: '', carbs: '', fat: '', isVeg: false, isVegan: false });
   };
 
   const handleDeleteItem = async (id) => {
     await base44.entities.MenuItem.delete(id);
-    queryClient.invalidateQueries({ queryKey: ['menuItems'] });
+    queryClient.invalidateQueries({ queryKey: ['menuItems', locationId] });
   };
 
   const handleSendChat = async (overrideText = null) => {

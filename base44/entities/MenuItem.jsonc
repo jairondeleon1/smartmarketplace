@@ -136,35 +136,7 @@
   "rls": {
     "create": {},
     "read": {},
-    "update": {
-      "user_condition": {
-        "$or": [
-          {
-            "role": "admin"
-          },
-          {
-            "role": "manager"
-          },
-          {
-            "role": "dietitian"
-          }
-        ]
-      }
-    },
-    "delete": {
-      "user_condition": {
-        "$or": [
-          {
-            "role": "admin"
-          },
-          {
-            "role": "manager"
-          },
-          {
-            "role": "dietitian"
-          }
-        ]
-      }
-    }
+    "update": {},
+    "delete": {}
   }
 }

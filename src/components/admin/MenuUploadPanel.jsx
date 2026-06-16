@@ -106,6 +106,20 @@ export default function MenuUploadPanel({ menuItems, onPublish }) {
       return;
     }
 
+    // Verify user is still authenticated with a valid role before starting
+    let currentUser;
+    try {
+      currentUser = await base44.auth.me();
+    } catch {
+      alert('❌ Error: You are not logged in. Please sign in and try again.');
+      return;
+    }
+    const validRoles = ['admin', 'manager', 'dietitian'];
+    if (!currentUser || !validRoles.includes(currentUser.role)) {
+      alert(`❌ Permission denied: Your account role (${currentUser?.role || 'unknown'}) does not have permission to publish menus. Required: admin, manager, or dietitian.`);
+      return;
+    }
+
     setPublishing(true);
     setProgress(0);
 

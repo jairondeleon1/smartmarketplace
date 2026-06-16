@@ -28,16 +28,16 @@ Deno.serve(async (req) => {
     // Use service role to bypass RLS for delete + create
     const existing = await base44.asServiceRole.entities.MenuItem.filter({ location_id });
 
-    // Delete in batches
-    const batchSize = 10;
-    for (let i = 0; i < existing.length; i += batchSize) {
-      const batch = existing.slice(i, i + batchSize);
-      await Promise.all(batch.map(item => base44.asServiceRole.entities.MenuItem.delete(item.id)));
+    // Delete existing items for this location
+    if (existing.length > 0) {
+      await Promise.all(existing.map(item => base44.asServiceRole.entities.MenuItem.delete(item.id)));
     }
 
     // Create new items with location_id
-    const itemsWithLocation = items.map(({ id, ...rest }) => ({ ...rest, location_id }));
-    await base44.asServiceRole.entities.MenuItem.bulkCreate(itemsWithLocation);
+    const itemsWithLocation = items.map(({ id, created_date, updated_date, created_by_id, ...rest }) => ({ ...rest, location_id }));
+    for (const item of itemsWithLocation) {
+      await base44.asServiceRole.entities.MenuItem.create(item);
+    }
 
     return Response.json({ success: true, count: itemsWithLocation.length });
   } catch (error) {

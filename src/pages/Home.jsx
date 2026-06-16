@@ -1193,15 +1193,13 @@ export default function Home() {
   });
   
   const setMenuItems = async (newItems) => {
-    const existing = await base44.entities.MenuItem.filter({ location_id: locationId });
-    const batchSize = 10;
-    for (let i = 0; i < existing.length; i += batchSize) {
-      const batch = existing.slice(i, i + batchSize);
-      await Promise.all(batch.map(item => base44.entities.MenuItem.delete(item.id)));
-      if (i + batchSize < existing.length) await new Promise(resolve => setTimeout(resolve, 500));
+    const response = await base44.functions.invoke('publishMenu', {
+      items: newItems,
+      location_id: locationId,
+    });
+    if (!response.data?.success) {
+      throw new Error(response.data?.error || 'Failed to publish menu');
     }
-    const itemsWithLocation = newItems.map(item => ({ ...item, location_id: locationId }));
-    await base44.entities.MenuItem.bulkCreate(itemsWithLocation);
     queryClient.invalidateQueries({ queryKey: ['menuItems', locationId] });
   };
 

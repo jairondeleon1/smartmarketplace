@@ -43,8 +43,8 @@ Deno.serve(async (req) => {
 
     const apiRes = await fetch(url, {
       headers: {
-        'WT-Client-Id': WT_CLIENT_ID,
-        'x-ibm-client-id': IBM_CLIENT_ID,
+        'X-IBM-Client-Id': IBM_CLIENT_ID,
+        'client_id': WT_CLIENT_ID,
         'Accept': 'application/json'
       }
     });

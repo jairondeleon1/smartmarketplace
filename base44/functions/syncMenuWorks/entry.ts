@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
       page: { offset: 1, limit: 200 }
     };
 
-    const url = `${BASE_URL}/business_units/${UNIT_ID}/menu_items?options=${encodeURIComponent(JSON.stringify(options))}`;
+    const url = `${BASE_URL}/${UNIT_ID}/menu_items?options=${encodeURIComponent(JSON.stringify(options))}`;
 
     const apiRes = await fetch(url, {
       headers: {

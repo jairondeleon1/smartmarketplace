@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     const ibmPreview = IBM_CLIENT_ID ? `${IBM_CLIENT_ID.slice(0,4)}...${IBM_CLIENT_ID.slice(-4)}` : 'NOT SET';
 
     // Try the business_units endpoint
-    const url = `${BASE_URL}/business_units`;
+    const url = `${BASE_URL}`;
     const apiRes = await fetch(url, {
       headers: {
         'WT-Client-Id': WT_CLIENT_ID,

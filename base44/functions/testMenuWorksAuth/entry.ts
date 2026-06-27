@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
     const wtPreview = WT_CLIENT_ID ? `${WT_CLIENT_ID.slice(0,4)}...${WT_CLIENT_ID.slice(-4)}` : 'NOT SET';
     const ibmPreview = IBM_CLIENT_ID ? `${IBM_CLIENT_ID.slice(0,4)}...${IBM_CLIENT_ID.slice(-4)}` : 'NOT SET';
 
-    const url = `${BASE_URL}`;
+    const url = `${BASE_URL}/40442/menu_items`;
     const apiRes = await fetch(url, {
       headers: {
         'X-IBM-Client-Id': IBM_CLIENT_ID,

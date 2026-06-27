@@ -80,41 +80,34 @@
   ],
   "rls": {
     "create": {
-      "user_condition": {
-        "$or": [
-          {
+      "$or": [
+        {
+          "user_condition": {
             "role": "admin"
-          },
-          {
+          }
+        },
+        {
+          "user_condition": {
             "role": "dietitian"
           }
-        ]
-      }
+        }
+      ]
     },
     "read": {},
-    "update": {
-      "user_condition": {
-        "$or": [
-          {
-            "role": "admin"
-          },
-          {
-            "role": "dietitian"
-          }
-        ]
-      }
-    },
+    "update": {},
     "delete": {
-      "user_condition": {
-        "$or": [
-          {
+      "$or": [
+        {
+          "user_condition": {
             "role": "admin"
-          },
-          {
+          }
+        },
+        {
+          "user_condition": {
             "role": "dietitian"
           }
-        ]
-      }
+        }
+      ]
     }
   }
 }

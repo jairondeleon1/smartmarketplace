@@ -9,9 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const BASE_URL = Deno.env.get('MENUWORKS_BASE_URL');
     const WT_CLIENT_ID = Deno.env.get('MENUWORKS_WT_CLIENT_ID');
-    const IBM_CLIENT_ID = Deno.env.get('MENUWORKS_CLIENT_ID');
     const UNIT_ID = '40442';
 
     const body = await req.json().catch(() => ({}));
@@ -39,12 +37,11 @@ Deno.serve(async (req) => {
       page: { offset: 1, limit: 200 }
     };
 
-    const url = `${BASE_URL}/${UNIT_ID}/menu_items?options=${encodeURIComponent(JSON.stringify(options))}`;
+    const url = `https://services.webtrition.com/serviceapi/v3/business_units/${UNIT_ID}/menu_items?options=${encodeURIComponent(JSON.stringify(options))}`;
 
     const apiRes = await fetch(url, {
       headers: {
-        'X-IBM-Client-Id': IBM_CLIENT_ID,
-        'client_id': WT_CLIENT_ID,
+        'WT-Client-Id': WT_CLIENT_ID || '',
         'Accept': 'application/json'
       }
     });

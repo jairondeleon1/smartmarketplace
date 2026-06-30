@@ -11,9 +11,10 @@ Deno.serve(async (req) => {
 
     const WT_CLIENT_ID = Deno.env.get('MENUWORKS_WT_CLIENT_ID');
     const UNIT_ID = '40442';
+    // This API key is only for the main domain (smartmenuiq). Subdomains use separate APIs.
+    const LOCATION_ID = 'smartmenuiq';
 
-    const body = await req.json().catch(() => ({}));
-    const locationId = body.location_id || null;
+    const body = await req.json().catch(() => ({}))
 
     // Fetch from body params or default to current week
     const bodyStartDate = body.startDate || null;
@@ -35,7 +36,6 @@ Deno.serve(async (req) => {
       filter: {
         startDate,
         days: bodyDays,
-        ...(locationId ? { locationId: parseInt(locationId) } : {})
       },
       include: {
         allergens: true,
@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
 
       return {
         name: item.name,
-        location_id: locationId || String(item.locationId || ''),
+        location_id: LOCATION_ID,
         description: item.enticingDescription || '',
         meal_period: ['Breakfast', 'Lunch', 'Dinner', 'All Day'].includes(mealPeriod) ? mealPeriod : 'Lunch',
         station,
@@ -105,8 +105,8 @@ Deno.serve(async (req) => {
       };
     });
 
-    // Delete all existing items (full replacement each sync)
-    await base44.asServiceRole.entities.MenuItem.deleteMany({});
+    // Delete only smartmenuiq items (full replacement for this location only)
+    await base44.asServiceRole.entities.MenuItem.deleteMany({ location_id: LOCATION_ID });
     await base44.asServiceRole.entities.MenuItem.bulkCreate(mapped);
 
     return Response.json({ success: true, synced: mapped.length, startDate, unit_id: UNIT_ID });

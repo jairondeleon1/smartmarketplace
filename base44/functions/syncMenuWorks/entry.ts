@@ -105,12 +105,8 @@ Deno.serve(async (req) => {
       };
     });
 
-    // Delete existing items for this location/week then bulk insert
-    const deleteQuery = locationId
-      ? { location_id: locationId }
-      : { location_id: { $exists: true } };
-
-    await base44.asServiceRole.entities.MenuItem.deleteMany(deleteQuery);
+    // Delete all existing items (full replacement each sync)
+    await base44.asServiceRole.entities.MenuItem.deleteMany({});
     await base44.asServiceRole.entities.MenuItem.bulkCreate(mapped);
 
     return Response.json({ success: true, synced: mapped.length, startDate, unit_id: UNIT_ID });

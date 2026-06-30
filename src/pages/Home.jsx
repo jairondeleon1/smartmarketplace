@@ -1178,7 +1178,7 @@ export default function Home() {
         const cached = loadMenuFromCache();
         return cached || [];
       }
-      const items = await base44.entities.MenuItem.list();
+      const items = await base44.entities.MenuItem.filter({ location_id: locationId });
       saveMenuToCache(items);
       return items;
     },

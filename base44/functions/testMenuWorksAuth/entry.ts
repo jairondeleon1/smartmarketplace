@@ -9,8 +9,13 @@ Deno.serve(async (req) => {
     const WT_CLIENT_ID = Deno.env.get('MENUWORKS_WT_CLIENT_ID');
     const wtPreview = WT_CLIENT_ID ? `${WT_CLIENT_ID.slice(0,4)}...${WT_CLIENT_ID.slice(-4)} (len:${WT_CLIENT_ID.length})` : 'NOT SET';
 
-    // Try the simplest possible endpoint first - no options needed
-    const url = `https://services.webtrition.com/serviceapi/v3/business_units`;
+    // Try fetching menu items with a broader date range
+    const options = {
+      filter: { startDate: '2026-06-01', days: 60 },
+      include: { allergens: true, nutrientTypes: ['Standard'] },
+      page: { offset: 1, limit: 10 }
+    };
+    const url = `https://services.webtrition.com/serviceapi/v3/business_units/40442/menu_items?options=${encodeURIComponent(JSON.stringify(options))}`;
 
     const apiRes = await fetch(url, {
       headers: {
@@ -25,8 +30,7 @@ Deno.serve(async (req) => {
       url,
       status: apiRes.status,
       wt_client_id_preview: wtPreview,
-      response_headers: Object.fromEntries(apiRes.headers.entries()),
-      response: responseText.slice(0, 1000)
+      response: responseText.slice(0, 2000)
     });
 
   } catch (error) {

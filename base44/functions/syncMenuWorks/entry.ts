@@ -15,18 +15,27 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const locationId = body.location_id || null;
 
-    // Build start date = this Monday, fetch 7 days
-    const today = new Date();
-    const dayOfWeek = today.getDay(); // 0=Sun
-    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + daysToMonday);
-    const startDate = monday.toISOString().split('T')[0];
+    // Fetch from body params or default to current week
+    const bodyStartDate = body.startDate || null;
+    const bodyDays = body.days || 7;
+
+    let startDate;
+    if (bodyStartDate) {
+      startDate = bodyStartDate;
+    } else {
+      // Default: this Monday
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const monday = new Date(today);
+      monday.setDate(today.getDate() + daysToMonday);
+      startDate = monday.toISOString().split('T')[0];
+    }
 
     const options = {
       filter: {
         startDate,
-        days: 7,
+        days: bodyDays,
         ...(locationId ? { locationId: parseInt(locationId) } : {})
       },
       include: {
@@ -34,7 +43,7 @@ Deno.serve(async (req) => {
         nutrientTypes: ['Standard'],
         ingredients: false
       },
-      page: { offset: 1, limit: 200 }
+      page: { offset: 1, limit: 500 }
     };
 
     const url = `https://services.webtrition.com/serviceapi/v3/business_units/${UNIT_ID}/menu_items?options=${encodeURIComponent(JSON.stringify(options))}`;

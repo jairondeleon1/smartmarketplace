@@ -214,13 +214,9 @@ export default function MenuPage({ menuItems: menuItemsProp, setMenuItems, user,
     queryKey: ['menuItems'],
     queryFn: async () => {
       const items = await base44.entities.MenuItem.list();
-      if (items.length === 0) {
-        await base44.entities.MenuItem.bulkCreate(DEFAULT_MENU);
-        return DEFAULT_MENU;
-      }
       return items;
     },
-    initialData: menuItemsProp || DEFAULT_MENU,
+    initialData: menuItemsProp || [],
   });
 
   const [myPlate, setMyPlate] = useState([]);

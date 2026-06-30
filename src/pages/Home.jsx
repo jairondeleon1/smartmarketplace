@@ -1179,13 +1179,7 @@ export default function Home() {
         if (cached) return cached;
         return DEFAULT_MENU;
       }
-      const items = await base44.entities.MenuItem.filter({ location_id: locationId });
-      if (items.length === 0) {
-        const defaultWithLocation = DEFAULT_MENU.map(item => ({ ...item, location_id: locationId }));
-        await base44.entities.MenuItem.bulkCreate(defaultWithLocation);
-        saveMenuToCache(defaultWithLocation);
-        return defaultWithLocation;
-      }
+      const items = await base44.entities.MenuItem.list();
       saveMenuToCache(items);
       return items;
     },

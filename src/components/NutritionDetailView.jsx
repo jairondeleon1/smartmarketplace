@@ -36,27 +36,29 @@ export default function NutritionDetailView({ item }) {
     return dv ? Math.round((value / dv) * 100) : 0;
   };
 
+  const r = (v) => Math.round(v || 0);
+
   const macroData = [
-    { name: 'Protein', value: item.protein || 0, color: COLORS.protein },
-    { name: 'Carbs', value: item.carbs || 0, color: COLORS.carbs },
-    { name: 'Fat', value: item.fat || 0, color: COLORS.fat }
+    { name: 'Protein', value: r(item.protein), color: COLORS.protein },
+    { name: 'Carbs', value: r(item.carbs), color: COLORS.carbs },
+    { name: 'Fat', value: r(item.fat), color: COLORS.fat }
   ];
 
   const fatBreakdown = [
-    { name: 'Saturated', value: item.saturated_fat || 0, dv: calculateDV('saturated_fat', item.saturated_fat || 0) },
-    { name: 'Unsaturated', value: item.unsaturated_fat || 0, dv: 0 }
+    { name: 'Saturated', value: r(item.saturated_fat), dv: calculateDV('saturated_fat', r(item.saturated_fat)) },
+    { name: 'Unsaturated', value: r(item.unsaturated_fat), dv: 0 }
   ];
 
   const vitamins = [
-    { name: 'Vitamin A', value: item.vitamin_a || 0, unit: 'mcg', dv: calculateDV('vitamin_a', item.vitamin_a || 0) },
-    { name: 'Vitamin C', value: item.vitamin_c || 0, unit: 'mg', dv: calculateDV('vitamin_c', item.vitamin_c || 0) },
-    { name: 'Vitamin D', value: item.vitamin_d || 0, unit: 'mcg', dv: calculateDV('vitamin_d', item.vitamin_d || 0) }
+    { name: 'Vitamin A', value: r(item.vitamin_a), unit: 'mcg', dv: calculateDV('vitamin_a', r(item.vitamin_a)) },
+    { name: 'Vitamin C', value: r(item.vitamin_c), unit: 'mg', dv: calculateDV('vitamin_c', r(item.vitamin_c)) },
+    { name: 'Vitamin D', value: r(item.vitamin_d), unit: 'mcg', dv: calculateDV('vitamin_d', r(item.vitamin_d)) }
   ];
 
   const minerals = [
-    { name: 'Calcium', value: item.calcium || 0, unit: 'mg', dv: calculateDV('calcium', item.calcium || 0) },
-    { name: 'Iron', value: item.iron || 0, unit: 'mg', dv: calculateDV('iron', item.iron || 0) },
-    { name: 'Potassium', value: item.potassium || 0, unit: 'mg', dv: calculateDV('potassium', item.potassium || 0) }
+    { name: 'Calcium', value: r(item.calcium), unit: 'mg', dv: calculateDV('calcium', r(item.calcium)) },
+    { name: 'Iron', value: r(item.iron), unit: 'mg', dv: calculateDV('iron', r(item.iron)) },
+    { name: 'Potassium', value: r(item.potassium), unit: 'mg', dv: calculateDV('potassium', r(item.potassium)) }
   ];
 
   return (
@@ -108,7 +110,7 @@ export default function NutritionDetailView({ item }) {
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: macro.color }} />
                     <span className="font-bold text-gray-700">{macro.name}</span>
                   </div>
-                  <span className="font-bold text-gray-900">{macro.value}g</span>
+                  <span className="font-bold text-gray-900">{Math.round(macro.value)}g</span>
                 </div>
               ))}
             </div>
@@ -117,23 +119,23 @@ export default function NutritionDetailView({ item }) {
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-gray-50 p-3 rounded-lg">
               <div className="text-xs text-gray-500 uppercase font-bold">Sodium</div>
-              <div className="text-lg font-bold text-gray-900">{item.sodium || 0}mg</div>
-              <div className="text-xs text-teal-600 font-bold">{calculateDV('sodium', item.sodium || 0)}% DV</div>
+              <div className="text-lg font-bold text-gray-900">{r(item.sodium)}mg</div>
+              <div className="text-xs text-teal-600 font-bold">{calculateDV('sodium', r(item.sodium))}% DV</div>
             </div>
             <div className="bg-gray-50 p-3 rounded-lg">
               <div className="text-xs text-gray-500 uppercase font-bold">Fiber</div>
-              <div className="text-lg font-bold text-gray-900">{item.fiber || 0}g</div>
-              <div className="text-xs text-teal-600 font-bold">{calculateDV('fiber', item.fiber || 0)}% DV</div>
+              <div className="text-lg font-bold text-gray-900">{r(item.fiber)}g</div>
+              <div className="text-xs text-teal-600 font-bold">{calculateDV('fiber', r(item.fiber))}% DV</div>
             </div>
             <div className="bg-gray-50 p-3 rounded-lg">
               <div className="text-xs text-gray-500 uppercase font-bold">Sugar</div>
-              <div className="text-lg font-bold text-gray-900">{item.sugar || 0}g</div>
-              <div className="text-xs text-teal-600 font-bold">{calculateDV('sugar', item.sugar || 0)}% DV</div>
+              <div className="text-lg font-bold text-gray-900">{r(item.sugar)}g</div>
+              <div className="text-xs text-teal-600 font-bold">{calculateDV('sugar', r(item.sugar))}% DV</div>
             </div>
             <div className="bg-gray-50 p-3 rounded-lg">
               <div className="text-xs text-gray-500 uppercase font-bold">Cholesterol</div>
-              <div className="text-lg font-bold text-gray-900">{item.cholesterol || 0}mg</div>
-              <div className="text-xs text-teal-600 font-bold">{calculateDV('cholesterol', item.cholesterol || 0)}% DV</div>
+              <div className="text-lg font-bold text-gray-900">{r(item.cholesterol)}mg</div>
+              <div className="text-xs text-teal-600 font-bold">{calculateDV('cholesterol', r(item.cholesterol))}% DV</div>
             </div>
           </div>
         </div>
@@ -143,7 +145,7 @@ export default function NutritionDetailView({ item }) {
       {activeTab === 'macros' && (
         <div className="space-y-4">
           <div>
-            <h4 className="text-xs font-bold uppercase text-gray-700 mb-3">Total Fat: {item.fat || 0}g</h4>
+            <h4 className="text-xs font-bold uppercase text-gray-700 mb-3">Total Fat: {r(item.fat)}g</h4>
             
             {(item.saturated_fat > 0 || item.unsaturated_fat > 0) ? (
               <>
@@ -180,17 +182,17 @@ export default function NutritionDetailView({ item }) {
               <div className="flex justify-between items-center text-xs">
                 <span className="font-bold text-gray-700">Total Carbohydrates</span>
                 <div className="text-right">
-                  <span className="font-bold text-gray-900">{item.carbs || 0}g</span>
-                  <span className="text-teal-600 ml-2">({calculateDV('carbs', item.carbs || 0)}% DV)</span>
+                  <span className="font-bold text-gray-900">{r(item.carbs)}g</span>
+                  <span className="text-teal-600 ml-2">({calculateDV('carbs', r(item.carbs))}% DV)</span>
                 </div>
               </div>
               <div className="flex justify-between items-center text-xs pl-4">
                 <span className="text-gray-600">Dietary Fiber</span>
-                <span className="font-bold text-gray-900">{item.fiber || 0}g</span>
+                <span className="font-bold text-gray-900">{r(item.fiber)}g</span>
               </div>
               <div className="flex justify-between items-center text-xs pl-4">
                 <span className="text-gray-600">Total Sugars</span>
-                <span className="font-bold text-gray-900">{item.sugar || 0}g</span>
+                <span className="font-bold text-gray-900">{r(item.sugar)}g</span>
               </div>
             </div>
           </div>
@@ -199,8 +201,8 @@ export default function NutritionDetailView({ item }) {
             <div className="flex justify-between items-center text-xs">
               <span className="font-bold text-gray-700">Protein</span>
               <div className="text-right">
-                <span className="font-bold text-gray-900">{item.protein || 0}g</span>
-                <span className="text-teal-600 ml-2">({calculateDV('protein', item.protein || 0)}% DV)</span>
+                <span className="font-bold text-gray-900">{r(item.protein)}g</span>
+                <span className="text-teal-600 ml-2">({calculateDV('protein', r(item.protein))}% DV)</span>
               </div>
             </div>
           </div>

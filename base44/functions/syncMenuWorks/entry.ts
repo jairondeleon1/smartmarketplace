@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
     const getNutrient = (nutrients, ...keywords) => {
       if (!nutrients) return 0;
       const n = nutrients.find(n => keywords.some(k => n.name?.toLowerCase().includes(k.toLowerCase())));
-      return n ? parseFloat(n.rawValue || 0) : 0;
+      return n ? Math.round(parseFloat(n.rawValue || 0)) : 0;
     };
 
     // Map API items to MenuItem entity shape

@@ -415,9 +415,9 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl, allergen
         )}
         <div className="flex flex-wrap gap-1.5 mb-4 font-sans font-bold">{item.tags?.filter(tag => ['High Protein', 'High Fiber', 'Vegan', 'Vegetarian', 'Fit', 'Spicy', 'Dairy Free', 'Low Carb', 'Heart Healthy'].includes(tag)).map(tag => <Badge key={tag}>{tag}</Badge>)}</div>
         <div className="grid grid-cols-3 gap-2 text-center py-3 bg-gray-50 rounded-xl mb-4 border border-gray-100/50 font-bold">
-          <div><span className="block text-sm font-bold text-gray-700 font-sans">{item.calories}</span><span className="text-[9px] text-gray-400 uppercase font-bold font-sans tracking-widest">Cals</span></div>
-          <div><span className="block text-sm font-bold text-gray-700 font-sans">{item.protein}g</span><span className="text-[9px] text-gray-400 uppercase font-bold font-sans tracking-widest">Prot</span></div>
-          <div><span className="block text-sm font-bold text-gray-700 font-sans">{item.carbs}g</span><span className="text-[9px] text-gray-400 uppercase font-bold font-sans tracking-widest">Carb</span></div>
+          <div><span className="block text-sm font-bold text-gray-700 font-sans">{Math.round(item.calories||0)}</span><span className="text-[9px] text-gray-400 uppercase font-bold font-sans tracking-widest">Cals</span></div>
+          <div><span className="block text-sm font-bold text-gray-700 font-sans">{Math.round(item.protein||0)}g</span><span className="text-[9px] text-gray-400 uppercase font-bold font-sans tracking-widest">Prot</span></div>
+          <div><span className="block text-sm font-bold text-gray-700 font-sans">{Math.round(item.carbs||0)}g</span><span className="text-[9px] text-gray-400 uppercase font-bold font-sans tracking-widest">Carb</span></div>
         </div>
       </div>
       <div className="px-5 pb-5 flex gap-2 font-sans font-bold">
@@ -455,9 +455,9 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl, allergen
 function TraySummary({ plate, onClick }) {
   if (plate.length === 0) return null;
   const totals = plate.reduce((acc, item) => ({
-    calories: acc.calories + (item.calories || 0),
-    protein: acc.protein + (item.protein || 0),
-  }), { calories: 0, protein: 0 });
+    calories: acc.calories + Math.round(item.calories || 0),
+    protein: acc.protein + Math.round(item.protein || 0),
+    }), { calories: 0, protein: 0 });
   
   return (
     <div onClick={onClick} className="fixed left-1/2 -translate-x-1/2 bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 text-white rounded-full shadow-2xl px-6 py-3 z-[45] flex items-center gap-4 border border-teal-500/30 cursor-pointer font-sans backdrop-blur-sm hover:shadow-teal-500/20 hover:shadow-xl transition-all hover:scale-105 animate-in slide-in-from-bottom-4 duration-500 select-none"

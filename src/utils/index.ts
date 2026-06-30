@@ -9,10 +9,15 @@ export function createPageUrl(pageName: string) {
  */
 export function getCurrentLocationId(): string {
     const hostname = window.location.hostname;
-    // On localhost or base44 preview, return a default
+    // On localhost or base44 preview, return smartmenuiq (the main domain's location)
     if (hostname === 'localhost' || hostname.includes('base44.app') || hostname.includes('base44.co')) {
-        return 'default';
+        return 'smartmenuiq';
     }
-    const subdomain = hostname.split('.')[0];
-    return subdomain || 'default';
+    const parts = hostname.split('.');
+    // Apex domain (e.g. smartmenuiq.com) — no subdomain, use smartmenuiq
+    if (parts.length <= 2) {
+        return 'smartmenuiq';
+    }
+    // Subdomain (e.g. eatiburon.smartmenuiq.com) → use the subdomain
+    return parts[0] || 'smartmenuiq';
 }

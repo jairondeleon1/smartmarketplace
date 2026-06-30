@@ -23,13 +23,12 @@ Deno.serve(async (req) => {
     if (bodyStartDate) {
       startDate = bodyStartDate;
     } else {
-      // Default: this Monday
+      // Default: this Sunday (start of week)
       const today = new Date();
-      const dayOfWeek = today.getDay();
-      const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-      const monday = new Date(today);
-      monday.setDate(today.getDate() + daysToMonday);
-      startDate = monday.toISOString().split('T')[0];
+      const dayOfWeek = today.getDay(); // 0=Sun
+      const sunday = new Date(today);
+      sunday.setDate(today.getDate() - dayOfWeek);
+      startDate = sunday.toISOString().split('T')[0];
     }
 
     const options = {

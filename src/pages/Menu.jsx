@@ -126,13 +126,18 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
             </div>
           )}
           <NutritionDetailView item={item} />
-          {item.allergens && item.allergens.filter(a => !['Garlic', 'Gluten', 'Onion'].includes(a)).length > 0 && (
-            <div className="mt-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-lg p-3">
-              <div className="text-red-600 dark:text-red-400 font-bold uppercase text-[10px] tracking-widest">
-                Contains: {item.allergens.filter(a => !['Garlic', 'Gluten', 'Onion'].includes(a)).join(', ')}
+          {(() => {
+            const MAJOR_ALLERGENS = ['milk', 'eggs', 'egg', 'peanuts', 'peanut', 'tree nuts', 'tree nut', 'almonds', 'almond', 'walnuts', 'walnut', 'cashews', 'cashew', 'wheat', 'soybeans', 'soybean', 'soy', 'fish', 'crustacean shellfish', 'shellfish', 'shrimp', 'crab', 'lobster', 'sesame'];
+            const filtered = (item.allergens || []).filter(a => MAJOR_ALLERGENS.some(m => a.toLowerCase().includes(m)));
+            if (filtered.length === 0) return null;
+            return (
+              <div className="mt-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-lg p-3">
+                <div className="text-red-600 dark:text-red-400 font-bold uppercase text-[10px] tracking-widest">
+                  Contains: {filtered.join(', ')}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       )}
     </div>

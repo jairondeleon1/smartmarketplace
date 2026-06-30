@@ -127,8 +127,10 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl }) {
           )}
           <NutritionDetailView item={item} />
           {(() => {
-            const MAJOR_ALLERGENS = ['milk', 'eggs', 'egg', 'peanuts', 'peanut', 'tree nuts', 'tree nut', 'almonds', 'almond', 'walnuts', 'walnut', 'cashews', 'cashew', 'wheat', 'soybeans', 'soybean', 'soy', 'fish', 'crustacean shellfish', 'shellfish', 'shrimp', 'crab', 'lobster', 'sesame'];
-            const filtered = (item.allergens || []).filter(a => MAJOR_ALLERGENS.some(m => a.toLowerCase().includes(m)));
+            const MAJOR_ALLERGENS = ['milk', 'egg', 'peanut', 'tree nut', 'wheat', 'soy', 'fish', 'shellfish', 'sesame'];
+            const filtered = (item.allergens || []).filter(a =>
+              MAJOR_ALLERGENS.some(m => a.toLowerCase().includes(m))
+            );
             if (filtered.length === 0) return null;
             return (
               <div className="mt-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-lg p-3">

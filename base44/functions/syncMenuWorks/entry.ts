@@ -78,8 +78,11 @@ Deno.serve(async (req) => {
       const mealPeriod = item.itemGroupings?.find(g => g.type === 'MealPeriod')?.name || 'Lunch';
       const station = item.itemGroupings?.find(g => g.type === 'Station')?.name || '';
       const dateStr = item.date ? new Date(item.date).toLocaleDateString('en-US', { weekday: 'long' }) : '';
-      const allergenStr = typeof item.allergens === 'string' ? item.allergens : '';
-      const allergenArr = allergenStr ? allergenStr.split(',').map(a => a.trim()).filter(Boolean) : [];
+      const MAJOR_ALLERGENS = ['milk', 'egg', 'peanut', 'tree nut', 'wheat', 'soy', 'fish', 'shellfish', 'sesame'];
+      const allergenStr = typeof item.allergens === 'string' ? item.allergens : (Array.isArray(item.allergens) ? item.allergens.join(',') : '');
+      const allergenArr = allergenStr
+        ? allergenStr.split(',').map(a => a.trim()).filter(a => a && MAJOR_ALLERGENS.some(m => a.toLowerCase().includes(m)))
+        : [];
       const nutrients = item.nutrients || [];
 
       return {

@@ -1176,14 +1176,12 @@ export default function Home() {
     queryFn: async () => {
       if (!navigator.onLine) {
         const cached = loadMenuFromCache();
-        if (cached) return cached;
-        return DEFAULT_MENU;
+        return cached || [];
       }
       const items = await base44.entities.MenuItem.list();
       saveMenuToCache(items);
       return items;
     },
-    initialData: () => loadMenuFromCache() || DEFAULT_MENU,
   });
   
   const setMenuItems = async (newItems) => {

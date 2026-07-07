@@ -41,6 +41,7 @@ export default function Welcome() {
     queryFn: () => base44.entities.Location.list(),
   });
 
+  const MAX_BEFORE_SEARCH = 3;
   const q = search.toLowerCase().trim();
   const matched = q
     ? locations.filter((l) => {
@@ -54,7 +55,7 @@ export default function Welcome() {
       })
     : locations;
   // Show only 3 locations before the user searches; show all matches once they type.
-  const filtered = q ? matched : matched.slice(0, 3);
+  const filtered = q ? matched : matched.slice(0, MAX_BEFORE_SEARCH);
 
   const handleSelect = (loc) => {
     saveLocation({ subdomain: loc.subdomain, name: loc.name });

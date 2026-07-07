@@ -50,7 +50,7 @@ const STORAGE_KEY = 'michelle_avatar_url';
 const DEFAULT_AVATAR = 'https://media.base44.com/images/public/698cee888040f55d6a3c5040/553685004_b87fc78a5_generated_image.png';
 
 
-export default function VoiceAssistant({ menuItems = [] }) {
+export default function VoiceAssistant({ menuItems = [], inline = false }) {
   const [phase, setPhase] = useState('idle');
   const [history, setHistory] = useState([]);
   const [avatarUrl, setAvatarUrl] = useState(() => localStorage.getItem(STORAGE_KEY) || DEFAULT_AVATAR);
@@ -214,6 +214,57 @@ ${pastTurns ? `Context:\n${pastTurns}\n` : ''}U: "${transcript}"`
     : phase === 'greeting' ? '👋 Hi!'
     : phase === 'processing' ? '🔍 Looking it up...'
     : '💬 Talk to Michelle';
+
+  if (inline) {
+    return (
+      <div className="flex items-center gap-3 bg-white rounded-2xl border border-violet-100 shadow-sm p-3">
+        <button
+          onClick={handleClick}
+          aria-label="Voice Assistant - Michelle"
+          className={`relative w-14 h-14 rounded-full shadow-lg transition-all duration-300 active:scale-95 overflow-hidden shrink-0 ${avatarAnimation}`}
+          style={{ boxShadow: glowStyle }}
+        >
+          {isUploading ? (
+            <div className="w-full h-full bg-violet-700 flex items-center justify-center">
+              <Loader2 className="w-5 h-5 text-white animate-spin" />
+            </div>
+          ) : (
+            <img src={avatarUrl} alt="Michelle" className="w-full h-full object-cover object-top" />
+          )}
+          {phase === 'listening' && (
+            <span className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-25" />
+          )}
+          {(phase === 'speaking' || phase === 'greeting') && (
+            <span className="absolute inset-0 rounded-full bg-violet-400 animate-ping opacity-15" />
+          )}
+        </button>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-sm text-slate-800">Michelle</p>
+          <p className={`text-[10px] font-bold uppercase tracking-widest ${
+            phase === 'listening' ? 'text-red-500' :
+            phase === 'speaking' || phase === 'greeting' ? 'text-violet-600' :
+            phase === 'processing' ? 'text-amber-600' :
+            'text-slate-400'
+          }`}>{statusLabel}</p>
+        </div>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="w-7 h-7 bg-slate-50 border border-slate-200 rounded-full shadow flex items-center justify-center hover:bg-slate-100 transition shrink-0"
+          aria-label="Upload avatar photo"
+          title="Replace with your own cartoon photo"
+        >
+          <Upload className="w-3 h-3 text-slate-400" />
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleAvatarUpload}
+        />
+      </div>
+    );
+  }
 
   return (
     <div

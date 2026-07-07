@@ -655,6 +655,7 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
             </div>
             <div className="bg-white/20 p-2 rounded-full border border-white/10 text-white transition-transform group-hover:translate-x-1 shadow-inner" aria-hidden="true"><ArrowRight className="w-5 h-5" /></div>
           </div>
+          <div className="md:hidden w-full"><VoiceAssistant menuItems={menuItems} inline /></div>
         </div>
 
         <CoreMenusSection onAddToPlate={addToPlate} />
@@ -1389,7 +1390,7 @@ export default function Home() {
         <ProfileSettingsModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} user={effectiveUser} allergenEnabled={allergenEnabled} onProfileUpdate={(profile) => { setLocalProfile(profile); localStorage.setItem('userProfile', JSON.stringify(profile)); }} />
         <AITransparencyModal isOpen={showAINotice} onAccept={handleAINoticeAccept} />
         <AppInstallBanner />
-        <VoiceAssistant menuItems={menuItems} />
+        <div className="hidden md:block"><VoiceAssistant menuItems={menuItems} /></div>
         <Footer onAdminClick={() => changeView('admin')} />
       </div>
     </AccessibilityProvider>

@@ -1,0 +1,52 @@
+{
+  "name": "Location",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Display name of the location (e.g. 'Main Campus Cafe')"
+    },
+    "zip_code": {
+      "type": "string",
+      "description": "ZIP code used for search"
+    },
+    "subdomain": {
+      "type": "string",
+      "description": "Subdomain prefix that doubles as location_id, e.g. 'cafe1' \u2192 cafe1.smartmenuiq.app"
+    },
+    "address": {
+      "type": "string",
+      "description": "Optional street address for display"
+    },
+    "city": {
+      "type": "string",
+      "description": "Optional city"
+    },
+    "state": {
+      "type": "string",
+      "description": "Optional state"
+    }
+  },
+  "required": [
+    "name",
+    "subdomain"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {},
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

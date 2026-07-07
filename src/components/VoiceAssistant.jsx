@@ -217,11 +217,16 @@ ${pastTurns ? `Context:\n${pastTurns}\n` : ''}U: "${transcript}"`
 
   if (inline) {
     return (
-      <div className="flex items-center gap-3 bg-white rounded-2xl border border-violet-100 shadow-sm p-3">
-        <button
-          onClick={handleClick}
-          aria-label="Voice Assistant - Michelle"
-          className={`relative w-14 h-14 rounded-full shadow-lg transition-all duration-300 active:scale-95 overflow-hidden shrink-0 ${avatarAnimation}`}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={handleClick}
+        onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && handleClick()}
+        aria-label="Voice Assistant - Michelle"
+        className="flex items-center gap-3 bg-white rounded-2xl border border-violet-100 shadow-sm p-3 cursor-pointer active:scale-[0.98] transition"
+      >
+        <div
+          className={`relative w-14 h-14 rounded-full shadow-lg transition-all duration-300 overflow-hidden shrink-0 ${avatarAnimation}`}
           style={{ boxShadow: glowStyle }}
         >
           {isUploading ? (
@@ -237,7 +242,7 @@ ${pastTurns ? `Context:\n${pastTurns}\n` : ''}U: "${transcript}"`
           {(phase === 'speaking' || phase === 'greeting') && (
             <span className="absolute inset-0 rounded-full bg-violet-400 animate-ping opacity-15" />
           )}
-        </button>
+        </div>
         <div className="flex-1 min-w-0">
           <p className="font-bold text-sm text-slate-800">Michelle</p>
           <p className={`text-[10px] font-bold uppercase tracking-widest ${
@@ -248,7 +253,7 @@ ${pastTurns ? `Context:\n${pastTurns}\n` : ''}U: "${transcript}"`
           }`}>{statusLabel}</p>
         </div>
         <button
-          onClick={() => fileInputRef.current?.click()}
+          onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
           className="w-7 h-7 bg-slate-50 border border-slate-200 rounded-full shadow flex items-center justify-center hover:bg-slate-100 transition shrink-0"
           aria-label="Upload avatar photo"
           title="Replace with your own cartoon photo"

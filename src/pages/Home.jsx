@@ -413,7 +413,7 @@ function MenuItemCard({ item, addToPlate, customVegUrl, customVeganUrl, allergen
         ) : (
           <p className="text-gray-400 text-sm leading-relaxed mb-4 italic font-sans font-medium">No description available</p>
         )}
-        <div className="flex flex-wrap gap-1.5 mb-4 font-sans font-bold">{item.tags?.filter(tag => ['High Protein', 'High Fiber', 'Vegan', 'Vegetarian', 'Fit', 'Spicy', 'Dairy Free', 'Low Carb', 'Heart Healthy', 'Whole Grain'].includes(tag)).map(tag => <Badge key={tag}>{tag === 'Fit' ? "Dietitian's Pick" : tag}</Badge>)}</div>
+        <div className="flex flex-wrap gap-1.5 mb-4 font-sans font-bold">{item.tags?.filter(tag => ['High Protein', 'High Fiber', 'Vegan', 'Vegetarian', 'Fit', 'Spicy', 'Dairy Free', 'Low Carb', 'Heart Healthy', 'Whole Grain'].includes(tag)).map(tag => <Badge key={tag}>{tag === 'Fit' ? "Dietitian's Pick" : tag === 'High Fiber' ? 'Whole Grain' : tag}</Badge>)}</div>
         <div className="grid grid-cols-3 gap-2 text-center py-3 bg-gray-50 rounded-xl mb-4 border border-gray-100/50 font-bold">
           <div><span className="block text-sm font-bold text-gray-700 font-sans">{Math.round(item.calories||0)}</span><span className="text-[9px] text-gray-400 uppercase font-bold font-sans tracking-widest">Cals</span></div>
           <div><span className="block text-sm font-bold text-gray-700 font-sans">{Math.round(item.protein||0)}g</span><span className="text-[9px] text-gray-400 uppercase font-bold font-sans tracking-widest">Prot</span></div>

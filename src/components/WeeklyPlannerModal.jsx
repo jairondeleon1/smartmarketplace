@@ -3,7 +3,7 @@ import { X, Wand, Loader2, RefreshCw, Trash2, Plus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 export default function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPlate, user }) {
-  const [goal, setGoal] = useState('High Protein');
+  const [goal, setGoal] = useState('FIT');
   const [plan, setPlan] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [changingMeal, setChangingMeal] = useState(null);
@@ -20,8 +20,8 @@ export default function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPl
     }
 
     const goalCriteria = {
+      'FIT': 'FIT: select lean, nutrient-dense items — high protein (≥15g), moderate calories, low saturated fat (≤5g), and balanced macros. Prioritize grilled, roasted, or steamed items, vegetables, and whole foods. Avoid fried, breaded, or heavily processed items.',
       'Low Carb Plan': 'Low Carb Plan: select items with 10–40g of carbohydrates per serving.',
-      'Heart Healthy': 'Heart Healthy: select items that are low in saturated fat (≤5g), sodium (≤600mg), and added sugar (≤10g). Prioritize lean proteins, vegetables, and whole foods. Avoid items high in saturated fat or heavy sodium.',
     };
     const criteriaNote = goalCriteria[goal] ? `IMPORTANT criteria for this goal — ${goalCriteria[goal]} ` : '';
     const prompt = `Plan 5-day meal menu for goal: "${goal}". ${criteriaNote}${userContext}For each weekday (Monday-Friday), select BOTH a breakfast item AND a lunch item from the menu. Use ONLY the exact string IDs provided. Menu Data: ${JSON.stringify(menuItems.map(i => ({id: i.id, name: i.name, day: i.day, meal_period: i.meal_period, calories: i.calories, protein: i.protein, carbs: i.carbs, fat: i.fat, saturated_fat: i.saturated_fat, sodium: i.sodium, sugar: i.sugar, tags: i.tags, allergens: i.allergens})))}. Return ONLY JSON with structure: {"Monday": {"breakfast": "ITEM_ID", "lunch": "ITEM_ID"}, "Tuesday": {"breakfast": "ITEM_ID", "lunch": "ITEM_ID"}, ...}`;
@@ -95,7 +95,7 @@ export default function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPl
           {!plan ? (
             <>
               <div className="grid grid-cols-1 gap-2">
-                {['High Protein', 'Balanced Strategy', 'Vegan Meal Prep', 'Vegetarian', 'Pescatarian', 'Low Carb Plan'].map(g => (
+                {['High Protein', 'FIT', 'Vegan Meal Prep', 'Vegetarian', 'Pescatarian', 'Low Carb Plan'].map(g => (
                   <button key={g} onClick={() => setGoal(g)} className={`p-4 rounded-xl border-2 text-left transition-all font-bold ${goal === g ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/30 text-teal-900 dark:text-teal-300' : 'border-gray-100 dark:border-slate-700 text-gray-500 dark:text-slate-400'}`}>
                     <span className="uppercase text-xs tracking-widest font-bold">{g}</span>
                     {g === 'Low Carb Plan' && <span className="block normal-case text-[11px] font-medium text-gray-400 dark:text-slate-500 mt-1 tracking-normal">Each item with 15 grams or less per serving</span>}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Pencil, X, MapPin, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Pencil, X, MapPin, Loader2, DownloadCloud } from 'lucide-react';
 
 const EMPTY = { name: '', subdomain: '', zip_code: '', address: '', city: '', state: '' };
 
@@ -9,6 +9,7 @@ export default function LocationsAdmin() {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(null); // record or EMPTY for new
   const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [error, setError] = useState('');
 
   const { data: locations = [], isLoading } = useQuery({
@@ -17,6 +18,43 @@ export default function LocationsAdmin() {
   });
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['locations'] });
+
+  // Auto-discover location_ids already used in menu items & app settings,
+  // then create Location records for any subdomains not yet in the list.
+  const handleAutoImport = async () => {
+    setImporting(true);
+    try {
+      const [menuItems, appSettings] = await Promise.all([
+        base44.entities.MenuItem.list('-created_date', 500),
+        base44.entities.AppSettings.list(),
+      ]);
+      const ids = new Set();
+      menuItems.forEach((m) => { if (m.location_id) ids.add(m.location_id); });
+      appSettings.forEach((s) => { if (s.location_id) ids.add(s.location_id); });
+
+      const existing = new Set(locations.map((l) => l.subdomain));
+      const missing = [...ids].filter((id) => !existing.has(id));
+      if (missing.length === 0) {
+        alert('Every location ID in the system is already in this list.');
+        return;
+      }
+      const newRecords = missing.map((id) => ({
+        name: id.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+        subdomain: id,
+        zip_code: '',
+        address: '',
+        city: '',
+        state: '',
+      }));
+      await base44.entities.Location.bulkCreate(newRecords);
+      await refresh();
+      alert(`Imported ${newRecords.length} location(s): ${missing.join(', ')}.\nEdit each one to add a friendly name and ZIP code.`);
+    } catch (err) {
+      alert('Auto-import failed: ' + (err.message || err));
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -124,9 +162,14 @@ export default function LocationsAdmin() {
             Manage which locations appear on the welcome picker
           </p>
         </div>
-        <button onClick={() => setEditing({ ...EMPTY })} className="bg-slate-900 text-white px-4 py-3 rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-black transition flex items-center gap-2">
-          <Plus className="w-4 h-4" /> Add
-        </button>
+        <div className="flex gap-2">
+          <button onClick={handleAutoImport} disabled={importing} className="bg-white border border-teal-200 text-teal-700 px-4 py-3 rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-teal-50 transition flex items-center gap-2 disabled:opacity-50">
+            {importing ? <Loader2 className="w-4 h-4 animate-spin" /> : <DownloadCloud className="w-4 h-4" />} Auto-Pull
+          </button>
+          <button onClick={() => setEditing({ ...EMPTY })} className="bg-slate-900 text-white px-4 py-3 rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-black transition flex items-center gap-2">
+            <Plus className="w-4 h-4" /> Add
+          </button>
+        </div>
       </div>
 
       {isLoading ? (

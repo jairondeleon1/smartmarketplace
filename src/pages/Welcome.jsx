@@ -42,7 +42,7 @@ export default function Welcome() {
   });
 
   const q = search.toLowerCase().trim();
-  const filtered = q
+  const matched = q
     ? locations.filter((l) => {
         return (
           (l.name || '').toLowerCase().includes(q) ||
@@ -53,6 +53,8 @@ export default function Welcome() {
         );
       })
     : locations;
+  // Show only 3 locations before the user searches; show all matches once they type.
+  const filtered = q ? matched : matched.slice(0, 3);
 
   const handleSelect = (loc) => {
     saveLocation({ subdomain: loc.subdomain, name: loc.name });

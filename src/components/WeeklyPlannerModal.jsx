@@ -98,7 +98,7 @@ export default function WeeklyPlannerModal({ isOpen, onClose, menuItems, addToPl
                 {['High Protein', 'Balanced Strategy', 'Vegan Meal Prep', 'Vegetarian', 'Pescatarian', 'Low Carb Plan'].map(g => (
                   <button key={g} onClick={() => setGoal(g)} className={`p-4 rounded-xl border-2 text-left transition-all font-bold ${goal === g ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/30 text-teal-900 dark:text-teal-300' : 'border-gray-100 dark:border-slate-700 text-gray-500 dark:text-slate-400'}`}>
                     <span className="uppercase text-xs tracking-widest font-bold">{g}</span>
-                    {g === 'Low Carb Plan' && <span className="block normal-case text-[11px] font-medium text-gray-400 dark:text-slate-500 mt-1 tracking-normal">15 grams or less per serving</span>}
+                    {g === 'Low Carb Plan' && <span className="block normal-case text-[11px] font-medium text-gray-400 dark:text-slate-500 mt-1 tracking-normal">Each item with 15 grams or less per serving</span>}
                   </button>
                 ))}
               </div>

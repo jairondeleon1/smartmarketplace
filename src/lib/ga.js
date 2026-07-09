@@ -1,5 +1,5 @@
-// Google Analytics 4 — replace with your Measurement ID (G-XXXXXXXXXX)
-const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX';
+// Google Analytics 4 Measurement ID
+const GA_MEASUREMENT_ID = 'G-TG8R2VFTTP';
 let initialized = false;
 
 export function initGA() {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Loader2, Utensils, ScanLine, BarChart2, TrendingUp, Calendar, ShoppingBag, Info } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import GoogleAnalyticsPanel from './GoogleAnalyticsPanel';
 
 export default function AnalyticsDashboard() {
   const [menuItems, setMenuItems] = useState([]);
@@ -82,6 +83,8 @@ export default function AnalyticsDashboard() {
         </div>
         <button onClick={loadData} className="text-xs text-teal-600 font-bold uppercase tracking-widest hover:underline">Refresh</button>
       </div>
+
+      <GoogleAnalyticsPanel />
 
       {/* Notice */}
       <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3 text-xs text-blue-800">

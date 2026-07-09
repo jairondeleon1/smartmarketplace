@@ -65,6 +65,7 @@ import LocationsAdmin from "../components/admin/LocationsAdmin";
 import MenuUploadPanel from "../components/admin/MenuUploadPanel";
 import AnalyticsDashboard from "../components/admin/AnalyticsDashboard";
 import { useAppSettings } from "@/hooks/useAppSettings";
+import { initGA, trackEvent } from "@/lib/ga";
 import { AccessibilityProvider } from "@/lib/AccessibilityContext";
 import useOnlineStatus, { saveMenuToCache, loadMenuFromCache, getCacheAge } from "@/hooks/useOfflineMenu";
 import OfflineBanner from "@/components/OfflineBanner";
@@ -642,11 +643,11 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
           <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698cee888040f55d6a3c5040/5f703ba08_SmartMenuIQ38x10.png" alt="SmartMenu IQ" className="max-w-md w-full px-4" />
         </div>
         <div className="flex flex-col gap-4 items-center max-w-xl mx-auto px-2 font-sans font-bold">
-          <button onClick={() => setIsWeeklyPlannerOpen(true)} className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 border border-slate-800 uppercase tracking-widest text-xs active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2">
+          <button onClick={() => { trackEvent('open_weekly_planner'); setIsWeeklyPlannerOpen(true); }} className="w-full bg-slate-900 text-white p-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 border border-slate-800 uppercase tracking-widest text-xs active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2">
             <Wand className="w-5 h-5 text-teal-400" aria-hidden="true" /> Plan My Whole Week Meal
           </button>
           {scanLabelEnabled && (
-            <button onClick={() => setIsScanLabelOpen(true)} className="w-full bg-teal-600 hover:bg-teal-700 text-white p-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 uppercase tracking-widest text-xs active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2">
+            <button onClick={() => { trackEvent('open_scan_label'); setIsScanLabelOpen(true); }} className="w-full bg-teal-600 hover:bg-teal-700 text-white p-5 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-3 uppercase tracking-widest text-xs active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2">
               <ScanLine className="w-5 h-5 text-white" aria-hidden="true" /> Scan Food Label
             </button>
           )}
@@ -1185,6 +1186,7 @@ export default function Home() {
   // Location routing: on apex domain with no saved choice, go to the Welcome picker.
   // On apex with a saved choice, redirect to that subdomain. On subdomains, show the menu.
   useEffect(() => {
+    initGA();
     if (isDevHost()) return; // dev/preview — show menu directly
     const sub = getSubdomain();
     if (!sub) {
@@ -1250,6 +1252,7 @@ export default function Home() {
     const to = VIEW_ORDER.indexOf(v);
     setDirection(to >= from ? 1 : -1);
     setView(v);
+    trackEvent('view_change', { view: v });
     setIsMobileMenuOpen(false);
     window.scrollTo(0, 0);
   };
@@ -1282,7 +1285,7 @@ export default function Home() {
   useEffect(() => { const timer = setTimeout(() => scrollToDay(selectedDay), 150); return () => clearTimeout(timer); }, [selectedDay]);
   useEffect(() => { const timer = setTimeout(() => scrollToDay(selectedDay), 300); return () => clearTimeout(timer); }, []);
 
-  const addToPlate = (item) => setMyPlate(prev => [...prev, item]);
+  const addToPlate = (item) => { trackEvent('add_to_tray', { item_name: item.name, station: item.station }); setMyPlate(prev => [...prev, item]); };
 
   const handleAddItem = async (e) => {
     e.preventDefault();
@@ -1302,6 +1305,7 @@ export default function Home() {
   const handleSendChat = async (overrideText = null) => {
     const textToSend = overrideText || userQuery;
     if (!textToSend.trim()) return;
+    trackEvent('send_chat', { query_length: textToSend.length });
     setChatHistory(prev => [...prev, { role: 'user', content: textToSend }]);
     setUserQuery('');
     setIsTyping(true);

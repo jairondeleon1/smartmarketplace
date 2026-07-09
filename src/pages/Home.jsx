@@ -65,7 +65,7 @@ import LocationsAdmin from "../components/admin/LocationsAdmin";
 import MenuUploadPanel from "../components/admin/MenuUploadPanel";
 import AnalyticsDashboard from "../components/admin/AnalyticsDashboard";
 import { useAppSettings } from "@/hooks/useAppSettings";
-import { initGA, trackEvent } from "@/lib/ga";
+import { trackEvent } from "@/lib/ga";
 import { AccessibilityProvider } from "@/lib/AccessibilityContext";
 import useOnlineStatus, { saveMenuToCache, loadMenuFromCache, getCacheAge } from "@/hooks/useOfflineMenu";
 import OfflineBanner from "@/components/OfflineBanner";
@@ -1186,7 +1186,6 @@ export default function Home() {
   // Location routing: on apex domain with no saved choice, go to the Welcome picker.
   // On apex with a saved choice, redirect to that subdomain. On subdomains, show the menu.
   useEffect(() => {
-    initGA();
     if (isDevHost()) return; // dev/preview — show menu directly
     const sub = getSubdomain();
     if (!sub) {

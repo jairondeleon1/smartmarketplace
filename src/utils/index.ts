@@ -1,3 +1,5 @@
+import { getSavedLocation } from '@/utils/location';
+
 export function createPageUrl(pageName: string) {
     return '/' + pageName.replace(/ /g, '-');
 }
@@ -9,9 +11,10 @@ export function createPageUrl(pageName: string) {
  */
 export function getCurrentLocationId(): string {
     const hostname = window.location.hostname;
-    // On localhost or base44 preview, return smartmenuiq (the main domain's location)
+    // On localhost or base44 preview, use saved location if available
     if (hostname === 'localhost' || hostname.includes('base44.app') || hostname.includes('base44.co')) {
-        return 'smartmenuiq';
+        const saved = getSavedLocation();
+        return saved?.subdomain || 'smartmenuiq';
     }
     const parts = hostname.split('.');
     // Apex domain (e.g. smartmenuiq.com) — no subdomain, use smartmenuiq

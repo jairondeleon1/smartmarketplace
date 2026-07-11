@@ -1176,8 +1176,8 @@ export default function Home() {
   const [view, setView] = useState('customer');
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
   const [isRedirecting] = useState(() => {
-    if (isDevHost()) return false;
     if (window.location.pathname.toLowerCase().includes('home')) return false;
+    if (isDevHost()) return !getSavedLocation();
     return !getSubdomain();
   });
 
@@ -1206,7 +1206,7 @@ export default function Home() {
   useEffect(() => {
     if (!isRedirecting) return;
     const saved = getSavedLocation();
-    if (saved?.subdomain) {
+    if (saved?.subdomain && !isDevHost()) {
       window.location.replace(`https://${saved.subdomain}.${getApexDomain()}`);
     } else {
       window.location.replace('/Welcome');

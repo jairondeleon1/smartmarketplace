@@ -16,13 +16,34 @@ export function useOneSignal(user) {
         const appId = response.data?.appId;
         if (!appId) return;
 
-        const doInit = async (OneSignal) => {
+        // Always use OneSignalDeferred — the official v16 pattern.
+        // The page SDK is a lightweight loader; window.OneSignal is a proxy,
+        // not the real SDK instance. The deferred callback receives the actual
+        // SDK instance once the full SDK has loaded. Late pushes still run
+        // because the SDK redefines .push() to execute immediately after load.
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        window.OneSignalDeferred.push(async function (OneSignal) {
           if (OneSignal.__smartmenuInit) return;
           OneSignal.__smartmenuInit = true;
 
           await OneSignal.init({
             appId,
             notifyButton: { enable: false },
+            promptOptions: {
+              slidedown: {
+                prompts: [
+                  {
+                    type: 'push',
+                    autoPrompt: false,
+                    text: {
+                      actionMessage: 'Get notified about new menu items and updates from your marketplace!',
+                      acceptButton: 'Allow',
+                      cancelButton: 'No Thanks',
+                    },
+                  },
+                ],
+              },
+            },
           });
 
           // Link logged-in user to their OneSignal subscription
@@ -34,15 +55,7 @@ export function useOneSignal(user) {
           setTimeout(() => {
             try { OneSignal.showSlidedownPrompt(); } catch (_e) { /* ignore */ }
           }, 12000);
-        };
-
-        // If the SDK is already loaded, init immediately; otherwise queue via deferred
-        if (window.OneSignal && typeof window.OneSignal.init === 'function') {
-          await doInit(window.OneSignal);
-        } else {
-          window.OneSignalDeferred = window.OneSignalDeferred || [];
-          window.OneSignalDeferred.push(doInit);
-        }
+        });
       } catch (e) {
         console.warn('OneSignal init skipped:', e?.message || e);
       }

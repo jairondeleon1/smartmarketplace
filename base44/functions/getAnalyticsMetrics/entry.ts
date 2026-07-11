@@ -74,7 +74,27 @@ Deno.serve(async (req) => {
         : 0,
     };
 
-    return Response.json({ daily, totals, days });
+    // Real-time active users (updates within seconds, no processing delay)
+    let realtime = { activeUsers: 0 };
+    try {
+      const rtRes = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runRealtimeReport`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          metrics: [{ name: 'activeUsers' }],
+        }),
+      });
+      if (rtRes.ok) {
+        const rtData = await rtRes.json();
+        const rtRow = rtData.rows?.[0];
+        realtime = { activeUsers: parseInt(rtRow?.metricValues?.[0]?.value || '0') || 0 };
+      }
+    } catch {}
+
+    return Response.json({ daily, totals, days, realtime });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

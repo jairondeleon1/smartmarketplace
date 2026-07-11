@@ -60,6 +60,13 @@ export default function GoogleAnalyticsPanel() {
 
   useEffect(() => { if (propertyId) fetchGA(propertyId); }, []);
 
+  // Auto-refresh every 30s for real-time active users
+  useEffect(() => {
+    if (!propertyId) return;
+    const interval = setInterval(() => fetchGA(propertyId), 30000);
+    return () => clearInterval(interval);
+  }, [propertyId]);
+
   const saveAndFetch = () => {
     const id = draftId.trim();
     setPropertyId(id);
@@ -98,6 +105,17 @@ export default function GoogleAnalyticsPanel() {
           {data && <button onClick={() => fetchGA(propertyId)} className="p-2 text-teal-600 hover:bg-teal-50 rounded-lg" aria-label="Refresh GA metrics"><RefreshCw className="w-4 h-4" /></button>}
         </div>
       </div>
+
+      {data?.realtime && (
+        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2.5 w-fit">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+          </span>
+          <span className="text-base font-bold text-green-800 leading-none">{data.realtime.activeUsers}</span>
+          <span className="text-[10px] text-green-600 font-bold uppercase tracking-widest">Active Right Now</span>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-teal-600" /></div>

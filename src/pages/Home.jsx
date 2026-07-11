@@ -1175,6 +1175,11 @@ export default function Home() {
 
   const [view, setView] = useState('customer');
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
+  const [isRedirecting] = useState(() => {
+    if (isDevHost()) return false;
+    if (window.location.pathname.toLowerCase().includes('home')) return false;
+    return !getSubdomain();
+  });
 
   const { data: user } = useQuery({
   queryKey: ['user'],
@@ -1199,16 +1204,12 @@ export default function Home() {
   // Location routing: on apex domain with no saved choice, go to the Welcome picker.
   // On apex with a saved choice, redirect to that subdomain. On subdomains, show the menu.
   useEffect(() => {
-    if (isDevHost()) return; // dev/preview — show menu directly
-    if (window.location.pathname.toLowerCase().includes('home')) return; // allow direct /Home access for testing
-    const sub = getSubdomain();
-    if (!sub) {
-      const saved = getSavedLocation();
-      if (saved?.subdomain) {
-        window.location.href = `https://${saved.subdomain}.${getApexDomain()}`;
-      } else {
-        window.location.href = '/Welcome';
-      }
+    if (!isRedirecting) return;
+    const saved = getSavedLocation();
+    if (saved?.subdomain) {
+      window.location.replace(`https://${saved.subdomain}.${getApexDomain()}`);
+    } else {
+      window.location.replace('/Welcome');
     }
   }, []);
 
@@ -1387,6 +1388,14 @@ export default function Home() {
     const mealOrder = { 'Breakfast': 0, 'Lunch': 1, 'Dinner': 2, 'All Day': 3 };
     return (mealOrder[a.meal_period || 'Lunch'] ?? 1) - (mealOrder[b.meal_period || 'Lunch'] ?? 1);
   });
+
+  if (isRedirecting) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-stone-50">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-teal-600 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <AccessibilityProvider>

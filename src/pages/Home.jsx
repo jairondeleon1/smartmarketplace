@@ -1200,6 +1200,7 @@ export default function Home() {
   // On apex with a saved choice, redirect to that subdomain. On subdomains, show the menu.
   useEffect(() => {
     if (isDevHost()) return; // dev/preview — show menu directly
+    if (window.location.pathname.toLowerCase().includes('home')) return; // allow direct /Home access for testing
     const sub = getSubdomain();
     if (!sub) {
       const saved = getSavedLocation();

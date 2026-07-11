@@ -1,0 +1,81 @@
+{
+  "name": "Broadcast",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Notification title"
+    },
+    "message": {
+      "type": "string",
+      "description": "Notification body text"
+    },
+    "location_id": {
+      "type": "string",
+      "description": "Target location subdomain. Empty = all locations.",
+      "default": ""
+    },
+    "channels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Channels used: push, in_app, email"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the in-app banner is still visible to users"
+    }
+  },
+  "required": [
+    "title",
+    "message"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    }
+  }
+}

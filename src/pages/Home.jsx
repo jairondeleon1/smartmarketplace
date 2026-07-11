@@ -64,6 +64,9 @@ import FeatureFlags from "../components/admin/FeatureFlags";
 import LocationsAdmin from "../components/admin/LocationsAdmin";
 import MenuUploadPanel from "../components/admin/MenuUploadPanel";
 import AnalyticsDashboard from "../components/admin/AnalyticsDashboard";
+import BroadcastCenter from "../components/admin/BroadcastCenter";
+import InAppBroadcastBanner from "../components/InAppBroadcastBanner";
+import { useOneSignal } from "@/hooks/useOneSignal";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import { trackEvent } from "@/lib/ga";
 import { AccessibilityProvider } from "@/lib/AccessibilityContext";
@@ -638,6 +641,8 @@ function CustomerView({ menuItems, queryClient, customVegUrl, customVeganUrl, se
     >
       <PullToRefreshIndicator pullDistance={pullDistance} isPulling={isPulling} isRefreshing={isRefreshing} />
 
+      <InAppBroadcastBanner />
+
       <div className="text-center space-y-6 pt-10 font-sans font-bold">
         <div className="flex justify-center">
           <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698cee888040f55d6a3c5040/5f703ba08_SmartMenuIQ38x10.png" alt="SmartMenu IQ" className="max-w-md w-full px-4" />
@@ -1071,6 +1076,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
         {isAdmin && <button onClick={() => setActiveTab('locations')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'locations' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Locations</button>}
         {(isAdmin || isDietitian) && <button onClick={() => setActiveTab('dietitian')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'dietitian' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Wellness</button>}
         <button onClick={() => setActiveTab('analytics')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'analytics' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Analytics</button>
+        {(isAdmin || currentUserRole === 'manager') && <button onClick={() => setActiveTab('broadcast')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'broadcast' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Broadcast</button>}
       </div>
 
       {activeTab === 'upload' && (
@@ -1147,6 +1153,11 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
           <AnalyticsDashboard />
         </div>
       )}
+      {activeTab === 'broadcast' && (
+        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+          <BroadcastCenter />
+        </div>
+      )}
 
       <BulkEditModal isOpen={showBulkEdit} onClose={() => setShowBulkEdit(false)} selectedItems={bulkEditItems} onSave={applyBulkEdit} />
       <EditMenuItemModal isOpen={!!editingItem} item={editingItem} onClose={() => setEditingItem(null)} onSave={handleEditItem} />
@@ -1166,9 +1177,11 @@ export default function Home() {
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
 
   const { data: user } = useQuery({
-    queryKey: ['user'],
-    queryFn: async () => { try { return await base44.auth.me(); } catch { return null; } }
+  queryKey: ['user'],
+  queryFn: async () => { try { return await base44.auth.me(); } catch { return null; } }
   });
+
+  useOneSignal(user);
 
   const [localProfile, setLocalProfile] = useState(() => {
     try { return JSON.parse(localStorage.getItem('userProfile') || 'null'); } catch { return null; }

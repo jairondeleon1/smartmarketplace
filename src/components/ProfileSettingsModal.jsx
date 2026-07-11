@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, User, AlertTriangle, Heart, Target, Trash2, ShieldAlert, ShieldCheck, Download, Shield, ExternalLink, Globe, Type } from 'lucide-react';
+import { X, Check, User, AlertTriangle, Heart, Target, Trash2, ShieldAlert, ShieldCheck, Download, Shield, ExternalLink, Globe, Type, MapPin } from 'lucide-react';
+import { goToWelcome } from '@/utils/location';
 
 const ALLERGENS = ['Milk', 'Wheat', 'Egg', 'Soy', 'Fish', 'Shellfish', 'Tree Nuts', 'Peanuts', 'Sesame', 'Gluten'];
 const SEVERE_ALLERGENS = ['Shellfish', 'Tree Nuts', 'Peanuts', 'Fish', 'Sesame'];
@@ -116,6 +117,23 @@ export default function ProfileSettingsModal({ isOpen, onClose, user, onProfileU
             <span className={`text-xs font-bold px-3 py-1 rounded-full ${gpcActive ? 'bg-green-100 text-green-800' : 'bg-slate-200 text-slate-600'}`}>
               {gpcActive ? '🔒 Opted Out (GPC Active)' : 'Standard Mode'}
             </span>
+          </div>
+
+          {/* Change Location */}
+          <div className="bg-teal-50 border border-teal-200 rounded-2xl p-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <MapPin className="w-5 h-5 text-teal-600 shrink-0" />
+              <div>
+                <h4 className="font-bold text-slate-800 uppercase tracking-widest text-sm">Location</h4>
+                <p className="text-xs text-gray-600 mt-0.5">Switch to a different cafe or marketplace</p>
+              </div>
+            </div>
+            <button
+              onClick={() => goToWelcome()}
+              className="px-4 py-2 rounded-xl text-xs font-bold uppercase border-2 bg-white text-teal-700 border-teal-300 hover:bg-teal-100 transition shrink-0"
+            >
+              Change
+            </button>
           </div>
 
           {/* Disclaimer Acceptance */}

@@ -37,15 +37,21 @@ export default function GoogleAnalyticsPanel() {
       const res = await base44.functions.invoke('getAnalyticsMetrics', { propertyId: id, days: 7 });
       const d = res.data;
       if (d?.error) {
-        setError(d.error === 'Forbidden'
-          ? 'Admins only.'
-          : (d.details ? `GA error: ${d.details.slice(0, 140)}` : d.error));
+        if (d.error === 'Forbidden') {
+          setError('Admins only.');
+        } else if (d.error === 'Unauthorized') {
+          setError('Please sign in as an admin to view analytics.');
+        } else if (d.details) {
+          setError(`Google Analytics: ${d.details.slice(0, 160)}`);
+        } else {
+          setError(d.error);
+        }
         setData(null);
       } else {
         setData(d);
       }
     } catch {
-      setError('Google Analytics is not connected yet. Ask an admin to connect it, then enter your GA4 Property ID.');
+      setError('Unable to reach the analytics service. Check your connection and try again.');
       setData(null);
     } finally {
       setLoading(false);

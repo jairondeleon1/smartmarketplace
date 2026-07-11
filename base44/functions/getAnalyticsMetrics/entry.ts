@@ -4,13 +4,13 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
+    if (!user) return Response.json({ error: 'Unauthorized' });
+    if (user.role !== 'admin') return Response.json({ error: 'Forbidden' });
 
     const body = await req.json().catch(() => ({}));
     const propertyId = String(body.propertyId || '').trim();
     const days = Math.min(Math.max(parseInt(body.days) || 7, 1), 30);
-    if (!propertyId) return Response.json({ error: 'propertyId required' }, { status: 400 });
+    if (!propertyId) return Response.json({ error: 'propertyId required' });
 
     // Shared connector — builder's Google Analytics account.
     const { accessToken } = await base44.asServiceRole.connectors.getConnection('google_analytics');
@@ -43,7 +43,12 @@ Deno.serve(async (req) => {
 
     if (!res.ok) {
       const errText = await res.text();
-      return Response.json({ error: 'GA API error', details: errText.slice(0, 300) }, { status: 502 });
+      let gaMessage = errText;
+      try {
+        const gaErr = JSON.parse(errText);
+        gaMessage = gaErr?.error?.message || errText;
+      } catch {}
+      return Response.json({ error: 'GA API error', details: gaMessage.slice(0, 300) });
     }
 
     const data = await res.json();

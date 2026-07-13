@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, ShieldCheck } from 'lucide-react';
+import { X, ShieldCheck, MapPin } from 'lucide-react';
+import { goToWelcome } from '@/utils/location';
 
 const LEGAL_CONTENT = {
   privacy: {
@@ -372,6 +373,13 @@ export default function Footer({ onAdminClick }) {
           )}
 
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+            <button
+              onClick={goToWelcome}
+              className="flex items-center gap-1.5 text-teal-400 hover:text-teal-300 text-xs font-bold uppercase tracking-widest transition-colors"
+            >
+              <MapPin className="w-3.5 h-3.5" />
+              Change Location
+            </button>
             {links.map(({ key, label }) => (
               <button
                 key={key}

@@ -41,6 +41,8 @@ export default function GoogleAnalyticsPanel() {
           setError('Admins only.');
         } else if (d.error === 'Unauthorized') {
           setError('Please sign in as an admin to view analytics.');
+        } else if (d.details && /permission|insufficient|does not have/i.test(d.details)) {
+          setError('The connected Google account does not have access to this GA4 property. In Google Analytics, go to Admin → Property access management and add the Google account used to authorize this app as a Viewer (or re-authorize the connector with an account that already has access).');
         } else if (d.details) {
           setError(`Google Analytics: ${d.details.slice(0, 160)}`);
         } else {

@@ -15,12 +15,23 @@ export default function AdminGate({ onGranted }) {
     try {
       const me = await base44.auth.me();
       setUser(me);
-      const role = me?._app_role || me?.role;
+      // me() may carry a stale role from the session token; fetch the stored
+      // User entity to get the authoritative, up-to-date role value.
+      let role = me?._app_role || me?.role;
+      try {
+        const record = await base44.entities.User.filter({ email: me?.email });
+        const stored = Array.isArray(record) ? record[0] : record;
+        if (stored?.role || stored?._app_role) {
+          role = stored._app_role || stored.role || role;
+        }
+      } catch (e) {
+        console.log('AdminGate: could not fetch user record, using token role', e?.message);
+      }
       if (role === 'admin' || role === 'manager' || role === 'dietitian' || role === 'analyst') {
         setStep('verified');
         onGranted();
       } else {
-        console.log('AdminGate denied. role:', me?.role, '_app_role:', me?._app_role);
+        console.log('AdminGate denied. role:', role, 'token role:', me?.role, '_app_role:', me?._app_role);
         setStep('not-admin');
       }
     } catch {

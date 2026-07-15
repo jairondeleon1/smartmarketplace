@@ -15,17 +15,14 @@ export default function AdminGate({ onGranted }) {
     try {
       const me = await base44.auth.me();
       setUser(me);
-      // me() may carry a stale role from the session token; fetch the stored
-      // User entity to get the authoritative, up-to-date role value.
+      // The auth token may carry a stale role; ask the backend for the
+      // authoritative role stored on the User entity (service-role fetch).
       let role = me?._app_role || me?.role;
       try {
-        const record = await base44.entities.User.filter({ email: me?.email });
-        const stored = Array.isArray(record) ? record[0] : record;
-        if (stored?.role || stored?._app_role) {
-          role = stored._app_role || stored.role || role;
-        }
+        const res = await base44.functions.invoke('getMyRole', {});
+        if (res?.data?.role) role = res.data.role;
       } catch (e) {
-        console.log('AdminGate: could not fetch user record, using token role', e?.message);
+        console.log('AdminGate: getMyRole failed, using token role', e?.message);
       }
       if (role === 'admin' || role === 'manager' || role === 'dietitian' || role === 'analyst') {
         setStep('verified');

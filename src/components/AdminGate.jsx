@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 export default function AdminGate({ onGranted }) {
   const [step, setStep] = useState('checking'); // checking | login-required | not-admin | verified
   const [user, setUser] = useState(null);
+  const [debug, setDebug] = useState({});
 
   useEffect(() => {
     checkAuth();
@@ -17,18 +18,24 @@ export default function AdminGate({ onGranted }) {
       setUser(me);
       // The auth token may carry a stale role; ask the backend for the
       // authoritative role stored on the User entity (service-role fetch).
-      let role = me?._app_role || me?.role;
+      const tokenRole = me?._app_role || me?.role;
+      let role = tokenRole;
+      let fnRole = null;
+      let fnError = null;
       try {
         const res = await base44.functions.invoke('getMyRole', {});
-        if (res?.data?.role) role = res.data.role;
+        fnRole = res?.data?.role || null;
+        if (fnRole) role = fnRole;
       } catch (e) {
-        console.log('AdminGate: getMyRole failed, using token role', e?.message);
+        fnError = e?.message || String(e);
+        console.log('AdminGate: getMyRole failed, using token role', fnError);
       }
+      setDebug({ tokenRole, fnRole, fnError, finalRole: role });
       if (role === 'admin' || role === 'manager' || role === 'dietitian' || role === 'analyst') {
         setStep('verified');
         onGranted();
       } else {
-        console.log('AdminGate denied. role:', role, 'token role:', me?.role, '_app_role:', me?._app_role);
+        console.log('AdminGate denied. role:', role, 'token role:', tokenRole, 'fn role:', fnRole);
         setStep('not-admin');
       }
     } catch {
@@ -80,6 +87,14 @@ export default function AdminGate({ onGranted }) {
             </p>
             <p className="text-[10px] text-gray-400 uppercase tracking-widest">Contact your administrator to request access.</p>
           </div>
+          {debug && Object.keys(debug).length > 0 && (
+            <div className="text-[10px] text-gray-400 font-mono normal-case tracking-normal break-all bg-gray-50 p-3 rounded-xl border border-gray-100 text-left">
+              <div>token role: {String(debug.tokenRole)}</div>
+              <div>fn role: {String(debug.fnRole)}</div>
+              <div>final: {String(debug.finalRole)}</div>
+              {debug.fnError && <div className="text-red-500">fn error: {debug.fnError}</div>}
+            </div>
+          )}
           <button
             onClick={() => base44.auth.logout()}
             className="w-full bg-red-600 text-white p-4 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-red-700 transition-all"

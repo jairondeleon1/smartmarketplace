@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Loader2, Shield, ShieldCheck, User, Trash2, UserPlus } from 'lucide-react';
+import { Loader2, Shield, ShieldCheck, User, Trash2, UserPlus, BarChart2 } from 'lucide-react';
 
 const ROLE_CONFIG = {
   admin:     { label: 'Admin',     color: 'bg-teal-100 text-teal-800',   icon: ShieldCheck },
   manager:   { label: 'Manager',   color: 'bg-purple-100 text-purple-800', icon: Shield },
   dietitian: { label: 'Dietitian', color: 'bg-green-100 text-green-800',  icon: User },
+  analyst:   { label: 'Analyst',   color: 'bg-blue-100 text-blue-800',    icon: BarChart2 },
   user:      { label: 'User',      color: 'bg-gray-200 text-gray-600',    icon: User },
 };
 
-const ROLES = ['admin', 'manager', 'dietitian', 'user'];
+const ROLES = ['admin', 'manager', 'dietitian', 'analyst', 'user'];
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -107,6 +108,7 @@ export default function UserManagement() {
         <div className="flex gap-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-teal-400 inline-block"/>Admin</span>
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-400 inline-block"/>Manager</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400 inline-block"/>Analyst</span>
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-300 inline-block"/>User</span>
         </div>
       </div>
@@ -195,6 +197,7 @@ export default function UserManagement() {
             <option value="user">User</option>
             <option value="manager">Manager</option>
             <option value="dietitian">Dietitian</option>
+            <option value="analyst">Analyst</option>
             {currentUser?.role === 'admin' && <option value="admin">Admin</option>}
           </select>
           <button
@@ -216,6 +219,7 @@ export default function UserManagement() {
         <p>• <span className="text-teal-700">Admin</span> — Full access: change any role, delete any user</p>
         <p>• <span className="text-purple-700">Manager</span> — Upload files only, can change roles of non-admins</p>
         <p>• <span className="text-green-700">Dietitian</span> — Upload, manage items, wellness — no users/features</p>
+        <p>• <span className="text-blue-700">Analyst</span> — Analytics dashboard only</p>
         <p>• <span className="text-gray-600">User</span> — Standard access only</p>
       </div>
     </div>

@@ -1006,10 +1006,11 @@ function ChatView({ chatHistory, isTyping, userQuery, setUserQuery, handleSendCh
 }
 
 function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomVegUrl, customVeganUrl, setCustomVeganUrl, newItem, setNewItem, handleAddItem, handleDeleteItem, queryClient, currentUserRole }) {
-  const [activeTab, setActiveTab] = useState('upload');
   // AdminGate already verified the user is admin — if role is unresolved, treat as admin
   const isAdmin = !currentUserRole || currentUserRole === 'admin';
   const isDietitian = currentUserRole === 'dietitian';
+  const isAnalyst = currentUserRole === 'analyst';
+  const [activeTab, setActiveTab] = useState(isAnalyst ? 'analytics' : 'upload');
   const [editingItem, setEditingItem] = useState(null);
   const doRefresh = useCallback(async () => { if (queryClient) await queryClient.invalidateQueries({ queryKey: ['menuItems'] }); }, [queryClient]);
   const { scrollRef, pullDistance, isPulling, isRefreshing, onTouchStart, onTouchMove, onTouchEnd } = usePullToRefresh(doRefresh);
@@ -1067,7 +1068,7 @@ function AdminView({ menuItems, setMenuItems, onLogout, customVegUrl, setCustomV
       </div>
 
       <div className="flex gap-2 bg-white p-2 rounded-xl border border-gray-100">
-        <button onClick={() => setActiveTab('upload')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'upload' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Upload Files</button>
+        {!isAnalyst && <button onClick={() => setActiveTab('upload')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'upload' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Upload Files</button>}
         {(isAdmin || isDietitian) && <button onClick={() => setActiveTab('manage')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'manage' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Manage Items ({menuItems.length})</button>}
         {isAdmin && <button onClick={() => setActiveTab('users')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'users' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Users</button>}
         {isAdmin && <button onClick={() => setActiveTab('features')} className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm uppercase transition ${activeTab === 'features' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>Features</button>}

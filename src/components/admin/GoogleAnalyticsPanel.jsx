@@ -105,7 +105,7 @@ export default function GoogleAnalyticsPanel() {
     sessions: d.sessions,
   }));
 
-  const daysLabel = RANGES.find((r) => r.value === data?.days)?.label || `Last ${days} Days`;
+  const daysLabel = RANGES.find((r) => r.value === days)?.label || `Last ${days} Days`;
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-4">

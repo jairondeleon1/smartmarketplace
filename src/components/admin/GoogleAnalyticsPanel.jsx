@@ -6,13 +6,19 @@ import {
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 const LS_KEY = 'ga_property_id';
+const LS_DAYS_KEY = 'ga_days_range';
+const RANGES = [
+  { label: '7 days', value: 7 },
+  { label: '14 days', value: 14 },
+  { label: '30 days', value: 30 },
+];
 
 function formatGADate(yyyymmdd) {
   if (!yyyymmdd || yyyymmdd.length !== 8) return yyyymmdd;
   const y = parseInt(yyyymmdd.slice(0, 4));
   const m = parseInt(yyyymmdd.slice(4, 6));
   const d = parseInt(yyyymmdd.slice(6, 8));
-  return new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 function fmtDuration(sec) {
@@ -25,16 +31,20 @@ function fmtDuration(sec) {
 export default function GoogleAnalyticsPanel() {
   const [propertyId, setPropertyId] = useState(() => localStorage.getItem(LS_KEY) || '');
   const [draftId, setDraftId] = useState(propertyId);
+  const [days, setDays] = useState(() => {
+    const saved = parseInt(localStorage.getItem(LS_DAYS_KEY));
+    return RANGES.some((r) => r.value === saved) ? saved : 7;
+  });
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const fetchGA = async (id) => {
+  const fetchGA = async (id, rangeDays) => {
     if (!id) return;
     setLoading(true);
     setError('');
     try {
-      const res = await base44.functions.invoke('getAnalyticsMetrics', { propertyId: id, days: 7 });
+      const res = await base44.functions.invoke('getAnalyticsMetrics', { propertyId: id, days: rangeDays });
       const d = res.data;
       if (d?.error) {
         if (d.error === 'Forbidden') {
@@ -60,20 +70,26 @@ export default function GoogleAnalyticsPanel() {
     }
   };
 
-  useEffect(() => { if (propertyId) fetchGA(propertyId); }, []);
+  useEffect(() => { if (propertyId) fetchGA(propertyId, days); }, []);
 
   // Auto-refresh every 30s for real-time active users
   useEffect(() => {
     if (!propertyId) return;
-    const interval = setInterval(() => fetchGA(propertyId), 30000);
+    const interval = setInterval(() => fetchGA(propertyId, days), 30000);
     return () => clearInterval(interval);
-  }, [propertyId]);
+  }, [propertyId, days]);
 
   const saveAndFetch = () => {
     const id = draftId.trim();
     setPropertyId(id);
     localStorage.setItem(LS_KEY, id);
-    if (id) fetchGA(id);
+    if (id) fetchGA(id, days);
+  };
+
+  const changeRange = (val) => {
+    setDays(val);
+    localStorage.setItem(LS_DAYS_KEY, String(val));
+    if (propertyId) fetchGA(propertyId, val);
   };
 
   const kpis = data?.totals ? [
@@ -89,13 +105,25 @@ export default function GoogleAnalyticsPanel() {
     sessions: d.sessions,
   }));
 
+  const daysLabel = RANGES.find((r) => r.value === data?.days)?.label || `Last ${days} Days`;
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-4">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <h4 className="text-xs font-bold uppercase tracking-widest text-gray-500 flex items-center gap-2">
-          <Activity className="w-4 h-4 text-teal-600" /> Google Analytics — Last 7 Days
+          <Activity className="w-4 h-4 text-teal-600" /> Google Analytics — {daysLabel}
         </h4>
         <div className="flex items-center gap-2">
+          <select
+            value={days}
+            onChange={(e) => changeRange(Number(e.target.value))}
+            className="px-3 py-2 rounded-lg bg-gray-50 border border-gray-100 text-xs font-bold outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+            aria-label="Date range"
+          >
+            {RANGES.map((r) => (
+              <option key={r.value} value={r.value}>{r.label}</option>
+            ))}
+          </select>
           <input
             type="text"
             value={draftId}
@@ -104,7 +132,7 @@ export default function GoogleAnalyticsPanel() {
             className="px-3 py-2 rounded-lg bg-gray-50 border border-gray-100 text-xs font-bold w-56 outline-none focus:ring-2 focus:ring-teal-500"
           />
           <button onClick={saveAndFetch} className="px-3 py-2 rounded-lg bg-teal-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-teal-700">Load</button>
-          {data && <button onClick={() => fetchGA(propertyId)} className="p-2 text-teal-600 hover:bg-teal-50 rounded-lg" aria-label="Refresh GA metrics"><RefreshCw className="w-4 h-4" /></button>}
+          {data && <button onClick={() => fetchGA(propertyId, days)} className="p-2 text-teal-600 hover:bg-teal-50 rounded-lg" aria-label="Refresh GA metrics"><RefreshCw className="w-4 h-4" /></button>}
         </div>
       </div>
 
